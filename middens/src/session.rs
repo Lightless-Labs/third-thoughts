@@ -1,0 +1,259 @@
+//! Unified session and message types parsed from any agent tool format.
+
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+/// A parsed session from any supported agent tool.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Session {
+    /// Unique session identifier (from the source file or generated).
+    pub id: String,
+    /// Path to the source file this session was parsed from.
+    pub source_path: PathBuf,
+    /// Which agent tool produced this session.
+    pub source_tool: SourceTool,
+    /// Session type: interactive (human-in-the-loop) or subagent (automated).
+    pub session_type: SessionType,
+    /// All messages in chronological order.
+    pub messages: Vec<Message>,
+    /// Session-level metadata extracted from the source.
+    pub metadata: SessionMetadata,
+    /// Environment fingerprint: what was active when this session ran.
+    pub environment: EnvironmentFingerprint,
+}
+
+/// Which agent tool produced this session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SourceTool {
+    ClaudeCode,
+    CodexCli,
+    GeminiCli,
+    Cursor,
+    OpenClaw,
+    OpenCode,
+    Unknown,
+}
+
+impl std::fmt::Display for SourceTool {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ClaudeCode => write!(f, "Claude Code"),
+            Self::CodexCli => write!(f, "Codex CLI"),
+            Self::GeminiCli => write!(f, "Gemini CLI"),
+            Self::Cursor => write!(f, "Cursor"),
+            Self::OpenClaw => write!(f, "OpenClaw"),
+            Self::OpenCode => write!(f, "OpenCode"),
+            Self::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
+/// Whether this session involved a human or was automated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SessionType {
+    /// Human-in-the-loop: real user corrections and steering.
+    Interactive,
+    /// Automated: subagent or autonomous loop with minimal/no human contact.
+    Subagent,
+    /// Could not determine.
+    Unknown,
+}
+
+/// A single message in a session (from any role).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Message {
+    /// Message role.
+    pub role: MessageRole,
+    /// Timestamp of this message.
+    pub timestamp: Option<DateTime<Utc>>,
+    /// The public text content (what the user sees).
+    pub text: String,
+    /// Private thinking/reasoning content (if preserved).
+    pub thinking: Option<String>,
+    /// Tool calls made in this message.
+    pub tool_calls: Vec<ToolCall>,
+    /// Tool results returned in this message.
+    pub tool_results: Vec<ToolResult>,
+    /// Classification of this message (correction, directive, approval, etc.).
+    pub classification: MessageClassification,
+    /// Raw content blocks from the source (for techniques that need them).
+    pub raw_content: Vec<ContentBlock>,
+}
+
+/// Message role.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MessageRole {
+    User,
+    Assistant,
+    System,
+}
+
+/// Classification of a user message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MessageClassification {
+    /// Real human correcting agent behavior.
+    HumanCorrection,
+    /// New instruction or task from a human.
+    HumanDirective,
+    /// Human approving or accepting agent output.
+    HumanApproval,
+    /// Human asking a question.
+    HumanQuestion,
+    /// Tool result, system notification, hook output.
+    SystemMessage,
+    /// Everything else.
+    Other,
+    /// Not yet classified.
+    Unclassified,
+}
+
+/// A tool call made by the assistant.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolCall {
+    /// Tool call ID (for matching with results).
+    pub id: String,
+    /// Tool name (e.g., "Bash", "Read", "Edit").
+    pub name: String,
+    /// Tool input as a JSON value.
+    pub input: serde_json::Value,
+}
+
+/// A tool result returned to the assistant.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolResult {
+    /// Tool use ID this result corresponds to.
+    pub tool_use_id: String,
+    /// Result content (text).
+    pub content: String,
+    /// Whether the tool execution errored.
+    pub is_error: bool,
+}
+
+/// A raw content block from the source JSONL.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum ContentBlock {
+    #[serde(rename = "text")]
+    Text { text: String },
+    #[serde(rename = "thinking")]
+    Thinking { thinking: String },
+    #[serde(rename = "tool_use")]
+    ToolUse {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+    },
+    #[serde(rename = "tool_result")]
+    ToolResultBlock {
+        tool_use_id: String,
+        content: serde_json::Value,
+        #[serde(default)]
+        is_error: bool,
+    },
+    /// Catch-all for unknown block types.
+    #[serde(other)]
+    Unknown,
+}
+
+/// Session-level metadata extracted from the source.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SessionMetadata {
+    /// Agent tool version string.
+    pub version: Option<String>,
+    /// Working directory.
+    pub cwd: Option<String>,
+    /// Git branch.
+    pub git_branch: Option<String>,
+    /// Model ID used.
+    pub model: Option<String>,
+    /// Project path or identifier.
+    pub project: Option<String>,
+    /// Permission mode.
+    pub permission_mode: Option<String>,
+    /// Additional tool-specific fields.
+    pub extra: BTreeMap<String, serde_json::Value>,
+}
+
+/// Environment fingerprint: the configuration active during this session.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EnvironmentFingerprint {
+    /// Agent tool version.
+    pub tool_version: Option<String>,
+    /// Model identifier.
+    pub model_id: Option<String>,
+    /// Permission/approval mode.
+    pub permission_mode: Option<String>,
+    /// Hash of CLAUDE.md (or equivalent) content if detectable.
+    pub config_hash: Option<String>,
+    /// MCP servers detected in session.
+    pub mcp_servers: Vec<String>,
+    /// Plugins/skills detected in session.
+    pub plugins: Vec<String>,
+    /// Hooks detected in session.
+    pub hooks: Vec<String>,
+}
+
+impl Session {
+    /// Count of user messages (any role == User).
+    pub fn user_message_count(&self) -> usize {
+        self.messages
+            .iter()
+            .filter(|m| m.role == MessageRole::User)
+            .count()
+    }
+
+    /// Count of assistant messages.
+    pub fn assistant_message_count(&self) -> usize {
+        self.messages
+            .iter()
+            .filter(|m| m.role == MessageRole::Assistant)
+            .count()
+    }
+
+    /// Count of all tool calls across all messages.
+    pub fn total_tool_calls(&self) -> usize {
+        self.messages.iter().map(|m| m.tool_calls.len()).sum()
+    }
+
+    /// Count of messages classified as corrections.
+    pub fn correction_count(&self) -> usize {
+        self.messages
+            .iter()
+            .filter(|m| m.classification == MessageClassification::HumanCorrection)
+            .count()
+    }
+
+    /// Count of messages with thinking blocks.
+    pub fn thinking_count(&self) -> usize {
+        self.messages
+            .iter()
+            .filter(|m| m.thinking.is_some())
+            .count()
+    }
+
+    /// Total text length across all messages.
+    pub fn total_text_length(&self) -> usize {
+        self.messages.iter().map(|m| m.text.len()).sum()
+    }
+
+    /// Total thinking text length.
+    pub fn total_thinking_length(&self) -> usize {
+        self.messages
+            .iter()
+            .filter_map(|m| m.thinking.as_ref())
+            .map(|t| t.len())
+            .sum()
+    }
+
+    /// Ordered list of tool names used (for sequence analysis).
+    pub fn tool_sequence(&self) -> Vec<&str> {
+        self.messages
+            .iter()
+            .flat_map(|m| m.tool_calls.iter())
+            .map(|tc| tc.name.as_str())
+            .collect()
+    }
+}

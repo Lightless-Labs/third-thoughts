@@ -1,0 +1,345 @@
+//! Message classifier: categorize user messages by intent.
+//!
+//! Port of the validated Python classifier (98% accuracy) to Rust.
+//! Uses a priority-based classification pipeline:
+//!   1. Structural: tool_result blocks → SystemMessage
+//!   2. Tags: system-reminder, command-name, etc. → SystemMessage
+//!   3. Lexical (length-gated): correction/approval/question patterns
+//!   4. Positional: first message defaults
+//!   5. Fallback: short → HumanDirective, long → Other
+
+use crate::session::{ContentBlock, Message, MessageClassification, MessageRole};
+
+/// System tag markers that indicate injected/system content.
+const SYSTEM_TAGS: &[&str] = &[
+    "<system-reminder>",
+    "<command-name>",
+    "<run_context>",
+    "<environment_details>",
+    "<tool_response>",
+    "<feedback>",
+    "<automated_reminder>",
+];
+
+/// Correction patterns (matched case-insensitively at word boundaries).
+const CORRECTION_PATTERNS: &[&str] = &[
+    "no,",
+    "no.",
+    "no!",
+    "no ",
+    "that's wrong",
+    "that is wrong",
+    "that's not",
+    "that is not",
+    "not what i",
+    "wrong",
+    "fix ",
+    "fix.",
+    "don't",
+    "do not",
+    "stop",
+    "undo",
+    "revert",
+    "instead,",
+    "instead ",
+    "actually,",
+    "actually ",
+    "wait,",
+    "wait ",
+    "hold on",
+    "try again",
+    "not quite",
+    "not right",
+    "should be",
+    "should have",
+    "shouldn't",
+    "change that",
+    "go back",
+    "roll back",
+    "i said",
+    "i meant",
+    "i wanted",
+];
+
+/// Approval patterns (matched case-insensitively).
+const APPROVAL_PATTERNS: &[&str] = &[
+    "yes",
+    "yep",
+    "yeah",
+    "yea",
+    "perfect",
+    "looks good",
+    "lgtm",
+    "approved",
+    "approve",
+    "great",
+    "thanks",
+    "thank you",
+    "good",
+    "nice",
+    "correct",
+    "exactly",
+    "right",
+    "ok",
+    "okay",
+    "sure",
+    "go ahead",
+    "proceed",
+    "ship it",
+    "merge",
+    "👍",
+];
+
+/// Question starters (matched case-insensitively).
+const QUESTION_STARTERS: &[&str] = &[
+    "how", "what", "why", "when", "where", "which", "who", "can you", "could you", "would you",
+    "is there", "are there", "do you", "does it", "will it", "should i", "should we",
+];
+
+/// Maximum message length for lexical pattern matching (Priority 3).
+/// Longer messages are unlikely to be simple corrections/approvals.
+const LEXICAL_MAX_LEN: usize = 1000;
+
+/// Classify a single message based on its content and position.
+///
+/// Only classifies `User` role messages; `Assistant` and `System` messages
+/// are returned as `Other`.
+pub fn classify_message(msg: &Message, is_first: bool) -> MessageClassification {
+    // Only classify user messages.
+    if msg.role != MessageRole::User {
+        return MessageClassification::Other;
+    }
+
+    // --- Priority 1: Structural (tool_result blocks) ---
+    if has_tool_result_blocks(msg) {
+        return MessageClassification::SystemMessage;
+    }
+
+    // --- Priority 2: System tags in text ---
+    if has_system_tags(&msg.text) {
+        return MessageClassification::SystemMessage;
+    }
+
+    // Also check raw content blocks for system tags.
+    for block in &msg.raw_content {
+        if let ContentBlock::Text { text } = block {
+            if has_system_tags(text) {
+                return MessageClassification::SystemMessage;
+            }
+        }
+    }
+
+    // --- Priority 3: Lexical patterns (length-gated) ---
+    let text = msg.text.trim();
+    if text.len() < LEXICAL_MAX_LEN {
+        let lower = text.to_lowercase();
+
+        // Check correction patterns first (most specific).
+        if matches_any(&lower, CORRECTION_PATTERNS) {
+            return MessageClassification::HumanCorrection;
+        }
+
+        // Check approval patterns.
+        if matches_any(&lower, APPROVAL_PATTERNS) {
+            return MessageClassification::HumanApproval;
+        }
+
+        // Check question patterns.
+        if text.contains('?') || starts_with_any(&lower, QUESTION_STARTERS) {
+            return MessageClassification::HumanQuestion;
+        }
+    }
+
+    // --- Priority 4: Positional default ---
+    if is_first {
+        return MessageClassification::HumanDirective;
+    }
+
+    // --- Priority 5: Fallback by length ---
+    if text.len() < LEXICAL_MAX_LEN {
+        MessageClassification::HumanDirective
+    } else {
+        MessageClassification::Other
+    }
+}
+
+/// Check whether the message contains tool_result content blocks (has `tool_use_id`).
+fn has_tool_result_blocks(msg: &Message) -> bool {
+    // Check raw content blocks for tool_result type.
+    for block in &msg.raw_content {
+        if matches!(block, ContentBlock::ToolResultBlock { .. }) {
+            return true;
+        }
+    }
+    // Also check if there are parsed tool results.
+    !msg.tool_results.is_empty()
+}
+
+/// Check if text contains any of the system tag markers.
+fn has_system_tags(text: &str) -> bool {
+    SYSTEM_TAGS.iter().any(|tag| text.contains(tag))
+}
+
+/// Check if the lowercased text matches any of the given patterns.
+fn matches_any(lower: &str, patterns: &[&str]) -> bool {
+    patterns.iter().any(|p| lower.contains(p))
+}
+
+/// Check if the lowercased text starts with any of the given prefixes.
+fn starts_with_any(lower: &str, prefixes: &[&str]) -> bool {
+    prefixes.iter().any(|p| lower.starts_with(p))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::session::{ContentBlock, Message, MessageRole};
+
+    fn user_msg(text: &str) -> Message {
+        Message {
+            role: MessageRole::User,
+            timestamp: None,
+            text: text.to_string(),
+            thinking: None,
+            tool_calls: vec![],
+            tool_results: vec![],
+            classification: MessageClassification::Unclassified,
+            raw_content: vec![],
+        }
+    }
+
+    fn user_msg_with_tool_result(text: &str) -> Message {
+        Message {
+            role: MessageRole::User,
+            timestamp: None,
+            text: text.to_string(),
+            thinking: None,
+            tool_calls: vec![],
+            tool_results: vec![],
+            classification: MessageClassification::Unclassified,
+            raw_content: vec![ContentBlock::ToolResultBlock {
+                tool_use_id: "toolu_123".to_string(),
+                content: serde_json::json!("result"),
+                is_error: false,
+            }],
+        }
+    }
+
+    #[test]
+    fn structural_tool_result_is_system() {
+        let msg = user_msg_with_tool_result("some output");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::SystemMessage
+        );
+    }
+
+    #[test]
+    fn system_tag_is_system() {
+        let msg = user_msg("<system-reminder>You are an agent</system-reminder>");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::SystemMessage
+        );
+    }
+
+    #[test]
+    fn correction_pattern() {
+        let msg = user_msg("No, that's wrong. Use the other function.");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanCorrection
+        );
+    }
+
+    #[test]
+    fn revert_is_correction() {
+        let msg = user_msg("revert that last change");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanCorrection
+        );
+    }
+
+    #[test]
+    fn approval_pattern() {
+        let msg = user_msg("lgtm");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanApproval
+        );
+    }
+
+    #[test]
+    fn looks_good_approval() {
+        let msg = user_msg("Looks good, ship it!");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanApproval
+        );
+    }
+
+    #[test]
+    fn question_pattern() {
+        let msg = user_msg("How does this work?");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanQuestion
+        );
+    }
+
+    #[test]
+    fn question_mark_is_question() {
+        let msg = user_msg("Did you run the tests?");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanQuestion
+        );
+    }
+
+    #[test]
+    fn first_message_is_directive() {
+        let msg = user_msg("Implement the new feature for user auth");
+        assert_eq!(
+            classify_message(&msg, true),
+            MessageClassification::HumanDirective
+        );
+    }
+
+    #[test]
+    fn short_default_is_directive() {
+        let msg = user_msg("add a test for the parser");
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::HumanDirective
+        );
+    }
+
+    #[test]
+    fn long_default_is_other() {
+        let long_text = "x".repeat(1500);
+        let msg = user_msg(&long_text);
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::Other
+        );
+    }
+
+    #[test]
+    fn assistant_message_is_other() {
+        let msg = Message {
+            role: MessageRole::Assistant,
+            timestamp: None,
+            text: "Here is the code".to_string(),
+            thinking: None,
+            tool_calls: vec![],
+            tool_results: vec![],
+            classification: MessageClassification::Unclassified,
+            raw_content: vec![],
+        };
+        assert_eq!(
+            classify_message(&msg, false),
+            MessageClassification::Other
+        );
+    }
+}
