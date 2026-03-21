@@ -6,6 +6,7 @@
 //! thinking blocks, and session metadata.
 
 use std::fs;
+use std::io::BufRead;
 use std::path::Path;
 
 use anyhow::{Context, Result};
@@ -113,18 +114,24 @@ impl SessionParser for ClaudeCodeParser {
             return false;
         }
 
-        // Read just enough to inspect the first valid JSON line.
-        let content = match fs::read_to_string(path) {
-            Ok(c) => c,
+        // Read only the first line using BufReader — avoid loading the entire file.
+        let file = match fs::File::open(path) {
+            Ok(f) => f,
             Err(_) => return false,
         };
+        let reader = std::io::BufReader::new(file);
 
-        for line in content.lines() {
-            let line = line.trim();
+        for line in reader.lines() {
+            let line = match line {
+                Ok(l) => l,
+                Err(_) => return false,
+            };
+            let line = line.trim().to_string();
             if line.is_empty() {
                 continue;
             }
-            let val: Value = match serde_json::from_str(line) {
+
+            let val: Value = match serde_json::from_str(&line) {
                 Ok(v) => v,
                 Err(_) => return false,
             };
@@ -258,15 +265,19 @@ impl SessionParser for ClaudeCodeParser {
             let (text, thinking, tool_calls, tool_results, raw_content) =
                 parse_content(&raw_msg.content, role);
 
-            if role == MessageRole::User && !text.trim().is_empty() {
-                // Check if this is real user text vs tool result only.
-                let is_tool_result_only = tool_results.len() > 0 && text.trim().is_empty();
-                if !is_tool_result_only {
+            if role == MessageRole::User {
+                // Check if this message consists solely of tool_result blocks
+                // with no human-typed text. Such messages should NOT count as
+                // real user text — they are automated tool result returns.
+                let is_tool_result_only = !tool_results.is_empty() && text.trim().is_empty();
+                if !is_tool_result_only && !text.trim().is_empty() {
                     has_real_user_text = true;
                 }
 
                 // Scan user message content for MCP servers and plugins.
-                scan_system_reminder_content(&text, &mut environment);
+                if !text.trim().is_empty() {
+                    scan_system_reminder_content(&text, &mut environment);
+                }
             }
 
             let msg = Message {

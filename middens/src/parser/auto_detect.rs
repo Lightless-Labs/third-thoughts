@@ -6,6 +6,8 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 
+use crate::classifier::correction::classify_message;
+use crate::classifier::session_type::classify_session;
 use crate::session::{Session, SourceTool};
 
 use super::all_parsers;
@@ -31,38 +33,84 @@ pub fn detect_format(path: &Path) -> Option<SourceTool> {
 
 /// Auto-detect the format of a session log file and parse it.
 ///
-/// Tries each registered parser's `can_parse` method first, then falls back
-/// to `detect_format` heuristics.
+/// Uses the cheap `detect_format` function (reads only the first line) to
+/// identify the source tool, then dispatches to the matching parser's `parse`
+/// method. This avoids a double-read: `can_parse` + `parse` would each read
+/// the file independently.
 pub fn parse_auto(path: &Path) -> Result<Vec<Session>> {
     let parsers = all_parsers();
 
-    // First pass: let each parser decide if it can handle this file.
-    for parser in &parsers {
-        if parser.can_parse(path) {
-            return parser
-                .parse(path)
-                .with_context(|| format!("{} parser failed on {}", parser.source_tool(), path.display()));
-        }
-    }
+    let mut sessions = None;
 
-    // Second pass: use format detection to pick a parser.
+    // Detect format cheaply (first line + path heuristics).
     if let Some(tool) = detect_format(path) {
         for parser in &parsers {
             if parser.source_tool() == tool {
-                return parser
-                    .parse(path)
-                    .with_context(|| format!("{} parser failed on {}", tool, path.display()));
+                sessions = Some(parser.parse(path).with_context(|| {
+                    format!("{} parser failed on {}", tool, path.display())
+                })?);
+                break;
             }
         }
     }
 
-    // No parser matched — return empty rather than erroring, so bulk
-    // operations can continue with other files.
-    eprintln!(
-        "middens: no parser matched for {}, skipping",
-        path.display()
-    );
-    Ok(vec![])
+    // No format detected — try each parser's `can_parse` as a last resort.
+    if sessions.is_none() {
+        for parser in &parsers {
+            if parser.can_parse(path) {
+                sessions = Some(parser.parse(path).with_context(|| {
+                    format!(
+                        "{} parser failed on {}",
+                        parser.source_tool(),
+                        path.display()
+                    )
+                })?);
+                break;
+            }
+        }
+    }
+
+    match sessions {
+        Some(mut sessions) => {
+            // Post-parsing: classify messages and refine session type.
+            classify_sessions(&mut sessions);
+            Ok(sessions)
+        }
+        None => {
+            // No parser matched — return empty rather than erroring, so bulk
+            // operations can continue with other files.
+            eprintln!(
+                "middens: no parser matched for {}, skipping",
+                path.display()
+            );
+            Ok(vec![])
+        }
+    }
+}
+
+/// Classify all messages in each session, then refine the session type
+/// based on the classifier's determination.
+fn classify_sessions(sessions: &mut [Session]) {
+    use crate::session::MessageRole;
+
+    for session in sessions.iter_mut() {
+        // Track whether this is the first user message (for positional classification).
+        let mut first_user_seen = false;
+
+        for msg in &mut session.messages {
+            let is_first = if msg.role == MessageRole::User && !first_user_seen {
+                first_user_seen = true;
+                true
+            } else {
+                false
+            };
+            msg.classification = classify_message(msg, is_first);
+        }
+
+        // Override the parser's initial session_type guess with the classifier's
+        // determination, which uses the now-classified messages.
+        session.session_type = classify_session(session);
+    }
 }
 
 /// Attempt to detect the source tool by inspecting the first line of the file.
@@ -112,8 +160,9 @@ fn detect_from_json(value: &serde_json::Value) -> Option<SourceTool> {
         return Some(SourceTool::GeminiCli);
     }
 
-    // OpenClaw signals.
-    if obj.contains_key("session") || obj.contains_key("openclaw") {
+    // OpenClaw signals: first line has `{"type":"session", ...}` with a version field.
+    if obj.get("type").and_then(|v| v.as_str()) == Some("session") || obj.contains_key("openclaw")
+    {
         return Some(SourceTool::OpenClaw);
     }
 

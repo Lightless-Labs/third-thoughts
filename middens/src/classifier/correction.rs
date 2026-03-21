@@ -180,9 +180,45 @@ fn has_system_tags(text: &str) -> bool {
     SYSTEM_TAGS.iter().any(|tag| text.contains(tag))
 }
 
-/// Check if the lowercased text matches any of the given patterns.
+/// Check if the lowercased text matches any of the given patterns at word boundaries.
+///
+/// A match is valid only if the pattern occurrence is preceded and followed by
+/// a non-alphanumeric character (or string boundary). This prevents false
+/// positives like "ok" matching inside "token" or "good" inside "goody".
+///
+/// Patterns that already contain trailing punctuation (e.g. "no," or "fix.")
+/// are exempt from the trailing-boundary check because the punctuation itself
+/// serves as a natural delimiter.
 fn matches_any(lower: &str, patterns: &[&str]) -> bool {
-    patterns.iter().any(|p| lower.contains(p))
+    patterns.iter().any(|p| {
+        let mut start = 0;
+        while let Some(pos) = lower[start..].find(p) {
+            let abs_pos = start + pos;
+            let end_pos = abs_pos + p.len();
+
+            // Check leading word boundary: start of string or non-alphanumeric char.
+            let leading_ok = abs_pos == 0
+                || !lower.as_bytes()[abs_pos - 1].is_ascii_alphanumeric();
+
+            // Check trailing word boundary: end of string or non-alphanumeric char.
+            // Skip if the pattern itself ends with punctuation (it's already bounded).
+            let pattern_ends_with_punct = p
+                .as_bytes()
+                .last()
+                .map(|&b| !b.is_ascii_alphanumeric())
+                .unwrap_or(false);
+            let trailing_ok = pattern_ends_with_punct
+                || end_pos >= lower.len()
+                || !lower.as_bytes()[end_pos].is_ascii_alphanumeric();
+
+            if leading_ok && trailing_ok {
+                return true;
+            }
+
+            start = abs_pos + 1;
+        }
+        false
+    })
 }
 
 /// Check if the lowercased text starts with any of the given prefixes.

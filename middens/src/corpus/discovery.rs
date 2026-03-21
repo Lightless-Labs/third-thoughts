@@ -90,10 +90,18 @@ fn discover_defaults() -> Result<Vec<PathBuf>> {
 }
 
 /// Get the user's home directory.
+///
+/// Tries HOME first (Unix/macOS), then falls back to USERPROFILE (Windows).
+/// This makes the function portable across platforms.
 fn home_dir() -> Result<PathBuf> {
     std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
         .map(PathBuf::from)
-        .map_err(|_| anyhow::anyhow!("could not determine home directory (HOME not set)"))
+        .map_err(|_| {
+            anyhow::anyhow!(
+                "could not determine home directory (neither HOME nor USERPROFILE is set)"
+            )
+        })
 }
 
 #[cfg(test)]
