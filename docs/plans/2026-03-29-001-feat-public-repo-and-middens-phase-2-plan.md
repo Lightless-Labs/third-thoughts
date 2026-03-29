@@ -1,7 +1,7 @@
 ---
 title: "feat: Public repo prep + Middens CLI wiring & Phase 2 techniques"
 type: feat
-status: active
+status: completed
 date: 2026-03-29
 origin: docs/brainstorms/2026-03-20-middens-cli-requirements.md
 ---

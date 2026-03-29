@@ -1,6 +1,13 @@
 # Middens Code Review Triage — P2s and P3s
 
-From CodeRabbit review of Phase 1 (2026-03-21).
+From CodeRabbit review of Phase 1 (2026-03-21) and Phase 2 review (2026-03-29).
+
+## P1 — Phase 2 Review (2026-03-29)
+
+- [ ] **P1-3: Burstiness cross-session contamination.** Inter-event intervals computed on concatenated sessions, creating artificial intervals at session boundaries. Should compute per-session and aggregate
+- [ ] **P1-4: Population variance vs sample variance.** Burstiness and entropy use population variance (÷n) instead of sample variance (÷n-1). Internally consistent but deviates from statistical convention
+- [ ] **P1-5: Entropy missing sessions_skipped diagnostic.** Sessions shorter than window_size are silently dropped. Add sessions_skipped finding alongside sessions_analyzed
+- [ ] **P1-6: Short session positional analysis.** Sessions with <3 user messages put everything in first third, biasing degradation ratios. Consider excluding from positional analysis
 
 ## P2 — Improvements
 
