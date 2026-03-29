@@ -51,7 +51,12 @@ impl Technique for CorrectionRate {
                 .collect();
 
             let user_count = user_msgs.len();
-            let correction_count = session.correction_count();
+            // Count corrections only among user-role messages (not all messages)
+            // to keep numerator and denominator consistent.
+            let correction_count = user_msgs
+                .iter()
+                .filter(|m| m.classification == MessageClassification::HumanCorrection)
+                .count();
 
             let correction_rate = if user_count == 0 {
                 0.0
@@ -296,11 +301,11 @@ impl Technique for CorrectionRate {
                         json!(s.correction_rate),
                         json!(s.first_third_rate),
                         json!(s.last_third_rate),
-                        json!(if s.degradation_ratio.is_finite() {
-                            s.degradation_ratio
+                        if s.degradation_ratio.is_finite() {
+                            json!(s.degradation_ratio)
                         } else {
-                            -1.0 // sentinel for infinity in JSON
-                        }),
+                            json!(null)
+                        },
                         json!(s.corrections),
                         json!(s.user_messages),
                     ]
@@ -469,9 +474,6 @@ mod tests {
         let first_rate: f64 = serde_json::from_value(row[2].clone()).unwrap();
         // last_third_rate is column index 3
         let last_rate: f64 = serde_json::from_value(row[3].clone()).unwrap();
-        // degradation_ratio is column index 4
-        let degradation: f64 = serde_json::from_value(row[4].clone()).unwrap();
-
         assert!(
             first_rate == 0.0,
             "Expected first_third_rate 0.0, got {}",
@@ -482,11 +484,11 @@ mod tests {
             "Expected last_third_rate 1.0, got {}",
             last_rate
         );
-        // degradation_ratio should be -1.0 (sentinel for infinity since first=0, last>0)
+        // degradation_ratio (column index 4) should be null (infinity not representable in JSON)
         assert!(
-            degradation == -1.0,
-            "Expected degradation_ratio sentinel -1.0 for infinity, got {}",
-            degradation
+            row[4].is_null(),
+            "Expected degradation_ratio to be null for infinity, got {}",
+            row[4]
         );
     }
 

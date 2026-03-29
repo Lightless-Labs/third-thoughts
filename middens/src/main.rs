@@ -103,7 +103,7 @@ fn main() -> anyhow::Result<()> {
             eprintln!("  output: {}", output.display());
 
             // TODO: implement pipeline
-            eprintln!("\n[not yet implemented — Phase 1 in progress]");
+            eprintln!("\n[not yet implemented — requires output engine (Phase 3)]");
             Ok(())
         }
         Commands::Report { results_dir, output } => {
@@ -145,7 +145,8 @@ fn main() -> anyhow::Result<()> {
             let sessions = middens::parser::auto_detect::parse_auto(&file)?;
             let json = match format.as_str() {
                 "json" => serde_json::to_string(&sessions)?,
-                "json-pretty" | _ => serde_json::to_string_pretty(&sessions)?,
+                "json-pretty" => serde_json::to_string_pretty(&sessions)?,
+                other => anyhow::bail!("unsupported format: {other}. Use 'json' or 'json-pretty'"),
             };
             println!("{}", json);
             Ok(())

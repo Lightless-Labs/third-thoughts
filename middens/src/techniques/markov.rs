@@ -150,7 +150,7 @@ impl Technique for MarkovChain {
                 value: json!({
                     "from": from,
                     "to": to,
-                    "probability": format!("{:.4}", p),
+                    "probability": p,
                 }),
                 description: Some(format!(
                     "#{} transition: {} -> {} (p={:.4})",
@@ -166,7 +166,7 @@ impl Technique for MarkovChain {
         for (tool, rate) in &self_loops {
             findings.push(Finding {
                 label: format!("self_loop_{}", tool),
-                value: json!(format!("{:.4}", rate)),
+                value: json!(rate),
                 description: Some(format!("Self-loop rate for {}: {:.4}", tool, rate)),
             });
         }
@@ -176,7 +176,7 @@ impl Technique for MarkovChain {
         for (tool, freq) in entry_freq.iter().take(entry_limit) {
             findings.push(Finding {
                 label: format!("entry_tool_{}", tool),
-                value: json!(format!("{:.4}", freq)),
+                value: json!(freq),
                 description: Some(format!("Entry frequency for {}: {:.4}", tool, freq)),
             });
         }
@@ -185,7 +185,7 @@ impl Technique for MarkovChain {
         for (i, &pi) in stationary.iter().enumerate() {
             findings.push(Finding {
                 label: format!("stationary_{}", tools[i]),
-                value: json!(format!("{:.6}", pi)),
+                value: json!(pi),
                 description: Some(format!(
                     "Stationary probability for {}: {:.6}",
                     tools[i], pi
@@ -422,7 +422,7 @@ mod tests {
             .iter()
             .find(|f| f.label == "self_loop_Bash")
             .expect("self_loop_Bash finding missing");
-        assert_eq!(self_loop.value, json!("1.0000"));
+        assert_eq!(self_loop.value, json!(1.0));
     }
 
     #[test]
@@ -466,13 +466,7 @@ mod tests {
             .findings
             .iter()
             .filter(|f| f.label.starts_with("stationary_"))
-            .map(|f| {
-                f.value
-                    .as_str()
-                    .unwrap()
-                    .parse::<f64>()
-                    .unwrap()
-            })
+            .map(|f| f.value.as_f64().unwrap())
             .sum();
 
         assert!(
