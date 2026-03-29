@@ -112,18 +112,46 @@ fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Commands::ListTechniques { essential } => {
-            eprintln!("middens list-techniques (essential={})", essential);
-            eprintln!("[not yet implemented]");
+            let all = middens::techniques::all_techniques();
+            let techniques: Vec<_> = if essential {
+                all.into_iter().filter(|t| t.is_essential()).collect()
+            } else {
+                all
+            };
+
+            println!(
+                "{:<30} {:<10} {:<8} {}",
+                "NAME", "ESSENTIAL", "PYTHON", "DESCRIPTION"
+            );
+            println!("{}", "-".repeat(80));
+
+            if techniques.is_empty() {
+                println!("No techniques registered yet.");
+            } else {
+                for t in &techniques {
+                    println!(
+                        "{:<30} {:<10} {:<8} {}",
+                        t.name(),
+                        if t.is_essential() { "yes" } else { "no" },
+                        if t.requires_python() { "yes" } else { "no" },
+                        t.description(),
+                    );
+                }
+            }
+
             Ok(())
         }
         Commands::Parse { file, format } => {
-            eprintln!("middens parse: {} (format={})", file.display(), format);
-            eprintln!("[not yet implemented]");
+            let sessions = middens::parser::auto_detect::parse_auto(&file)?;
+            let json = match format.as_str() {
+                "json" => serde_json::to_string(&sessions)?,
+                "json-pretty" | _ => serde_json::to_string_pretty(&sessions)?,
+            };
+            println!("{}", json);
             Ok(())
         }
         Commands::Freeze { path, output } => {
-            eprintln!("middens freeze: {} -> {}", path.display(), output.display());
-            eprintln!("[not yet implemented]");
+            middens::corpus::manifest::create_manifest(&path, &output)?;
             Ok(())
         }
         Commands::Fingerprint { path } => {

@@ -1,5 +1,11 @@
 //! Analytical techniques — both Rust-native and Python-bridged.
 
+pub mod burstiness;
+pub mod correction_rate;
+pub mod diversity;
+pub mod entropy;
+pub mod markov;
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -59,4 +65,30 @@ pub trait Technique {
 
     /// Run the technique on the given sessions.
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult>;
+}
+
+/// All registered techniques.
+pub fn all_techniques() -> Vec<Box<dyn Technique>> {
+    vec![
+        Box::new(burstiness::Burstiness),
+        Box::new(correction_rate::CorrectionRate),
+        Box::new(diversity::Diversity),
+        Box::new(entropy::EntropyRate),
+        Box::new(markov::MarkovChain),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_techniques_returns_without_error() {
+        let techniques = all_techniques();
+        assert!(!techniques.is_empty(), "expected at least one technique registered");
+        assert!(
+            techniques.iter().any(|t| t.name() == "entropy"),
+            "expected entropy technique to be registered"
+        );
+    }
 }
