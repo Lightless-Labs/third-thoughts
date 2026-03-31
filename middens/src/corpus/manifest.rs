@@ -81,7 +81,7 @@ pub fn create_manifest(path: &Path, output: &Path) -> Result<()> {
 }
 
 /// Compute the SHA-256 hex digest of a file.
-fn hash_file(path: &Path) -> Result<String> {
+pub fn hash_file(path: &Path) -> Result<String> {
     let mut file = fs::File::open(path)
         .with_context(|| format!("opening {} for hashing", path.display()))?;
     let mut hasher = Sha256::new();
@@ -109,42 +109,5 @@ fn guess_tool_from_path(path: &Path) -> SourceTool {
         SourceTool::OpenClaw
     } else {
         SourceTool::Unknown
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use tempfile::TempDir;
-
-    #[test]
-    fn create_manifest_records_files() {
-        let tmp = TempDir::new().unwrap();
-        let corpus = tmp.path().join("corpus");
-        fs::create_dir_all(&corpus).unwrap();
-        fs::write(corpus.join("session.jsonl"), r#"{"hello":"world"}"#).unwrap();
-        fs::write(corpus.join("not-session.txt"), "ignored").unwrap();
-
-        let output = tmp.path().join("manifest.json");
-        create_manifest(&corpus, &output).unwrap();
-
-        let content = fs::read_to_string(&output).unwrap();
-        let manifest: Manifest = serde_json::from_str(&content).unwrap();
-        assert_eq!(manifest.entries.len(), 1);
-        assert!(manifest.entries[0].path.ends_with("session.jsonl"));
-        assert_eq!(manifest.entries[0].size, 17);
-        assert!(!manifest.entries[0].sha256.is_empty());
-    }
-
-    #[test]
-    fn hash_is_deterministic() {
-        let tmp = TempDir::new().unwrap();
-        let file = tmp.path().join("test.jsonl");
-        fs::write(&file, "deterministic content").unwrap();
-
-        let h1 = hash_file(&file).unwrap();
-        let h2 = hash_file(&file).unwrap();
-        assert_eq!(h1, h2);
     }
 }

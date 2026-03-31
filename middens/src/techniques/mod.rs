@@ -78,17 +78,3 @@ pub fn all_techniques() -> Vec<Box<dyn Technique>> {
     ]
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn all_techniques_returns_without_error() {
-        let techniques = all_techniques();
-        assert!(!techniques.is_empty(), "expected at least one technique registered");
-        assert!(
-            techniques.iter().any(|t| t.name() == "entropy"),
-            "expected entropy technique to be registered"
-        );
-    }
-}

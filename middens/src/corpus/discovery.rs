@@ -103,31 +103,3 @@ fn home_dir() -> Result<PathBuf> {
             )
         })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use tempfile::TempDir;
-
-    #[test]
-    fn discover_finds_jsonl_files() {
-        let tmp = TempDir::new().unwrap();
-        let sub = tmp.path().join("nested").join("deep");
-        fs::create_dir_all(&sub).unwrap();
-        fs::write(tmp.path().join("a.jsonl"), "{}").unwrap();
-        fs::write(sub.join("b.jsonl"), "{}").unwrap();
-        fs::write(sub.join("c.txt"), "not a jsonl").unwrap();
-
-        let found = discover_sessions(Some(tmp.path())).unwrap();
-        assert_eq!(found.len(), 2);
-        assert!(found.iter().all(|p| p.extension().unwrap() == "jsonl"));
-    }
-
-    #[test]
-    fn discover_missing_dir_returns_empty() {
-        let result = discover_sessions(Some(Path::new("/tmp/nonexistent-middens-test-dir")));
-        assert!(result.is_ok());
-        assert!(result.unwrap().is_empty());
-    }
-}
