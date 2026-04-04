@@ -1,9 +1,10 @@
-pub mod parser;
-pub mod classifier;
-pub mod fingerprint;
-pub mod techniques;
 pub mod bridge;
+pub mod classifier;
 pub mod corpus;
+pub mod fingerprint;
 pub mod output;
+pub mod parser;
+pub mod pipeline;
 pub mod report;
 pub mod session;
+pub mod techniques;

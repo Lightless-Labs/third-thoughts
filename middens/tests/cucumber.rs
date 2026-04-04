@@ -1,19 +1,27 @@
 mod steps;
 
-use cucumber::{given, then, World};
+use cucumber::{World, given, then};
 use steps::world::MiddensWorld;
 
 // Import all step modules so the cucumber proc macros register their steps.
 #[allow(unused_imports)]
-use steps::parser;
-#[allow(unused_imports)]
 use steps::classifier;
+#[allow(unused_imports)]
+use steps::cli;
 #[allow(unused_imports)]
 use steps::corpus;
 #[allow(unused_imports)]
+use steps::output;
+#[allow(unused_imports)]
+use steps::parser;
+#[allow(unused_imports)]
+use steps::pipeline;
+#[allow(unused_imports)]
+use steps::split;
+#[allow(unused_imports)]
 use steps::techniques;
 #[allow(unused_imports)]
-use steps::cli;
+use steps::thinking_divergence;
 
 // Smoke test steps
 #[given("the test harness is initialized")]

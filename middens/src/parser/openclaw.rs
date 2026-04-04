@@ -97,9 +97,7 @@ enum OpenClawContentBlock {
         text_signature: Option<String>,
     },
     #[serde(rename = "thinking")]
-    Thinking {
-        thinking: String,
-    },
+    Thinking { thinking: String },
     #[serde(rename = "tool_use")]
     ToolUse {
         #[serde(default)]
@@ -150,7 +148,9 @@ fn extract_sender_info(text: &str) -> Option<serde_json::Value> {
     let idx = text.find(marker)?;
     let after = &text[idx + marker.len()..];
     // Find the JSON block between ```json and ```.
-    let json_start = after.find("```json\n").or_else(|| after.find("```json\r\n"))?;
+    let json_start = after
+        .find("```json\n")
+        .or_else(|| after.find("```json\r\n"))?;
     let json_body = &after[json_start + 8..]; // skip "```json\n"
     let json_end = json_body.find("```")?;
     let json_str = json_body[..json_end].trim();
@@ -162,7 +162,9 @@ fn extract_conversation_label(text: &str) -> Option<String> {
     let marker = "Conversation info (untrusted metadata):";
     let idx = text.find(marker)?;
     let after = &text[idx + marker.len()..];
-    let json_start = after.find("```json\n").or_else(|| after.find("```json\r\n"))?;
+    let json_start = after
+        .find("```json\n")
+        .or_else(|| after.find("```json\r\n"))?;
     let json_body = &after[json_start + 8..];
     let json_end = json_body.find("```")?;
     let json_str = json_body[..json_end].trim();
@@ -433,10 +435,9 @@ impl SessionParser for OpenClawParser {
             );
         }
         if let Some(name) = &agent_name {
-            metadata.extra.insert(
-                "agent_name".into(),
-                serde_json::Value::String(name.clone()),
-            );
+            metadata
+                .extra
+                .insert("agent_name".into(), serde_json::Value::String(name.clone()));
         }
         if let Some(label) = &conversation_label {
             metadata.extra.insert(
@@ -475,4 +476,3 @@ impl SessionParser for OpenClawParser {
         Ok(vec![session])
     }
 }
-

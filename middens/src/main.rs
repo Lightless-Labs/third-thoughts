@@ -96,17 +96,48 @@ fn main() -> anyhow::Result<()> {
             no_python,
             output,
         } => {
-            eprintln!("middens analyze: scanning {:?}", path.as_deref().unwrap_or(&PathBuf::from("(auto-discover)")));
-            eprintln!("  techniques: {}", if all { "all".to_string() } else { techniques.as_ref().map_or("essential 10".to_string(), |t| t.join(", ")) });
-            eprintln!("  split: {split}");
-            eprintln!("  python: {}", !no_python);
-            eprintln!("  output: {}", output.display());
+            use middens::pipeline::{self, PipelineConfig, TechniqueFilter};
 
-            // TODO: implement pipeline
-            eprintln!("\n[not yet implemented — requires output engine (Phase 3)]");
+            let technique_filter = if all {
+                TechniqueFilter::All
+            } else if let Some(t) = techniques {
+                TechniqueFilter::Named(t)
+            } else {
+                TechniqueFilter::Essential
+            };
+
+            let config = PipelineConfig {
+                corpus_path: path,
+                output_dir: output,
+                technique_filter,
+                no_python,
+                split,
+            };
+
+            let result = pipeline::run(config)?;
+
+            eprintln!("\nAnalysis complete:");
+            eprintln!("  sessions discovered: {}", result.sessions_discovered);
+            eprintln!("  sessions parsed: {}", result.sessions_parsed);
+            if split {
+                eprintln!("  interactive sessions: {}", result.interactive_sessions);
+                eprintln!("  subagent sessions: {}", result.subagent_sessions);
+            }
+            eprintln!("  parse errors: {}", result.parse_errors);
+            eprintln!("  techniques run: {}", result.techniques_run);
+            eprintln!("  technique errors: {}", result.technique_errors);
+            eprintln!("  results written to: {}", result.output_dir.display());
+
+            if result.sessions_parsed == 0 {
+                std::process::exit(1);
+            }
+
             Ok(())
         }
-        Commands::Report { results_dir, output } => {
+        Commands::Report {
+            results_dir,
+            output: _,
+        } => {
             eprintln!("middens report: {}", results_dir.display());
             eprintln!("[not yet implemented]");
             Ok(())

@@ -92,8 +92,23 @@ const APPROVAL_PATTERNS: &[&str] = &[
 
 /// Question starters (matched case-insensitively).
 const QUESTION_STARTERS: &[&str] = &[
-    "how", "what", "why", "when", "where", "which", "who", "can you", "could you", "would you",
-    "is there", "are there", "do you", "does it", "will it", "should i", "should we",
+    "how",
+    "what",
+    "why",
+    "when",
+    "where",
+    "which",
+    "who",
+    "can you",
+    "could you",
+    "would you",
+    "is there",
+    "are there",
+    "do you",
+    "does it",
+    "will it",
+    "should i",
+    "should we",
 ];
 
 /// Maximum message length for lexical pattern matching (Priority 3).
@@ -197,8 +212,7 @@ fn matches_any(lower: &str, patterns: &[&str]) -> bool {
             let end_pos = abs_pos + p.len();
 
             // Check leading word boundary: start of string or non-alphanumeric char.
-            let leading_ok = abs_pos == 0
-                || !lower.as_bytes()[abs_pos - 1].is_ascii_alphanumeric();
+            let leading_ok = abs_pos == 0 || !lower.as_bytes()[abs_pos - 1].is_ascii_alphanumeric();
 
             // Check trailing word boundary: end of string or non-alphanumeric char.
             // Skip if the pattern itself ends with punctuation (it's already bounded).
@@ -225,4 +239,3 @@ fn matches_any(lower: &str, patterns: &[&str]) -> bool {
 fn starts_with_any(lower: &str, prefixes: &[&str]) -> bool {
     prefixes.iter().any(|p| lower.starts_with(p))
 }
-

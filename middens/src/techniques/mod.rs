@@ -5,6 +5,7 @@ pub mod correction_rate;
 pub mod diversity;
 pub mod entropy;
 pub mod markov;
+pub mod thinking_divergence;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -75,6 +76,6 @@ pub fn all_techniques() -> Vec<Box<dyn Technique>> {
         Box::new(diversity::Diversity),
         Box::new(entropy::EntropyRate),
         Box::new(markov::MarkovChain),
+        Box::new(thinking_divergence::ThinkingDivergence),
     ]
 }
-

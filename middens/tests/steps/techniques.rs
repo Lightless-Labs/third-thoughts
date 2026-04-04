@@ -12,7 +12,7 @@ use middens::techniques::correction_rate::CorrectionRate;
 use middens::techniques::diversity::Diversity;
 use middens::techniques::entropy::EntropyRate;
 use middens::techniques::markov::MarkovChain;
-use middens::techniques::{all_techniques, Technique};
+use middens::techniques::{Technique, all_techniques};
 
 use super::world::MiddensWorld;
 
@@ -155,7 +155,9 @@ fn parse_tool_list(tools_csv: &str) -> Vec<String> {
 fn given_session_with_tools(world: &mut MiddensWorld, tools_csv: String) {
     let names = parse_tool_list(&tools_csv);
     let refs: Vec<&str> = names.iter().map(|s| s.as_str()).collect();
-    world.sessions.push(session_with_tools("test-session", &refs));
+    world
+        .sessions
+        .push(session_with_tools("test-session", &refs));
 }
 
 #[given(expr = "no sessions")]
@@ -238,7 +240,9 @@ fn given_session_with_copies_each(
     world.sessions.push(session_with_tools(&id, &refs));
 }
 
-#[given(expr = "a session {string} with {int} copies of tool {string} and {int} copy of tool {string}")]
+#[given(
+    expr = "a session {string} with {int} copies of tool {string} and {int} copy of tool {string}"
+)]
 fn given_session_with_uneven_tools(
     world: &mut MiddensWorld,
     id: String,
@@ -254,12 +258,7 @@ fn given_session_with_uneven_tools(
 }
 
 #[given(expr = "a species-area session {string} with {int} tools and {int} unique")]
-fn given_species_area_session(
-    world: &mut MiddensWorld,
-    id: String,
-    total: usize,
-    unique: usize,
-) {
+fn given_species_area_session(world: &mut MiddensWorld, id: String, total: usize, unique: usize) {
     assert!(unique > 0, "unique must be > 0, got {unique}");
     assert!(
         unique <= total,
@@ -318,7 +317,9 @@ fn given_session_periodic_and_clustered(
 
 // -- Correction rate session builders ---------------------------------------
 
-#[given(expr = "a session {string} in project {string} with {int} corrections and {int} directives")]
+#[given(
+    expr = "a session {string} in project {string} with {int} corrections and {int} directives"
+)]
 fn given_correction_session(
     world: &mut MiddensWorld,
     id: String,
@@ -328,9 +329,11 @@ fn given_correction_session(
 ) {
     let mut classifications = vec![MessageClassification::HumanCorrection; corrections];
     classifications.extend(vec![MessageClassification::HumanDirective; directives]);
-    world
-        .sessions
-        .push(session_with_classifications(&id, &classifications, Some(&project)));
+    world.sessions.push(session_with_classifications(
+        &id,
+        &classifications,
+        Some(&project),
+    ));
 }
 
 #[given(expr = "a session {string} with {int} directives then {int} corrections")]
@@ -368,7 +371,6 @@ fn given_session_no_project(world: &mut MiddensWorld, id: String, directives: us
         .push(session_with_classifications(&id, &classifications, None));
 }
 
-
 // ===========================================================================
 //  WHEN steps
 // ===========================================================================
@@ -390,7 +392,6 @@ fn when_run_entropy_on_session(world: &mut MiddensWorld) {
     let technique = EntropyRate;
     world.technique_result = Some(technique.run(&world.sessions).unwrap());
 }
-
 
 #[when("I run the diversity technique")]
 fn when_run_diversity(world: &mut MiddensWorld) {
@@ -442,7 +443,10 @@ fn when_list_techniques(world: &mut MiddensWorld) {
 
 #[then(expr = "finding {string} should be integer {int}")]
 fn then_finding_integer(world: &mut MiddensWorld, label: String, expected: i64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let finding = result
         .findings
         .iter()
@@ -460,7 +464,10 @@ fn then_finding_integer(world: &mut MiddensWorld, label: String, expected: i64) 
 
 #[then(expr = "finding {string} should be float {float}")]
 fn then_finding_float(world: &mut MiddensWorld, label: String, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let finding = result
         .findings
         .iter()
@@ -478,7 +485,10 @@ fn then_finding_float(world: &mut MiddensWorld, label: String, expected: f64) {
 
 #[then(expr = "finding {string} should be approximately {float}")]
 fn then_finding_approximately(world: &mut MiddensWorld, label: String, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let finding = result
         .findings
         .iter()
@@ -497,7 +507,10 @@ fn then_finding_approximately(world: &mut MiddensWorld, label: String, expected:
 
 #[then(expr = "finding {string} should be a negative number")]
 fn then_finding_negative(world: &mut MiddensWorld, label: String) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let finding = result
         .findings
         .iter()
@@ -516,7 +529,10 @@ fn then_finding_negative(world: &mut MiddensWorld, label: String) {
 
 #[then(expr = "the technique result should have a table {string}")]
 fn then_result_has_table(world: &mut MiddensWorld, table_name: String) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     assert!(
         result.tables.iter().any(|t| t.name == table_name),
         "table '{}' not found in result",
@@ -526,7 +542,10 @@ fn then_result_has_table(world: &mut MiddensWorld, table_name: String) {
 
 #[then(expr = "the technique result should have {int} tables")]
 fn then_result_table_count(world: &mut MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     assert_eq!(
         result.tables.len(),
         expected,
@@ -538,7 +557,10 @@ fn then_result_table_count(world: &mut MiddensWorld, expected: usize) {
 
 #[then(expr = "the technique result should have a table {string} with {int} rows")]
 fn then_result_table_with_rows(world: &mut MiddensWorld, table_name: String, expected_rows: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -558,7 +580,10 @@ fn then_result_table_with_rows(world: &mut MiddensWorld, table_name: String, exp
 
 #[then(expr = "the transition matrix should have {int} columns")]
 fn then_transition_matrix_columns(world: &mut MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -580,7 +605,10 @@ fn then_transition_value(
     to_tool: String,
     expected: f64,
 ) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -614,7 +642,10 @@ fn then_transition_value(
 
 #[then("the stationary distribution should sum to approximately 1.0")]
 fn then_stationary_sums_to_one(world: &mut MiddensWorld) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let stationary_sum: f64 = result
         .findings
         .iter()
@@ -632,7 +663,10 @@ fn then_stationary_sums_to_one(world: &mut MiddensWorld) {
 
 #[then(expr = "the session entropy mean should be less than {float}")]
 fn then_session_entropy_mean_less_than(world: &mut MiddensWorld, threshold: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     // Get mean_entropy from the per_session_entropy table (first row).
     let table = result
         .tables
@@ -657,7 +691,10 @@ fn then_session_entropy_mean_less_than(world: &mut MiddensWorld, threshold: f64)
 
 #[then(expr = "the session entropy mean should be greater than {float}")]
 fn then_session_entropy_mean_greater_than(world: &mut MiddensWorld, threshold: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -680,7 +717,10 @@ fn then_session_entropy_mean_greater_than(world: &mut MiddensWorld, threshold: f
 
 #[then("the session entropy result should be none")]
 fn then_session_entropy_result_none(world: &mut MiddensWorld) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let analyzed = result
         .findings
         .iter()
@@ -695,7 +735,10 @@ fn then_session_entropy_result_none(world: &mut MiddensWorld) {
 
 #[then(expr = "the session entropy anomaly count should be {int}")]
 fn then_session_entropy_anomaly_count(world: &mut MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -706,7 +749,9 @@ fn then_session_entropy_anomaly_count(world: &mut MiddensWorld, expected: usize)
         "per_session_entropy table has no rows"
     );
     // num_anomalies is column index 3
-    let anomalies = table.rows[0][3].as_u64().expect("num_anomalies is not a number") as usize;
+    let anomalies = table.rows[0][3]
+        .as_u64()
+        .expect("num_anomalies is not a number") as usize;
     assert_eq!(
         anomalies, expected,
         "expected {} anomalies, got {}",
@@ -731,7 +776,10 @@ fn then_numeric_result_less_than(world: &mut MiddensWorld, threshold: f64) {
 
 #[then(expr = "the session richness should be {int}")]
 fn then_session_richness(world: &mut MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -744,7 +792,10 @@ fn then_session_richness(world: &mut MiddensWorld, expected: usize) {
 
 #[then(expr = "the session abundance should be {int}")]
 fn then_session_abundance(world: &mut MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -757,7 +808,10 @@ fn then_session_abundance(world: &mut MiddensWorld, expected: usize) {
 
 #[then(expr = "the session shannon should be approximately {float}")]
 fn then_session_shannon_approx(world: &mut MiddensWorld, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -775,7 +829,10 @@ fn then_session_shannon_approx(world: &mut MiddensWorld, expected: f64) {
 
 #[then("the session shannon should be approximately ln4")]
 fn then_session_shannon_ln4(world: &mut MiddensWorld) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -793,7 +850,10 @@ fn then_session_shannon_ln4(world: &mut MiddensWorld) {
 
 #[then(expr = "the session simpson should be approximately {float}")]
 fn then_session_simpson_approx(world: &mut MiddensWorld, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -811,7 +871,10 @@ fn then_session_simpson_approx(world: &mut MiddensWorld, expected: f64) {
 
 #[then(expr = "the session evenness should be approximately {float}")]
 fn then_session_evenness_approx(world: &mut MiddensWorld, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -831,7 +894,10 @@ fn then_session_evenness_approx(world: &mut MiddensWorld, expected: f64) {
 
 #[then(expr = "the species-area z should be approximately {float} within {float}")]
 fn then_species_area_z(world: &mut MiddensWorld, expected: f64, tolerance: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let finding = result
         .findings
         .iter()
@@ -849,7 +915,10 @@ fn then_species_area_z(world: &mut MiddensWorld, expected: f64, tolerance: f64) 
 
 #[then(expr = "the species-area r-squared should be greater than {float}")]
 fn then_species_area_r_squared(world: &mut MiddensWorld, threshold: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let finding = result
         .findings
         .iter()
@@ -868,13 +937,19 @@ fn then_species_area_r_squared(world: &mut MiddensWorld, threshold: f64) {
 
 #[then(expr = "the technique result name should be {string}")]
 fn then_result_name(world: &mut MiddensWorld, expected: String) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     assert_eq!(result.name, expected);
 }
 
 #[then(expr = "the technique result should have findings {string}")]
 fn then_result_has_findings(world: &mut MiddensWorld, labels_csv: String) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let expected_labels: Vec<&str> = labels_csv.split(',').collect();
     let actual_labels: Vec<&str> = result.findings.iter().map(|f| f.label.as_str()).collect();
     for label in &expected_labels {
@@ -893,7 +968,10 @@ fn find_burstiness_row<'a>(
     world: &'a MiddensWorld,
     tool_name: &str,
 ) -> Option<&'a Vec<serde_json::Value>> {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -937,12 +1015,7 @@ fn then_tool_burstiness_greater_than(world: &mut MiddensWorld, tool: String, thr
 }
 
 #[then(expr = "tool {string} should have burstiness B between {float} and {float}")]
-fn then_tool_burstiness_between(
-    world: &mut MiddensWorld,
-    tool: String,
-    low: f64,
-    high: f64,
-) {
+fn then_tool_burstiness_between(world: &mut MiddensWorld, tool: String, low: f64, high: f64) {
     let row = find_burstiness_row(world, &tool)
         .unwrap_or_else(|| panic!("tool '{}' not found in burstiness table", tool));
     let b = row[1].as_f64().unwrap();
@@ -1005,7 +1078,10 @@ fn then_tool_not_in_table(world: &mut MiddensWorld, tool: String) {
 // -- Correction rate assertions ---------------------------------------------
 
 fn assert_per_session_table_row_count(world: &MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1021,7 +1097,10 @@ fn then_per_session_table_rows(world: &mut MiddensWorld, expected: usize) {
 
 #[then(expr = "the per-project table should have {int} rows")]
 fn then_per_project_table_rows(world: &mut MiddensWorld, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1032,7 +1111,10 @@ fn then_per_project_table_rows(world: &mut MiddensWorld, expected: usize) {
 
 #[then(expr = "per-session row {int} should have correction_rate approximately {float}")]
 fn then_per_session_correction_rate(world: &mut MiddensWorld, row_idx: usize, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1049,7 +1131,10 @@ fn then_per_session_correction_rate(world: &mut MiddensWorld, row_idx: usize, ex
 
 #[then(expr = "per-session row {int} should have {int} corrections")]
 fn then_per_session_corrections(world: &mut MiddensWorld, row_idx: usize, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1061,7 +1146,10 @@ fn then_per_session_corrections(world: &mut MiddensWorld, row_idx: usize, expect
 
 #[then(expr = "per-session row {int} should have {int} user messages")]
 fn then_per_session_user_messages(world: &mut MiddensWorld, row_idx: usize, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1073,7 +1161,10 @@ fn then_per_session_user_messages(world: &mut MiddensWorld, row_idx: usize, expe
 
 #[then(expr = "per-session row {int} should have first_third_rate {float}")]
 fn then_per_session_first_third_rate(world: &mut MiddensWorld, row_idx: usize, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1090,7 +1181,10 @@ fn then_per_session_first_third_rate(world: &mut MiddensWorld, row_idx: usize, e
 
 #[then(expr = "per-session row {int} should have last_third_rate {float}")]
 fn then_per_session_last_third_rate(world: &mut MiddensWorld, row_idx: usize, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1107,7 +1201,10 @@ fn then_per_session_last_third_rate(world: &mut MiddensWorld, row_idx: usize, ex
 
 #[then(expr = "per-session row {int} should have null degradation_ratio")]
 fn then_per_session_null_degradation(world: &mut MiddensWorld, row_idx: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1122,7 +1219,10 @@ fn then_per_session_null_degradation(world: &mut MiddensWorld, row_idx: usize) {
 
 #[then(expr = "per-session row {int} should have degradation_ratio {float}")]
 fn then_per_session_degradation_ratio(world: &mut MiddensWorld, row_idx: usize, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1139,7 +1239,10 @@ fn then_per_session_degradation_ratio(world: &mut MiddensWorld, row_idx: usize, 
 
 #[then(expr = "the per-project table should have {int} row for project {string}")]
 fn then_per_project_row_for(world: &mut MiddensWorld, expected_rows: usize, project: String) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1162,7 +1265,10 @@ fn then_per_project_row_for(world: &mut MiddensWorld, expected_rows: usize, proj
 
 #[then(expr = "the per-project row for {string} should have correction_rate approximately {float}")]
 fn then_per_project_correction_rate(world: &mut MiddensWorld, project: String, expected: f64) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1184,12 +1290,11 @@ fn then_per_project_correction_rate(world: &mut MiddensWorld, project: String, e
 }
 
 #[then(expr = "the per-project row for {string} should have {int} total corrections")]
-fn then_per_project_total_corrections(
-    world: &mut MiddensWorld,
-    project: String,
-    expected: usize,
-) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+fn then_per_project_total_corrections(world: &mut MiddensWorld, project: String, expected: usize) {
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1210,7 +1315,10 @@ fn then_per_project_total_user_messages(
     project: String,
     expected: usize,
 ) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()
@@ -1227,7 +1335,10 @@ fn then_per_project_total_user_messages(
 
 #[then(expr = "the per-project row for {string} should have {int} sessions")]
 fn then_per_project_session_count(world: &mut MiddensWorld, project: String, expected: usize) {
-    let result = world.technique_result.as_ref().expect("no technique result");
+    let result = world
+        .technique_result
+        .as_ref()
+        .expect("no technique result");
     let table = result
         .tables
         .iter()

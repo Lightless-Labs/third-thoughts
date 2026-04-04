@@ -64,17 +64,11 @@ struct ResponseItemPayload {
 #[serde(tag = "type")]
 enum RawContentBlock {
     #[serde(rename = "input_text")]
-    InputText {
-        text: String,
-    },
+    InputText { text: String },
     #[serde(rename = "output_text")]
-    OutputText {
-        text: String,
-    },
+    OutputText { text: String },
     #[serde(rename = "text")]
-    Text {
-        text: String,
-    },
+    Text { text: String },
     #[serde(rename = "thinking")]
     Thinking {
         thinking: Option<String>,
@@ -169,7 +163,10 @@ impl SessionParser for CodexParser {
                 Ok(_) => continue,
                 Err(e) => {
                     // Skip lines that can't be read (encoding issues etc.)
-                    eprintln!("warning: skipping unreadable line in {}: {e}", path.display());
+                    eprintln!(
+                        "warning: skipping unreadable line in {}: {e}",
+                        path.display()
+                    );
                     continue;
                 }
             };
@@ -190,9 +187,10 @@ impl SessionParser for CodexParser {
                         environment.tool_version = meta.cli_version;
 
                         if let Some(provider) = meta.model_provider {
-                            metadata
-                                .extra
-                                .insert("model_provider".into(), serde_json::Value::String(provider));
+                            metadata.extra.insert(
+                                "model_provider".into(),
+                                serde_json::Value::String(provider),
+                            );
                         }
 
                         if let Some(git) = meta.git {
@@ -232,9 +230,10 @@ impl SessionParser for CodexParser {
                                 .insert("effort".into(), serde_json::Value::String(effort));
                         }
                         if let Some(personality) = ctx.personality {
-                            metadata
-                                .extra
-                                .insert("personality".into(), serde_json::Value::String(personality));
+                            metadata.extra.insert(
+                                "personality".into(),
+                                serde_json::Value::String(personality),
+                            );
                         }
                         if let Some(sandbox) = ctx.sandbox_policy {
                             // Extract sandbox type.
@@ -278,9 +277,7 @@ impl SessionParser for CodexParser {
                                     | RawContentBlock::OutputText { text }
                                     | RawContentBlock::Text { text } => {
                                         text_parts.push(text.clone());
-                                        raw_content.push(ContentBlock::Text {
-                                            text: text.clone(),
-                                        });
+                                        raw_content.push(ContentBlock::Text { text: text.clone() });
                                     }
                                     RawContentBlock::Thinking { thinking, .. } => {
                                         if let Some(t) = thinking {
@@ -394,4 +391,3 @@ impl SessionParser for CodexParser {
         Ok(vec![session])
     }
 }
-

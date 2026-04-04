@@ -1,13 +1,20 @@
 # Middens Code Review Triage — P2s and P3s
 
-From CodeRabbit review of Phase 1 (2026-03-21) and Phase 2 review (2026-03-29).
+From CodeRabbit review of Phase 1 (2026-03-21), Phase 2 review (2026-03-29), and PR #2 review (2026-04-01).
+
+## P2 — PR #2 Review (2026-04-01)
+
+- [ ] **P2-25: ASCII table byte vs char width.** `render_ascii_table` uses `.len()` (byte length) but truncation uses `.chars().count()`. Misaligns tables with non-ASCII content. Use `.chars().count()` consistently. (Copilot + Gemini Code Assist)
+- [ ] **P2-26: Test epsilon hack for float formatting.** Step helper mutates integer-like floats by adding epsilon to force formatting path. Less faithful to real TechniqueResult data. Consider fixing format_value to handle 0.0 deterministically. (Copilot)
+- [ ] **P2-27: ASCII table double format_value call.** Column widths computed by calling format_value for every cell, then called again during rendering. Cache formatted strings. (Gemini Code Assist)
+- [ ] **P2-28: Bar chart negative max.** render_ascii_bar doesn't validate negative max values. Add guard clause. (Gemini Code Assist)
 
 ## P1 — Phase 2 Review (2026-03-29)
 
-- [ ] **P1-3: Burstiness cross-session contamination.** Inter-event intervals computed on concatenated sessions, creating artificial intervals at session boundaries. Should compute per-session and aggregate
-- [ ] **P1-4: Population variance vs sample variance.** Burstiness and entropy use population variance (÷n) instead of sample variance (÷n-1). Internally consistent but deviates from statistical convention
-- [ ] **P1-5: Entropy missing sessions_skipped diagnostic.** Sessions shorter than window_size are silently dropped. Add sessions_skipped finding alongside sessions_analyzed
-- [ ] **P1-6: Short session positional analysis.** Sessions with <3 user messages put everything in first third, biasing degradation ratios. Consider excluding from positional analysis
+- [x] **P1-3: Burstiness cross-session contamination.** Fixed: intervals computed per-session, then aggregated per tool type
+- [x] **P1-4: Population variance vs sample variance.** Fixed: Bessel's correction (n-1) in both burstiness and entropy
+- [x] **P1-5: Entropy missing sessions_skipped diagnostic.** Fixed: sessions_skipped finding added
+- [x] **P1-6: Short session positional analysis.** Fixed: sessions with <3 user messages excluded from positional breakdown
 
 ## P2 — Improvements
 

@@ -50,4 +50,3 @@ pub fn classify_session(session: &Session) -> SessionType {
         SessionType::Unknown
     }
 }
-

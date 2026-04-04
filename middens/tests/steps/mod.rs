@@ -1,6 +1,10 @@
 pub mod classifier;
 pub mod cli;
 pub mod corpus;
+pub mod output;
 pub mod parser;
+pub mod pipeline;
+pub mod split;
 pub mod techniques;
+pub mod thinking_divergence;
 pub mod world;

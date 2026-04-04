@@ -68,8 +68,7 @@ pub fn create_manifest(path: &Path, output: &Path) -> Result<()> {
     };
 
     let json = serde_json::to_string_pretty(&manifest)?;
-    fs::write(output, json)
-        .with_context(|| format!("writing manifest to {}", output.display()))?;
+    fs::write(output, json).with_context(|| format!("writing manifest to {}", output.display()))?;
 
     eprintln!(
         "middens: manifest written to {} ({} entries)",
@@ -82,8 +81,8 @@ pub fn create_manifest(path: &Path, output: &Path) -> Result<()> {
 
 /// Compute the SHA-256 hex digest of a file.
 pub fn hash_file(path: &Path) -> Result<String> {
-    let mut file = fs::File::open(path)
-        .with_context(|| format!("opening {} for hashing", path.display()))?;
+    let mut file =
+        fs::File::open(path).with_context(|| format!("opening {} for hashing", path.display()))?;
     let mut hasher = Sha256::new();
     let mut buf = [0u8; 8192];
     loop {

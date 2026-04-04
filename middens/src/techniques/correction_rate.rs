@@ -156,9 +156,7 @@ impl Technique for CorrectionRate {
         let mut project_map: std::collections::BTreeMap<String, (usize, usize, usize)> =
             std::collections::BTreeMap::new();
         for sm in &per_session {
-            let entry = project_map
-                .entry(sm.project.clone())
-                .or_insert((0, 0, 0));
+            let entry = project_map.entry(sm.project.clone()).or_insert((0, 0, 0));
             entry.0 += sm.corrections;
             entry.1 += sm.user_messages;
             entry.2 += 1;
@@ -244,10 +242,7 @@ impl Technique for CorrectionRate {
             },
             Finding {
                 label: "sessions_with_corrections".to_string(),
-                value: json!(format!(
-                    "{}/{}",
-                    sessions_with_corrections, total_sessions
-                )),
+                value: json!(format!("{}/{}", sessions_with_corrections, total_sessions)),
                 description: Some("Sessions containing at least one correction".to_string()),
             },
             Finding {
@@ -275,9 +270,7 @@ impl Technique for CorrectionRate {
             Finding {
                 label: "last_third_rate".to_string(),
                 value: json!(mean_last_third),
-                description: Some(
-                    "Mean correction rate in the last third of sessions".to_string(),
-                ),
+                description: Some("Mean correction rate in the last third of sessions".to_string()),
             },
         ];
 
@@ -361,4 +354,3 @@ impl Technique for CorrectionRate {
         })
     }
 }
-

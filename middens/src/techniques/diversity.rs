@@ -146,10 +146,8 @@ impl Technique for Diversity {
     }
 
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult> {
-        let metrics: Vec<SessionMetrics> = sessions
-            .iter()
-            .map(|s| Self::compute_metrics(s))
-            .collect();
+        let metrics: Vec<SessionMetrics> =
+            sessions.iter().map(|s| Self::compute_metrics(s)).collect();
 
         let analyzed = metrics.len();
 
@@ -216,9 +214,7 @@ impl Technique for Diversity {
             Finding {
                 label: "species_area_z".to_string(),
                 value: json!(species_area_z),
-                description: Some(
-                    "Species-area exponent z from S = c * A^z fit".to_string(),
-                ),
+                description: Some("Species-area exponent z from S = c * A^z fit".to_string()),
             },
             Finding {
                 label: "species_area_r_squared".to_string(),
@@ -300,4 +296,3 @@ impl Technique for Diversity {
         })
     }
 }
-

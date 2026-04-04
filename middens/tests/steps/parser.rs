@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use cucumber::{gherkin::Step, given, then, when};
 use tempfile::TempDir;
 
+use middens::parser::SessionParser;
 use middens::parser::auto_detect::{detect_format, parse_auto};
 use middens::parser::claude_code::ClaudeCodeParser;
 use middens::parser::codex::CodexParser;
 use middens::parser::openclaw::OpenClawParser;
-use middens::parser::SessionParser;
 use middens::session::{MessageRole, SourceTool};
 
 use super::world::MiddensWorld;
@@ -376,9 +376,7 @@ fn then_env_permission_mode(world: &mut MiddensWorld, expected: String) {
 
 #[then(expr = "the detected format should be {string}")]
 fn then_detected_format(world: &mut MiddensWorld, expected: String) {
-    let format = world
-        .detected_format
-        .expect("detected_format not set");
+    let format = world.detected_format.expect("detected_format not set");
     let actual = format!("{:?}", format);
     assert_eq!(actual, expected, "detected format mismatch");
 }

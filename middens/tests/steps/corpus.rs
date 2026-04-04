@@ -5,7 +5,7 @@ use cucumber::{given, then, when};
 use tempfile::TempDir;
 
 use middens::corpus::discovery::discover_sessions;
-use middens::corpus::manifest::{create_manifest, hash_file, Manifest};
+use middens::corpus::manifest::{Manifest, create_manifest, hash_file};
 
 use super::world::MiddensWorld;
 
@@ -119,7 +119,8 @@ fn all_files_have_extension(world: &mut MiddensWorld, ext: String) {
             .and_then(|e| e.to_str())
             .unwrap_or("<none>");
         assert_eq!(
-            actual, ext_no_dot,
+            actual,
+            ext_no_dot,
             "file {} has extension {:?}, expected {}",
             path.display(),
             actual,
@@ -163,7 +164,8 @@ fn manifest_entry_size_gt(world: &mut MiddensWorld, min: u64) {
     assert!(
         manifest.entries[0].size > min,
         "expected size > {}, got {}",
-        min, manifest.entries[0].size
+        min,
+        manifest.entries[0].size
     );
 }
 

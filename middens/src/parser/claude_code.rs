@@ -299,9 +299,7 @@ impl SessionParser for ClaudeCodeParser {
         }
 
         // Determine session type.
-        let is_in_subagents_dir = path
-            .components()
-            .any(|c| c.as_os_str() == "subagents");
+        let is_in_subagents_dir = path.components().any(|c| c.as_os_str() == "subagents");
 
         let session_type = if is_in_subagents_dir || has_agent_id || has_sidechain {
             SessionType::Subagent
@@ -372,10 +370,7 @@ fn parse_content(
         }
         Some(RawContent::Blocks(blocks)) => {
             for block in blocks {
-                let block_type = block
-                    .get("type")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("");
+                let block_type = block.get("type").and_then(|v| v.as_str()).unwrap_or("");
 
                 match block_type {
                     "text" => {
@@ -550,4 +545,3 @@ fn scan_system_reminder_content(text: &str, env: &mut EnvironmentFingerprint) {
         }
     }
 }
-

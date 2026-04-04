@@ -256,4 +256,3 @@ impl Technique for EntropyRate {
         })
     }
 }
-

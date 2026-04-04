@@ -227,10 +227,7 @@ impl Technique for MarkovChain {
                 .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(t, _)| t.as_str())
                 .unwrap_or("?"),
-            self_loops
-                .iter()
-                .map(|(_, r)| *r)
-                .fold(0.0f64, f64::max),
+            self_loops.iter().map(|(_, r)| *r).fold(0.0f64, f64::max),
         );
 
         Ok(TechniqueResult {
@@ -278,4 +275,3 @@ fn compute_stationary(prob: &[Vec<f64>], n: usize) -> Vec<f64> {
 
     pi
 }
-

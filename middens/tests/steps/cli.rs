@@ -55,11 +55,7 @@ fn when_parse_empty_file(world: &mut MiddensWorld) {
 }
 
 #[when(expr = "I run middens parse on the {string} fixture with format {string}")]
-fn when_parse_fixture_with_format(
-    world: &mut MiddensWorld,
-    fixture_name: String,
-    format: String,
-) {
+fn when_parse_fixture_with_format(world: &mut MiddensWorld, fixture_name: String, format: String) {
     let fixture_path = fixtures_dir().join(&fixture_name);
     let path_str = fixture_path.to_string_lossy().to_string();
     run_middens(world, &["parse", &path_str, "--format", &format]);
@@ -110,15 +106,7 @@ fn when_list_techniques_essential(world: &mut MiddensWorld) {
 // Then steps — exit code
 // ---------------------------------------------------------------------------
 
-#[then("the exit code should be 0")]
-fn then_exit_code_zero(world: &mut MiddensWorld) {
-    let code = world.cli_exit_code.expect("process had no exit code");
-    assert_eq!(
-        code, 0,
-        "Expected exit code 0, got {}.\nstdout: {}\nstderr: {}",
-        code, world.cli_output, world.cli_stderr
-    );
-}
+// exit code step moved to pipeline.rs as parameterized version
 
 #[then("the exit code should not be 0")]
 fn then_exit_code_nonzero(world: &mut MiddensWorld) {

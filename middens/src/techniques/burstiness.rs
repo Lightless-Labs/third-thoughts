@@ -34,10 +34,8 @@ impl Technique for Burstiness {
 
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult> {
         // Collect all tool sequences across all sessions into one combined sequence.
-        let combined_sequence: Vec<&str> = sessions
-            .iter()
-            .flat_map(|s| s.tool_sequence())
-            .collect();
+        let combined_sequence: Vec<&str> =
+            sessions.iter().flat_map(|s| s.tool_sequence()).collect();
 
         if combined_sequence.is_empty() {
             return Ok(TechniqueResult {
@@ -87,10 +85,7 @@ impl Technique for Burstiness {
             }
 
             // Compute inter-event intervals.
-            let intervals: Vec<f64> = pos
-                .windows(2)
-                .map(|w| (w[1] - w[0] - 1) as f64)
-                .collect();
+            let intervals: Vec<f64> = pos.windows(2).map(|w| (w[1] - w[0] - 1) as f64).collect();
 
             let n = intervals.len() as f64;
             let mu = intervals.iter().sum::<f64>() / n;
@@ -156,20 +151,16 @@ impl Technique for Burstiness {
         };
 
         // Find burstiest and most periodic tools.
-        let burstiest = tool_metrics
-            .iter()
-            .max_by(|a, b| {
-                a.burstiness_b
-                    .partial_cmp(&b.burstiness_b)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
-        let most_periodic = tool_metrics
-            .iter()
-            .min_by(|a, b| {
-                a.burstiness_b
-                    .partial_cmp(&b.burstiness_b)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
+        let burstiest = tool_metrics.iter().max_by(|a, b| {
+            a.burstiness_b
+                .partial_cmp(&b.burstiness_b)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        let most_periodic = tool_metrics.iter().min_by(|a, b| {
+            a.burstiness_b
+                .partial_cmp(&b.burstiness_b)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Build findings.
         let mut findings = vec![
@@ -322,4 +313,3 @@ fn pearson_consecutive(intervals: &[f64]) -> f64 {
 fn round4(v: f64) -> f64 {
     (v * 10000.0).round() / 10000.0
 }
-

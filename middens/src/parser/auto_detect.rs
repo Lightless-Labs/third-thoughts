@@ -46,9 +46,10 @@ pub fn parse_auto(path: &Path) -> Result<Vec<Session>> {
     if let Some(tool) = detect_format(path) {
         for parser in &parsers {
             if parser.source_tool() == tool {
-                sessions = Some(parser.parse(path).with_context(|| {
-                    format!("{} parser failed on {}", tool, path.display())
-                })?);
+                sessions =
+                    Some(parser.parse(path).with_context(|| {
+                        format!("{} parser failed on {}", tool, path.display())
+                    })?);
                 break;
             }
         }
@@ -149,7 +150,12 @@ fn detect_from_json(value: &serde_json::Value) -> Option<SourceTool> {
     // Codex CLI signals: "model" at top level with OpenAI-style IDs.
     if obj.contains_key("model") && obj.contains_key("id") {
         if let Some(model) = obj.get("model").and_then(|v| v.as_str()) {
-            if model.starts_with("gpt") || model.starts_with("o1") || model.starts_with("o3") || model.starts_with("o4") || model.contains("codex") {
+            if model.starts_with("gpt")
+                || model.starts_with("o1")
+                || model.starts_with("o3")
+                || model.starts_with("o4")
+                || model.contains("codex")
+            {
                 return Some(SourceTool::CodexCli);
             }
         }
@@ -161,8 +167,7 @@ fn detect_from_json(value: &serde_json::Value) -> Option<SourceTool> {
     }
 
     // OpenClaw signals: first line has `{"type":"session", ...}` with a version field.
-    if obj.get("type").and_then(|v| v.as_str()) == Some("session") || obj.contains_key("openclaw")
-    {
+    if obj.get("type").and_then(|v| v.as_str()) == Some("session") || obj.contains_key("openclaw") {
         return Some(SourceTool::OpenClaw);
     }
 
@@ -184,4 +189,3 @@ fn detect_from_path(path: &Path) -> Option<SourceTool> {
         None
     }
 }
-

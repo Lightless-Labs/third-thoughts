@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use cucumber::World;
 use tempfile::TempDir;
 
-use middens::session::{Session, SourceTool, SessionType, MessageClassification};
+use middens::session::{MessageClassification, Session, SessionType, SourceTool};
 use middens::techniques::TechniqueResult;
 
 /// Shared test state for all Cucumber scenarios.
