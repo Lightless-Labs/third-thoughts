@@ -40,6 +40,8 @@ pub struct MiddensWorld {
     pub discovered_files: Vec<PathBuf>,
     /// Generic numeric result for assertions.
     pub numeric_result: Option<f64>,
+    /// Whether the scenario was skipped due to environment constraints.
+    pub skipped: bool,
 }
 
 impl MiddensWorld {
@@ -59,6 +61,7 @@ impl MiddensWorld {
             error: None,
             discovered_files: Vec::new(),
             numeric_result: None,
+            skipped: false,
         }
     }
 }
