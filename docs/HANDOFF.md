@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-04
+**Last updated:** 2026-04-04 (post Python bridge merge)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
@@ -30,7 +30,7 @@ middens list-techniques                                # show 6 registered techn
 | Output engine | Done | Markdown (YAML frontmatter), JSON, ASCII (sparklines, bars, tables) |
 | Analyze pipeline | Done | discover → parse → classify → techniques → output |
 | `--split` | Done | Automatic interactive/subagent stratification |
-| Python bridge | PR #3 | UvManager + PythonTechnique wrapper (needs merge) |
+| Python bridge | Done | UvManager + PythonTechnique wrapper (merged PR #3) |
 | Python techniques | Not started | 13 techniques to port (todos/python-bridge.md) |
 | `fingerprint` | Stub | Environment extraction not implemented |
 | `report` | Stub | Cross-technique synthesis not implemented |
@@ -40,8 +40,7 @@ middens list-techniques                                # show 6 registered techn
 
 | Branch | Status |
 |--------|--------|
-| `main` | Current — output engine + analyze + split + thinking divergence merged |
-| `feat/python-bridge` | PR #3 open — Python bridge infrastructure |
+| `main` | Current — all phases through Python bridge merged |
 
 ### Test suite
 
@@ -81,9 +80,8 @@ Key todo files:
 ## What to do first in a new session
 
 1. Read this file + `CLAUDE.md` + memory at `~/.claude/projects/-Users-thomas-Projects-lightless-labs-third-thoughts/memory/MEMORY.md`
-2. Check PR #3 status — merge if approved, address comments if not
-3. Check for new review comments on any open PRs
-4. Ask the user what they want to work on
+2. Check for open PRs and review comments
+3. Ask the user what they want to work on
 
 ## Before compaction / session end
 
