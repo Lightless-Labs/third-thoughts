@@ -133,7 +133,11 @@ impl Technique for PythonTechnique {
 
         // Use from_slice — TechniqueResult fields have #[serde(default)] for
         // optional/omittable fields so Python scripts don't need to emit every field.
-        let result: TechniqueResult = serde_json::from_slice(&stdout_data)
+        // Trim trailing whitespace — Python's print() adds a newline that from_slice rejects.
+        let trimmed = stdout_data.iter().rposition(|b| !b.is_ascii_whitespace())
+            .map(|pos| &stdout_data[..=pos])
+            .unwrap_or(&stdout_data);
+        let result: TechniqueResult = serde_json::from_slice(trimmed)
             .context("Invalid JSON output from Python subprocess")?;
 
         Ok(result)

@@ -32,10 +32,16 @@ fn technique_script_path(name: &str) -> PathBuf {
 }
 
 fn make_tool_call(turn: usize) -> ToolCall {
-    let tools = ["Read", "Edit", "Bash", "Glob", "Grep"];
-    let name = tools[turn % tools.len()];
-    let dirs = ["src/", "src/parser/", "src/bridge/", "tests/", "python/"];
-    let dir = dirs[turn % dirs.len()];
+    make_tool_call_varied(turn, 0)
+}
+
+fn make_tool_call_varied(turn: usize, session_idx: usize) -> ToolCall {
+    let tools = ["Read", "Edit", "Bash", "Glob", "Grep", "Write", "Skill", "WebSearch"];
+    // Vary tool selection by session index to create diverse patterns
+    let offset = session_idx * 3;
+    let name = tools[(turn + offset) % tools.len()];
+    let dirs = ["src/", "src/parser/", "src/bridge/", "tests/", "python/", "docs/"];
+    let dir = dirs[(turn + session_idx) % dirs.len()];
     ToolCall {
         id: format!("call_{}", turn),
         name: name.to_string(),
@@ -52,6 +58,10 @@ fn make_tool_result(call_id: &str, is_error: bool) -> ToolResult {
 }
 
 fn make_message(role: MessageRole, turn: usize, is_correction: bool) -> Message {
+    make_message_varied(role, turn, is_correction, 0)
+}
+
+fn make_message_varied(role: MessageRole, turn: usize, is_correction: bool, session_idx: usize) -> Message {
     let text = match role {
         MessageRole::User => format!("User message at turn {}", turn),
         MessageRole::Assistant => format!("Assistant response at turn {} with analysis and code changes", turn),
@@ -59,7 +69,7 @@ fn make_message(role: MessageRole, turn: usize, is_correction: bool) -> Message 
     };
 
     let (tool_calls, tool_results, thinking) = if role == MessageRole::Assistant {
-        let tc = make_tool_call(turn);
+        let tc = make_tool_call_varied(turn, session_idx);
         let tr = make_tool_result(&tc.id, turn % 7 == 0); // occasional failure
         (
             vec![tc],
@@ -95,11 +105,15 @@ fn make_message(role: MessageRole, turn: usize, is_correction: bool) -> Message 
 }
 
 fn create_session(id: &str, num_turns: usize, high_correction: bool) -> Session {
+    create_session_indexed(id, num_turns, high_correction, 0)
+}
+
+fn create_session_indexed(id: &str, num_turns: usize, high_correction: bool, session_idx: usize) -> Session {
     let mut messages = Vec::new();
     for i in 0..num_turns {
         let is_correction = if high_correction { i % 3 == 0 && i > 0 } else { i % 7 == 0 && i > 2 };
-        messages.push(make_message(MessageRole::User, i, is_correction));
-        messages.push(make_message(MessageRole::Assistant, i, false));
+        messages.push(make_message_varied(MessageRole::User, i, is_correction, session_idx));
+        messages.push(make_message_varied(MessageRole::Assistant, i, false, session_idx));
     }
     Session {
         id: id.to_string(),
@@ -131,7 +145,7 @@ fn given_sessions_with_turns(world: &mut MiddensWorld, count: i32, min: i32, max
     world.sessions = (0..count)
         .map(|i| {
             let turns = (min as usize) + (i as usize % ((max - min + 1) as usize));
-            create_session(&format!("session_{}", i), turns, false)
+            create_session_indexed(&format!("session_{}", i), turns, false, i as usize)
         })
         .collect();
 }
@@ -141,7 +155,7 @@ fn given_mixed_sessions(world: &mut MiddensWorld, count: i32) {
     world.sessions = (0..count)
         .map(|i| {
             let turns = 15 + (i as usize % 20);
-            create_session(&format!("session_{}", i), turns, i % 2 == 0)
+            create_session_indexed(&format!("session_{}", i), turns, i % 2 == 0, i as usize)
         })
         .collect();
 }
@@ -151,7 +165,7 @@ fn given_long_sessions(world: &mut MiddensWorld, count: i32, min_turns: i32) {
     world.sessions = (0..count)
         .map(|i| {
             let turns = (min_turns as usize) + 1 + (i as usize % 15);
-            create_session(&format!("session_{}", i), turns, false)
+            create_session_indexed(&format!("session_{}", i), turns, false, i as usize)
         })
         .collect();
 }
@@ -175,7 +189,7 @@ fn given_varied_sessions(world: &mut MiddensWorld, count: i32) {
     world.sessions = (0..count)
         .map(|i| {
             let turns = 5 + (i as usize % 35);
-            create_session(&format!("varied_{}", i), turns, i % 3 == 0)
+            create_session_indexed(&format!("varied_{}", i), turns, i % 3 == 0, i as usize)
         })
         .collect();
 }
