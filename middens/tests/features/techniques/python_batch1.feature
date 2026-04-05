@@ -15,7 +15,7 @@ Feature: Python Batch 1 Techniques
     And the result summary should mention "HSMM"
     And the result should have a numeric finding with label "optimal_n_states"
     And the result should contain a table named "State Transition Matrix"
-    And the result should contain a table named "State Emission Probabilities"
+    And the result should contain a table named "State Characteristics"
 
   Scenario: hsmm.py gracefully handles insufficient data
     Given a set of 5 sessions, each with 30-50 turns, including thinking and tool use

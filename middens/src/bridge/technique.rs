@@ -131,10 +131,9 @@ impl Technique for PythonTechnique {
             );
         }
 
-        // Use streaming deserializer to tolerate trailing non-JSON output
-        // (e.g. Python library warnings printed to stdout).
-        let mut de = serde_json::Deserializer::from_slice(&stdout_data);
-        let result = TechniqueResult::deserialize(&mut de)
+        // Use from_slice — TechniqueResult fields have #[serde(default)] for
+        // optional/omittable fields so Python scripts don't need to emit every field.
+        let result: TechniqueResult = serde_json::from_slice(&stdout_data)
             .context("Invalid JSON output from Python subprocess")?;
 
         Ok(result)

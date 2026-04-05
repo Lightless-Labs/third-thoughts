@@ -20,10 +20,13 @@ pub struct TechniqueResult {
     /// Human-readable summary of findings.
     pub summary: String,
     /// Key findings as name-value pairs.
+    #[serde(default)]
     pub findings: Vec<Finding>,
     /// Raw data tables (for Parquet/JSON export).
+    #[serde(default)]
     pub tables: Vec<DataTable>,
     /// Vega-Lite figure specifications.
+    #[serde(default)]
     pub figures: Vec<FigureSpec>,
 }
 
@@ -32,6 +35,7 @@ pub struct TechniqueResult {
 pub struct Finding {
     pub label: String,
     pub value: serde_json::Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
