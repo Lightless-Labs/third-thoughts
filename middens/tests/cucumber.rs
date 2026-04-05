@@ -24,6 +24,8 @@ use steps::techniques;
 use steps::thinking_divergence;
 #[allow(unused_imports)]
 use steps::python_bridge;
+#[allow(unused_imports)]
+use steps::python_batch1;
 
 // Smoke test steps
 #[given("the test harness is initialized")]
