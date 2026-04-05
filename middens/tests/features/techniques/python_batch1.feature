@@ -96,3 +96,97 @@ Feature: Python Batch 1 Techniques
       | information_foraging    |
       | granger_causality       |
       | survival_analysis       |
+
+  Scenario: process_mining.py successfully builds directly-follows graph and identifies rework
+    Given a set of 5 sessions with a mix of high and low correction rates, tool calls, and thinking
+    When the "process_mining" technique is run
+    Then the technique should succeed
+    And the result should have a finding with label "total_events"
+    And the result should have a finding with label "unique_activities"
+    And the result should have a finding with label "most_common_activity"
+    And the result should have a finding with label "top_rework_activity"
+    And the result should have a finding with label "top_correction_predecessor"
+    And the result should have a finding with label "dfg_edges"
+    And the result should contain a table named "Activity Frequencies"
+    And the result should contain a table named "Directly-Follows Graph"
+    And the result should contain a table named "Correction Predecessors"
+
+  Scenario: prefixspan_mining.py successfully finds frequent sequential patterns
+    Given a set of 5 sessions, each with 30-50 turns, including thinking and tool use
+    When the "prefixspan_mining" technique is run
+    Then the technique should succeed
+    And the result should have a finding with label "total_patterns"
+    And the result should have a finding with label "patterns_length_3"
+    And the result should have a finding with label "patterns_length_4"
+    And the result should have a finding with label "success_patterns"
+    And the result should have a finding with label "struggle_patterns"
+    And the result should contain a table named "Frequent Sequential Patterns"
+    And the result should contain a table named "Discriminative Patterns"
+
+  Scenario: prefixspan_mining.py handles sessions with no tool calls gracefully
+    Given a set of 5 sessions with no tool calls
+    When the "prefixspan_mining" technique is run
+    Then the technique should succeed
+
+  Scenario: smith_waterman.py successfully computes local alignments and extracts motifs
+    Given a set of 5 sessions with a mix of high and low correction rates, tool calls, and thinking
+    When the "smith_waterman" technique is run
+    Then the technique should succeed
+    And the result should have a finding with label "mean_alignment_score"
+    And the result should have a finding with label "conserved_motifs_count"
+    And the result should have a finding with label "top_success_motif"
+    And the result should have a finding with label "top_struggle_motif"
+    And the result should have a finding with label "cluster_count"
+    And the result should contain a table named "Conserved Motifs"
+    And the result should contain a table named "Motif Enrichment"
+
+  Scenario: tpattern_detection.py successfully detects significant temporal patterns
+    Given a set of 3 sessions, each with 30-50 turns, including thinking and tool use
+    When the "tpattern_detection" technique is run
+    Then the technique should succeed
+    And the result should have a finding with label "level_1_patterns"
+    And the result should have a finding with label "level_2_patterns"
+    And the result should have a finding with label "most_common_pattern"
+    And the result should have a finding with label "total_events_analyzed"
+    And the result should contain a table named "T-Patterns Level 1"
+    And the result should contain a table named "T-Patterns Level 2"
+
+  Scenario Outline: Batch 2 techniques handle an empty session array
+    Given an empty array of sessions
+    When the "<technique_name>" technique is run
+    Then the technique should succeed
+    And the result should contain 0 findings
+    And the result summary should indicate that 0 sessions were analyzed
+
+    Examples:
+      | technique_name          |
+      | process_mining          |
+      | prefixspan_mining       |
+      | smith_waterman          |
+      | tpattern_detection      |
+
+  Scenario Outline: Batch 2 techniques exit successfully with valid JSON
+    Given a set of 5 sessions, each with 30-50 turns, including thinking and tool use
+    When the "<technique_name>" technique is run
+    Then the technique should succeed
+    And the result name should be "<technique_name>"
+
+    Examples:
+      | technique_name          |
+      | process_mining          |
+      | prefixspan_mining       |
+      | smith_waterman          |
+      | tpattern_detection      |
+
+  Scenario Outline: Batch 2 techniques handle unrecoverable errors
+    Given an invalid session file path
+    When I attempt to run the "<technique_name>" technique with the invalid path
+    Then the technique should fail with a non-zero exit code
+    And the captured stderr should not be empty
+
+    Examples:
+      | technique_name          |
+      | process_mining          |
+      | prefixspan_mining       |
+      | smith_waterman          |
+      | tpattern_detection      |

@@ -347,3 +347,17 @@ fn then_technique_fails(world: &mut MiddensWorld) {
 fn then_stderr_not_empty(world: &mut MiddensWorld) {
     assert!(!world.cli_stderr.is_empty(), "Expected stderr output but it was empty");
 }
+
+#[given(expr = "a set of {int} sessions with no tool calls")]
+fn given_sessions_no_tool_calls(world: &mut MiddensWorld, count: i32) {
+    world.sessions = (0..count)
+        .map(|i| {
+            let mut session = create_session(&format!("no_tools_{}", i), 10, false);
+            for msg in &mut session.messages {
+                msg.tool_calls.clear();
+                msg.tool_results.clear();
+            }
+            session
+        })
+        .collect();
+}
