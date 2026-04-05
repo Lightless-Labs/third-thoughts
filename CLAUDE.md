@@ -83,6 +83,7 @@ When running cross-model evaluations:
 
 - **Kimi has tool use** through OpenCode's tool layer. Use `--format json` to get NDJSON output — without it, ANSI escape codes corrupt code extraction. Validated in A²D project (skunkworks/a2d).
 - NDJSON output format: `{"type":"text","part":{"text":"..."}}` — parse by filtering for `type == "text"` and extracting `/part/text`.
+- **Kimi write tool chokes on large payloads** — JSON serialization corrupts when file content is too long. Dispatch one file per invocation, not multiple files in one prompt.
 - Background dispatch: `opencode run --model provider/model --format json "prompt" > log.log 2>&1 &`
 
 ### Automated PR review workflow
