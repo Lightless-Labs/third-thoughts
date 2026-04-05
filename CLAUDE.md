@@ -68,7 +68,7 @@ See `docs/HANDOFF.md` for current implementation status and `docs/plans/2026-03-
 ## Multi-Model Analysis
 
 When running cross-model evaluations:
-- Codex CLI: `codex exec --skip-git-repo-check --full-auto "prompt"` (always set `timeout: 600000` on Bash calls)
+- Codex CLI: `codex exec --skip-git-repo-check --full-auto "prompt"` (always set `timeout: 600000` on Bash calls — default 120s auto-backgrounds, and piped output doesn't flush, so 10 min of compute is lost silently. Use `-o output.md` not pipes.)
 - Gemini CLI: `gemini -y -s false --prompt "prompt"` (yolo mode + no sandbox for file writes)
 - OpenCode CLI: `opencode run --model provider/model "prompt"` (can be very slow — 5-15 min)
 - Claude subagents: `Agent` tool with `mode: bypassPermissions`
@@ -82,6 +82,7 @@ When running cross-model evaluations:
 | Minimax M2.7 | `minimax/minimax-m2.7` | Faster than GLM, but architectural bugs |
 
 - **Kimi has tool use** through OpenCode's tool layer. Use `--format json` to get NDJSON output — without it, ANSI escape codes corrupt code extraction. Validated in A²D project (skunkworks/a2d).
+- NDJSON output format: `{"type":"text","part":{"text":"..."}}` — parse by filtering for `type == "text"` and extracting `/part/text`.
 - Background dispatch: `opencode run --model provider/model --format json "prompt" > log.log 2>&1 &`
 
 ### Automated PR review workflow
@@ -102,4 +103,10 @@ This repo has Codex, Copilot, Gemini, and CodeRabbit automated reviews. When add
 - All techniques documented in `docs/methods-catalog.md` with academic references
 - Findings that don't survive stratification must be retracted or downgraded in reports
 - Todos as individual files in `todos/` with YAML frontmatter (status, priority, issue_id, tags, source)
-- Non-trivial features use adversarial process — see foundry docs at `~/Projects/lightless-labs/foundry/docs/solutions/`
+- Corpus data (corpus*/, experiments/, data/labeled-messages.json) must NEVER be committed — .gitignore handles this but be aware
+- Non-trivial features use adversarial process (full methodology in foundry docs at `~/Projects/lightless-labs/foundry/docs/solutions/`):
+  1. Write NLSpec → review → red team writes tests from DoD only → green team implements from How only
+  2. **Information barrier:** orchestrator must NOT fix step definitions or implementation directly — route filtered feedback to the correct team
+  3. When tests fail: diagnose whether spec was unclear (amend NLSpec) or implementation wrong (route PASS/FAIL to green WITHOUT showing test code)
+  4. Use `/codex-cli`, `/gemini-cli`, `/opencode-cli` skills for red/green dispatch — enforces context isolation naturally
+  5. Match tool to task: CLI tools for self-contained units, subagents for crate-context work, inline for small surgical fixes
