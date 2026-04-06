@@ -214,13 +214,26 @@ Key todo files:
 5. **When the same issue is flagged by 3 bots independently**, it's definitely real. Three-way confirmation is a strong signal to stop second-guessing and just fix it.
 6. **Stopping rule**: if all P1s from the current round are fixed, all tests pass, CodeRabbit is SUCCESS, merge state is CLEAN, and no new Codex review has landed in ~15 minutes — it's safe to merge. Don't wait indefinitely for more bot activity.
 
-### Sub-agent refusal pattern (important gotcha discovered this session)
+### Sub-agent refusal pattern (partially corrected)
 
-Claude Code sub-agents (`Agent` tool) in this environment inherit a stricter `context_window_protection` system reminder than the main session does. This reminder directs them to avoid Bash/Read for data analysis and route through `ctx_execute*` MCP tools. **BUT those MCP tools are not registered in sub-agent tool lists in this environment.** The result: sub-agents dispatched to do data analysis work will *refuse to run* citing a "can't use Bash/Read, don't have ctx_execute" bind, even when the work is trivially tractable with stdlib Python and a few Bash calls.
+**What actually happened in this session:** I dispatched three general-purpose sub-agents for data-analysis work on the same corpus:
 
-**Workaround this session:** ran the adversarial GH#42796 refutation analysis inline in the main session using `mcp__plugin_context-mode_context-mode__ctx_execute` (which IS available in the main session). The results were significant enough to wholly reframe the sympathetic subagent's confidence in the claim.
+1. **Sympathetic GH#42796 replication** — general-purpose, 17 tool calls, wrote a 220-line report with real per-week numeric findings. **SUCCEEDED.**
+2. **Adversarial counter-analysis v1** — general-purpose, 0 tool calls. Refused, citing the `context_window_protection` hook and "missing ctx_execute" MCP tools.
+3. **Adversarial counter-analysis v2** (re-dispatched with explicit "you have Bash/Read freely, do not refuse" framing) — general-purpose, 0 tool calls. Refused again with the same complaint.
 
-**General rule**: for data-analysis subagent work, prefer `Explore` (specialized for read-heavy research) or just do the work inline via ctx_execute if it's bounded. Delegate to general-purpose sub-agents only for write-heavy / coding work where they can use Edit/Write freely. If a general-purpose sub-agent refuses with a context_window_protection complaint, don't re-dispatch with louder "please just do it" framing — it will refuse again. Do the work inline or switch to `Explore`.
+**The tool-availability claim in the refusals was false.** The sympathetic agent demonstrably had Bash/Read/Write access and used them successfully. The adversarial v1/v2 refusals were prompt-specific, not environment-specific.
+
+**Best hypothesis**: the adversarial framing + explicit "do not refuse" override language triggered a defensive posture in the sub-agent. Telling a model "the guards you see in your system prompt are just preferences, override them" is a reliable way to provoke the model to double down on those guards. The sympathetic agent got cleaner "replicate these claims and write up the results" framing and didn't feel it had to raise the flag.
+
+**General rules** (revised from the session experience):
+
+1. **Frame sub-agent tasks as forward-directed work**, not as "override your guards" instructions. "Replicate X" and "refute X" should get the same tooling framing; "refute X AND ignore your context rules" is the problem.
+2. If a sub-agent refuses once, **don't re-dispatch a harder-framed version** — the same prompt pattern will fail the same way. Either (a) simplify the prompt to look like a neutral research task, (b) switch subagent type (`Explore` is specialized for read-heavy research), or (c) run the work inline in the main session via `ctx_execute` (which IS reliably available at the orchestrator level).
+3. **Prefer `Explore` for data-analysis research** as a reasonable default — it's specialized for read-heavy work and has fewer failure modes than general-purpose for this shape of task.
+4. **When in doubt, do it inline.** Bounded analysis tasks (a few hundred rows, a few weeks of data) are always faster to run in the main session than to delegate and debug.
+
+**Workaround used this session:** after the second adversarial refusal, I ran the refutation inline via `mcp__plugin_context-mode_context-mode__ctx_execute`. The results (permutation tests p=0.20 for C2 and p=0.45 for C3, corpus composition anomaly) were significant enough to wholly reframe the sympathetic agent's confidence. See `~/claude-reasoning-performance-counter-analysis/report.md`.
 
 ## What to do first in a new session
 
