@@ -1,8 +1,17 @@
 # Session Handoff
 
-**Last updated:** 2026-04-06 (Batch 3 Python techniques — all 13/13 ported)
+**Last updated:** 2026-04-06 (post PR #4 merge + GH#42796 replication work)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
+
+## This session (2026-04-06) accomplished
+
+1. **Batch 3 Python techniques shipped (PR #4, merged as 9eca691)** — 13/13 Python techniques ported.
+2. **6 rounds of PR-review iteration** — 26 automated findings from Gemini (6) + Copilot (8) + Codex (12 across 6 review rounds). All addressed inline + replied with rationale. See commit `9eca691` for the full squashed set.
+3. **Output-contract design doc written** at `docs/design/output-contract.md` — storage (Parquet + manifest) vs view (ipynb/md/html/pluto/quarto/json) split. Fully designed, not yet implemented. See `todos/output-contract.md` for work breakdown.
+4. **Conclusions v1 and v2 design** at `todos/conclusions-v{1-manual,2-synthesize}.md` — post-hoc cross-technique narrative, analyst-authored then optionally LLM-authored.
+5. **GH#42796 replication study** — sympathetic replication at `~/claude-reasoning-performance-analysis/report.md`, adversarial counter-analysis at `~/claude-reasoning-performance-counter-analysis/report.md`. **Conclusion: this corpus cannot confirm or refute Laurenzo's claims as currently sliced.** See "GH#42796 replication" section below.
+6. **Two significant corpus anomalies discovered** during the replication work — see "Corpus composition anomaly (W10→W11)" below.
 
 ## Current State
 
@@ -57,6 +66,14 @@ NLSpecs at `middens/docs/nlspecs/2026-04-{05,06}-python-techniques-batch{1,2,3}-
 - Summary substring assertions are case-insensitive but literal — if the spec says "mention 'lag sequential'" the actual summary must contain "lag sequential" (space, not hyphen)
 - Test fixtures have `timestamp: None` — techniques that order by timestamp must fall back to array index ordering
 
+### Open work (prioritized for next session)
+
+1. **Investigate corpus composition anomaly W10→W11** — the interactive bucket jumped from 27 sessions/week (W09) to 141 (W10) to 1230 (W11) while tools-per-session collapsed from 572 → 114 → 8.9. Signature of mass influx of very short / empty / automation sessions. Needs `scripts/correction_classifier.py` re-pass on W10–W12 sessions. **Nothing in temporal analysis on this corpus is trustworthy until this is explained.** See `~/claude-reasoning-performance-counter-analysis/report.md` for the data.
+2. **Wire Python techniques into `src/techniques/mod.rs::all_techniques()`** — pre-existing gap from Batch 1. Right now `middens analyze` in production only runs the 6 Rust techniques; all 13 Python ones are invoked only by cucumber tests.
+3. **Storage/view reshape** (`todos/output-contract.md`) — big next step. Parquet + manifest canonical storage, `ViewRenderer` trait, `.ipynb` renderer, `middens report <run_id> --format <fmt>`, `middens runs list`. Fully designed.
+4. **Conclusions v1** (`todos/conclusions-v1-manual.md`) — small, lands alongside or after the reshape.
+5. **Deferred PR #4 review items** — `todos/batch3-coderabbit-deferred.md` has the P2/P3 spec clarifications that didn't land in PR #4. Mostly doc refinements.
+
 ### Branches
 
 | Branch | Status |
@@ -65,7 +82,41 @@ NLSpecs at `middens/docs/nlspecs/2026-04-{05,06}-python-techniques-batch{1,2,3}-
 
 ### Test suite
 
-**261 Cucumber/Gherkin scenarios, 1415 steps — all passing** (post Batch 3). Runner at `middens/tests/cucumber.rs`. Feature files organized by domain under `middens/tests/features/`. Python technique tests at `tests/features/techniques/python_batch{1,3}.feature` (batch1 covers Batches 1+2 scripts despite the name; batch3 adds the 5 new ones).
+**261 Cucumber/Gherkin scenarios, 1433 steps — all passing** (post Batch 3). Runner at `middens/tests/cucumber.rs`. Feature files organized by domain under `middens/tests/features/`. Python technique tests at `tests/features/techniques/python_batch{1,3}.feature` (batch1 covers Batches 1+2 scripts despite the name; batch3 adds the 5 new ones).
+
+## Corpus composition anomaly (W10→W11) — HIGH PRIORITY
+
+**What it is:** During the GH#42796 replication work, the interactive bucket's composition changed dramatically between ISO weeks W09 and W11 of 2026:
+
+| Week | Sessions | Tool calls | Tools/session | Prompts/session |
+|------|---------:|-----------:|--------------:|----------------:|
+| W06 | 2 | 1,390 | 695 | 49 |
+| W09 | 27 | 15,442 | 572 | 58 |
+| W10 | 141 | 16,024 | **114** | 18 |
+| W11 | **1,230** | 10,902 | **8.9** | 30.6 |
+| W12 | 555 | 3,282 | **5.9** | 2.7 |
+
+**Why it matters:** Session count exploded 45× (27 → 1,230) while total tool calls actually *dropped*. Mean tools-per-session collapsed 64× (572 → 8.9). **A model-behaviour regression cannot explain this** — it's the signature of mass influx of very short, empty, or automation sessions into the interactive bucket (misclassified subagent sessions, abandoned sessions, or a new automation layer that emits session metadata without real interaction). Until this is explained and/or corrected, **no temporal analysis on the interactive corpus after ~W10 can be trusted**.
+
+This is directly analogous to the prior retracted Third Thoughts finding documented in `docs/solutions/methodology/population-contamination-interactive-vs-subagent-20260320.md` — another thinking-related finding that dissolved under population stratification.
+
+**Next session must:**
+1. Read `~/claude-reasoning-performance-counter-analysis/report.md` for the full analysis and numbers
+2. Re-run `scripts/correction_classifier.py` on W10–W12 sessions to verify they are actually interactive
+3. Quantify how many W11 "interactive" sessions are really <20 events (and therefore below `spc_control_charts.py`'s minimum-event filter anyway)
+4. Document findings in `docs/solutions/methodology/`
+
+## GH#42796 replication
+
+Two artifacts in `~/`:
+
+- **`~/claude-reasoning-performance-analysis/`** — sympathetic replication of the Laurenzo #42796 claims. Headline: signature↔thinking correlation 0.94 (n=5744), redaction rollout 0%→82% Feb–Mar, Write%-of-mutations "doubled" (~20%→48% comparing W06–W10 to W12 alone).
+- **`~/claude-reasoning-performance-counter-analysis/`** — adversarial refutation attempt. Headline:
+  - **C3 (Write doubled) is dead**. Proper pre/post weighting (by sessions, by mutations, or by tool_calls) gives +5pp, not a doubling. Permutation p=0.445 at n=7 weeks — indistinguishable from noise. The "doubling" framing came from comparing a broad baseline to W12 alone (which has 7% of post-period tool calls and 1.8% of paired thinking samples).
+  - **C2 (redaction rollout) fails significance**. Permutation p=0.20 on 7 weeks. The curve is also non-monotonic (W10=64%, W11=16%, W12=82%) in ways inconsistent with a clean staged rollout — the sympathetic agent acknowledged this as a "format artifact" but didn't quantify it.
+  - **C1 (signature correlation) is weakened**. W11 alone contributes 36% of the correlation's sample weight. W12 (the "degraded" tail) has only 77 paired samples — 95% CI on Pearson at n=77 is ±0.22, so the correlation could be anywhere from 0.72 to 1.0 in W12 and we have no power to tell.
+  - **The corpus composition anomaly (above) is the dominant signal** — everything the sympathetic report reads as a model regression is mechanically consistent with population drift.
+- **Recommendation**: do **NOT** file anything against anthropics/claude-code from this corpus. It cannot support the claim on either side. If you want to replicate honestly, fix the composition issue first, then try again.
 
 ## Process
 
@@ -143,11 +194,33 @@ Process learnings documented in foundry: `~/Projects/lightless-labs/foundry/docs
 Individual files in `todos/` following phil-connors pattern (YAML frontmatter with status, priority, issue_id, tags, source). When triaging PR review comments, reply with the todo file link.
 
 Key todo files:
-- `todos/python-bridge.md` — Phase 4: 13 Python technique ports
-- `todos/remaining-cli.md` — fingerprint, report, Parquet, Vega-Lite, config
+- `todos/python-bridge.md` — Phase 4: 13 Python technique ports (DONE — all 13/13 merged)
+- `todos/remaining-cli.md` — fingerprint, report, Parquet, Vega-Lite, config (most items *superseded* by output-contract reshape)
+- `todos/output-contract.md` — storage/view split full work breakdown (next major piece)
+- `todos/conclusions-v1-manual.md` — manual analyst-authored conclusions sidecar
+- `todos/conclusions-v2-synthesize.md` — LLM-authored conclusions via future `middens synthesize`
+- `todos/batch3-coderabbit-deferred.md` — spec clarifications deferred from PR #4 review
 - `todos/research-reruns.md` — Granger, survival, process mining with corrected classifier
 - `todos/023-pending-p1-peer-review-methodology-findings.md` — unaddressed research methodology issues
 - `todos/009-026` — individual P2/P3 code review fixes
+
+### PR review iteration (learned this session)
+
+**When a PR is open and multiple bots are reviewing:**
+1. **CodeRabbit, Gemini, Copilot typically review once on the initial commit only.** They don't re-trigger automatically on subsequent pushes. If you want a fresh Gemini/Copilot review after fixes, you may need to dismiss + request again, or push as a new PR.
+2. **Codex re-reviews on every push** and often finds new issues each round — expect 3-6 rounds for a substantial PR. Many findings are real; don't dismiss them as "nit". This session went through 6 Codex review rounds on Batch 3 and every round surfaced at least one legitimate bug.
+3. **Run `coderabbit review --plain --base origin/main` LOCALLY before opening the PR** — cheaper than burning a remote round trip. The local CodeRabbit tool produced 20 findings that I fixed inline, saving a review round.
+4. **Triage discipline**: P1 bugs fix inline; P2 bugs fix inline OR log to `todos/batch3-coderabbit-deferred.md` with reasoning; P3/nit log as deferred. Reply to every comment with rationale, not just "fixed".
+5. **When the same issue is flagged by 3 bots independently**, it's definitely real. Three-way confirmation is a strong signal to stop second-guessing and just fix it.
+6. **Stopping rule**: if all P1s from the current round are fixed, all tests pass, CodeRabbit is SUCCESS, merge state is CLEAN, and no new Codex review has landed in ~15 minutes — it's safe to merge. Don't wait indefinitely for more bot activity.
+
+### Sub-agent refusal pattern (important gotcha discovered this session)
+
+Claude Code sub-agents (`Agent` tool) in this environment inherit a stricter `context_window_protection` system reminder than the main session does. This reminder directs them to avoid Bash/Read for data analysis and route through `ctx_execute*` MCP tools. **BUT those MCP tools are not registered in sub-agent tool lists in this environment.** The result: sub-agents dispatched to do data analysis work will *refuse to run* citing a "can't use Bash/Read, don't have ctx_execute" bind, even when the work is trivially tractable with stdlib Python and a few Bash calls.
+
+**Workaround this session:** ran the adversarial GH#42796 refutation analysis inline in the main session using `mcp__plugin_context-mode_context-mode__ctx_execute` (which IS available in the main session). The results were significant enough to wholly reframe the sympathetic subagent's confidence in the claim.
+
+**General rule**: for data-analysis subagent work, prefer `Explore` (specialized for read-heavy research) or just do the work inline via ctx_execute if it's bounded. Delegate to general-purpose sub-agents only for write-heavy / coding work where they can use Edit/Write freely. If a general-purpose sub-agent refuses with a context_window_protection complaint, don't re-dispatch with louder "please just do it" framing — it will refuse again. Do the work inline or switch to `Explore`.
 
 ## What to do first in a new session
 
