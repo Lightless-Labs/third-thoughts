@@ -1,12 +1,14 @@
 # Remaining CLI Work
 
+> **Note:** `fingerprint`, `report`, Parquet export, and Vega-Lite figure specs are **superseded** by the output-contract reshape. See `todos/output-contract.md` and `docs/design/output-contract.md`. They remain listed here with their new framing for reference.
+
 ## Commands
-- [ ] **`middens fingerprint <path>`** — Implement environment fingerprint extraction. Stubs exist at `src/fingerprint/{extract,evolution}.rs`. Extract: tool version, model ID, permission mode, MCP servers, plugins, hooks, CLAUDE.md hash from session metadata. Track changes over time across sessions
-- [ ] **`middens report <results-dir>`** — Cross-technique synthesis report generator. Read technique results from a previous `analyze` run, identify convergent findings, produce a consolidated markdown report
+- [ ] **`middens fingerprint`** — *Superseded.* Reframed as a technique (subject fingerprint) + a technique (evolution diff) reading from storage. Analyzer fingerprint is absorbed into `manifest.json`. See `todos/output-contract.md` § "Fingerprint as a technique (retrofit)".
+- [ ] **`middens report`** — *Superseded.* New contract: `(run_id, format) → view file`. Reads storage (Parquet + manifest), renders a view. No ambiguous "cross-technique synthesis". See `todos/output-contract.md` § "`middens report` command".
 
 ## Output Formats
-- [ ] **Parquet export** — Add `polars` or `arrow2` dep. Write `.parquet` per technique alongside `.md` and `.json`. Machine-readable tabular data for Python/DuckDB downstream analysis
-- [ ] **Vega-Lite figure specs** — Generate `.vl.json` per technique with chart definitions (line charts for entropy, heatmaps for transition matrices, bar charts for tool frequencies). Renderable in VS Code, notebooks, browsers
+- [ ] **Parquet export** — *Superseded.* Parquet becomes the *canonical storage layer*, not an alternate output format. See `todos/output-contract.md` § "Storage layer".
+- [ ] **Vega-Lite figure specs** — *Superseded.* Vega-Lite becomes a `FigureKind` variant embedded inside views (notebook, HTML), not a top-level output format. See `todos/output-contract.md` § "View layer" and the `FigureSpec` schema note.
 
 ## Pipeline Improvements
 - [ ] **Progress reporting** — Show per-technique progress during `analyze` runs (technique name, elapsed time, ETA)

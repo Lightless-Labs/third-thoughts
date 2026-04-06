@@ -375,3 +375,61 @@ fn given_sessions_no_tool_calls(world: &mut MiddensWorld, count: i32) {
         })
         .collect();
 }
+
+// ── Batch 3 specific steps ──
+
+#[given(expr = "a set of {int} sessions across {int} projects, each with {int}-{int} turns, including thinking and tool use")]
+fn given_sessions_across_projects(
+    world: &mut MiddensWorld,
+    session_count: i32,
+    project_count: i32,
+    min: i32,
+    max: i32,
+) {
+    assert!(project_count > 0, "project_count must be positive");
+    assert!(max >= min, "max must be >= min");
+    world.sessions = (0..session_count)
+        .map(|i| {
+            let turns = (min as usize) + (i as usize % ((max - min + 1) as usize));
+            let mut session = create_session_indexed(&format!("session_{}", i), turns, false, i as usize);
+            let project_id = format!("project_{}", i % project_count);
+            session.metadata.cwd = Some(format!("/home/user/workspace/{}", project_id));
+            session
+        })
+        .collect();
+}
+
+#[then("no table cell contains raw user or assistant text")]
+fn then_no_table_cell_contains_raw_text(world: &mut MiddensWorld) {
+    let result = world.technique_result.as_ref().expect("Expected technique result");
+    for table in &result.tables {
+        for row in &table.rows {
+            for cell in row {
+                if let serde_json::Value::String(s) = cell {
+                    assert!(!s.contains("User message at turn"), "Table cell contains user text: {}", s);
+                    assert!(!s.contains("Assistant response at turn"), "Table cell contains assistant text: {}", s);
+                    assert!(!s.contains("Thinking about turn"), "Table cell contains thinking text: {}", s);
+                    assert!(!s.contains("/home/user/workspace/"), "Table cell contains cwd path: {}", s);
+                    // Note: session IDs (e.g. "session_0") are EXPLICITLY allowed by the contract
+                    // as stable parser-assigned identifiers, so we don't reject the "session_" substring.
+                }
+            }
+        }
+    }
+}
+
+#[then("the result summary should state that insufficient projects were found for cross-project analysis")]
+fn then_result_summary_insufficient_projects(world: &mut MiddensWorld) {
+    let result = world.technique_result.as_ref().expect("Expected technique result");
+    let s = result.summary.to_lowercase();
+    // Require wording that is *specific* to the cross-project insufficient-projects case.
+    // A bare "skipped" match is too permissive (other techniques skip sessions for unrelated reasons).
+    let ok = s.contains("insufficient project")
+        || (s.contains("insufficient") && s.contains("cross-project"))
+        || (s.contains("cross-project") && s.contains("skipped"));
+    assert!(
+        ok,
+        "Expected summary to indicate insufficient projects for cross-project analysis, but got: {}",
+        result.summary
+    );
+}
