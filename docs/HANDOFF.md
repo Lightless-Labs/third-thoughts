@@ -1,20 +1,22 @@
 # Session Handoff
 
-**Last updated:** 2026-04-07 (3 PRs open, 3 rounds of bot-review triage completed, all mergeable)
+**Last updated:** 2026-04-07 (PRs #5/#6/#7 merged after 4 rounds of bot review; CLAUDE.md Key Findings table refreshed)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
 ## >>> Read this first <<<
 
-Three PRs are open as of this handoff. Check them with `gh pr list` before doing anything else.
+All three open PRs from the previous session are now merged into `main`:
 
-| PR | Branch | What it does | Status |
-|----|--------|-------------|--------|
-| **#5** | `feat/batch4-and-distribution-prep` | Batch 4 Python techniques (4 new) + embedded-assets distribution prep. 23 techniques total (6 Rust + 17 Python). 270/270 scenarios. | **Merge-ready** — 3 rounds of bot review, all P1/P2 addressed, CR SUCCESS, MERGEABLE. |
-| **#6** | `feat/corpus-anomaly-w10-w12` | Investigation report: W10–W12 "interactive" bucket is ~99.7% contaminated with Boucle autonomous agent loop iterations (1,820/1,826 queue-operation marker; 100% zero tool calls). Self-contained report. | **Merge-ready** — 3 rounds of bot review, all P1/P2 addressed, CR SUCCESS, MERGEABLE. |
-| **#7** | `feat/thinking-visibility-stratification` | `Session::thinking_visibility` field + parser heuristic + `thinking-divergence` guard. **Re-ran 85.5% finding on real corpus: superseded by 100% on visible-only sessions (N=828).** | **Merge-ready** — 3 rounds of bot review, all P1/P2 addressed, MERGEABLE. |
+| PR | Merged commit | What it shipped |
+|----|---------------|------------------|
+| **#5** | `feat/batch4-and-distribution-prep` (squashed) | Batch 4 Python techniques (4 new) + embedded-assets distribution prep. 23 techniques total (6 Rust + 17 Python). 270/270 scenarios. |
+| **#6** | `feat/corpus-anomaly-w10-w12` (squashed) | Investigation report: W10–W12 "interactive" bucket is ~99.7% contaminated with Boucle autonomous agent loop iterations (1,820/1,826 queue-operation marker; 100% zero tool calls). Recommends 3-way Interactive/Subagent/Autonomous stratum. |
+| **#7** | `feat/thinking-visibility-stratification` (squashed) | `Session::thinking_visibility` field + parser heuristic + `thinking-divergence` guard. **85.5% mixed-corpus finding superseded by 100% on visible-only sessions (N=828, 4,819 risk tokens, 209 paired messages).** |
 
-**Next concrete move (per user):** start **Phase 1 of Autonomous Session Stratum** as follow-up commits on `feat/corpus-anomaly-w10-w12` (PR #6). The Boucle contamination is no longer treated as contamination-to-filter but as a **new first-class session-type stratum** worth studying. See `todos/autonomous-session-stratum.md` for the full plan. Phase 1 is a small classifier + 3-way split; Phase 2 is running the 23-technique battery on the new stratum and writing a comparative report.
+Bot-review story for the curious: 49 distinct inline findings across 4 review rounds (Codex / Gemini / Copilot / CodeRabbit). All P1/P2 addressed inline, all comments replied to with rationale, deferred items in `todos/batch4-coderabbit-deferred.md`.
+
+**Next concrete move:** start **Phase 1 of Autonomous Session Stratum** on a fresh branch off `main`. The Boucle contamination is no longer treated as contamination-to-filter but as a **new first-class session-type stratum** worth studying. See `todos/autonomous-session-stratum.md` for the full plan. Phase 1 is a small classifier + 3-way split; Phase 2 is running the 23-technique battery on the new stratum and writing a comparative report.
 
 ## Key findings (as of this handoff)
 
