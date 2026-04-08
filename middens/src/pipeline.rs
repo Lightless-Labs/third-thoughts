@@ -5,10 +5,11 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::Utc;
 
+use crate::bridge::{UvManager, embedded};
 use crate::corpus::discovery::discover_sessions;
 use crate::output::{OutputMetadata, render_json, render_markdown};
 use crate::parser::auto_detect::parse_auto;
-use crate::techniques::{Technique, all_techniques};
+use crate::techniques::{Technique, all_techniques, all_techniques_with_python};
 
 pub struct PipelineConfig {
     pub corpus_path: Option<PathBuf>,
@@ -58,8 +59,46 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
         }
     }
 
-    // Step 3: Select techniques
-    let mut all_possible = all_techniques();
+    // Step 3: Select techniques — include Python-bridged ones only when the
+    // current filter actually selects at least one of them. This avoids
+    // paying `uv` detection / extraction cost on runs that only use Rust
+    // techniques (e.g. `--essential`). Failures degrade gracefully to
+    // Rust-only techniques (with a stderr warning) so the CLI is still
+    // usable on systems without `uv` installed.
+    let python_technique_names: std::collections::HashSet<&str> =
+        crate::techniques::PYTHON_TECHNIQUE_MANIFEST
+            .iter()
+            .map(|(n, _, _)| *n)
+            .collect();
+
+    let needs_python = !config.no_python
+        && match &config.technique_filter {
+            TechniqueFilter::All => true,
+            TechniqueFilter::Essential => false,
+            TechniqueFilter::Named(names) => names
+                .iter()
+                .any(|n| python_technique_names.contains(n.trim())),
+        };
+
+    let mut python_env_failed: Option<String> = None;
+    let mut all_possible: Vec<Box<dyn Technique>> = if !needs_python {
+        all_techniques()
+    } else {
+        match prepare_python_env() {
+            Ok((scripts_dir, python_path)) => {
+                all_techniques_with_python(&scripts_dir, &python_path, 300)
+            }
+            Err(e) => {
+                eprintln!(
+                    "middens: warning: Python techniques unavailable ({}). \
+                     Running Rust-only. Pass --no-python to silence.",
+                    e
+                );
+                python_env_failed = Some(e.to_string());
+                all_techniques()
+            }
+        }
+    };
     let mut selected: Vec<Box<dyn Technique>> = match config.technique_filter {
         TechniqueFilter::All => all_possible,
         TechniqueFilter::Essential => all_possible
@@ -72,6 +111,20 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
                 let trimmed_name = name.trim();
                 if let Some(pos) = all_possible.iter().position(|t| t.name() == trimmed_name) {
                     filtered.push(all_possible.remove(pos));
+                } else if let Some(reason) = &python_env_failed {
+                    if python_technique_names.contains(trimmed_name) {
+                        // Explicitly requested by name AND would have been
+                        // available if Python had loaded — fail loud rather
+                        // than silently dropping the request.
+                        anyhow::bail!(
+                            "middens: technique '{}' requires Python but the Python \
+                             environment failed to prepare ({}). Install `uv` (https://docs.astral.sh/uv/) \
+                             or pass --no-python to skip Python techniques entirely.",
+                            trimmed_name, reason
+                        );
+                    } else {
+                        eprintln!("middens: warning: unknown technique '{}'", trimmed_name);
+                    }
                 } else {
                     eprintln!("middens: warning: unknown technique '{}'", trimmed_name);
                 }
@@ -195,4 +248,15 @@ fn run_technique(technique: &Box<dyn Technique>, sessions: &[crate::session::Ses
             Err(e)
         }
     }
+}
+
+/// Extract embedded Python assets, detect `uv`, and initialise the shared
+/// middens venv. Returns `(scripts_dir, python_path)` on success.
+fn prepare_python_env() -> Result<(PathBuf, PathBuf)> {
+    let cache = embedded::cache_dir();
+    std::fs::create_dir_all(&cache)?;
+    let (scripts_dir, requirements_path) = embedded::extract_to(&cache)?;
+    let uv = UvManager::detect(requirements_path)?;
+    uv.init()?;
+    Ok((scripts_dir, uv.python_path().clone()))
 }

@@ -72,7 +72,7 @@ pub trait Technique {
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult>;
 }
 
-/// All registered techniques.
+/// All Rust-native techniques.
 pub fn all_techniques() -> Vec<Box<dyn Technique>> {
     vec![
         Box::new(burstiness::Burstiness),
@@ -82,4 +82,127 @@ pub fn all_techniques() -> Vec<Box<dyn Technique>> {
         Box::new(markov::MarkovChain),
         Box::new(thinking_divergence::ThinkingDivergence),
     ]
+}
+
+/// Metadata for a Python-bridged technique: (name, description, script filename).
+///
+/// Script filename is resolved at runtime against the extracted scripts
+/// directory (see `bridge::embedded::extract_to`). Keeping the list here
+/// means registration is in sync with the embedded asset list.
+pub const PYTHON_TECHNIQUE_MANIFEST: &[(&str, &str, &str)] = &[
+    ("hsmm", "Hidden semi-Markov behavioural-state modelling", "hsmm.py"),
+    (
+        "information-foraging",
+        "Charnov marginal-value-theorem patch analysis",
+        "information_foraging.py",
+    ),
+    (
+        "granger-causality",
+        "Granger causality between event streams",
+        "granger_causality.py",
+    ),
+    (
+        "survival-analysis",
+        "Kaplan-Meier / Cox session survival",
+        "survival_analysis.py",
+    ),
+    (
+        "process-mining",
+        "Directly-follows graph process discovery",
+        "process_mining.py",
+    ),
+    (
+        "prefixspan-mining",
+        "PrefixSpan frequent sequential-pattern mining",
+        "prefixspan_mining.py",
+    ),
+    (
+        "smith-waterman",
+        "Smith-Waterman local sequence alignment",
+        "smith_waterman.py",
+    ),
+    (
+        "tpattern-detection",
+        "Magnusson T-pattern temporal detection",
+        "tpattern_detection.py",
+    ),
+    (
+        "lag-sequential",
+        "Lag-sequential transition analysis",
+        "lag_sequential.py",
+    ),
+    (
+        "spc-control-charts",
+        "Statistical process control charts",
+        "spc_control_charts.py",
+    ),
+    (
+        "ncd-clustering",
+        "Normalised compression-distance clustering",
+        "ncd_clustering.py",
+    ),
+    (
+        "ena-analysis",
+        "Epistemic network analysis",
+        "ena_analysis.py",
+    ),
+    (
+        "convention-epidemiology",
+        "Convention-epidemiology diffusion model",
+        "convention_epidemiology.py",
+    ),
+    (
+        "user-signal-analysis",
+        "User message signal classification (English-only)",
+        "user_signal_analysis.py",
+    ),
+    (
+        "cross-project-graph",
+        "Directed reference graph between projects with centrality metrics",
+        "cross_project_graph.py",
+    ),
+    (
+        "change-point-detection",
+        "Ruptures PELT regime-shift detection on per-session signals",
+        "change_point_detection.py",
+    ),
+    (
+        "corpus-timeline",
+        "Per-day per-project session counts (provisional)",
+        "corpus_timeline.py",
+    ),
+];
+
+/// Build Python-bridged techniques from the manifest, resolving each
+/// script against `scripts_dir` and using `python_path` as the interpreter.
+pub fn python_techniques(
+    scripts_dir: &std::path::Path,
+    python_path: &std::path::Path,
+    timeout_seconds: u64,
+) -> Vec<Box<dyn Technique>> {
+    use crate::bridge::PythonTechnique;
+    PYTHON_TECHNIQUE_MANIFEST
+        .iter()
+        .map(|(name, desc, filename)| {
+            Box::new(PythonTechnique::new(
+                name,
+                desc,
+                scripts_dir.join(filename),
+                python_path.to_path_buf(),
+                timeout_seconds,
+            )) as Box<dyn Technique>
+        })
+        .collect()
+}
+
+/// Rust techniques + Python techniques combined. Used by the analyze
+/// pipeline when a Python environment has been successfully detected.
+pub fn all_techniques_with_python(
+    scripts_dir: &std::path::Path,
+    python_path: &std::path::Path,
+    timeout_seconds: u64,
+) -> Vec<Box<dyn Technique>> {
+    let mut t = all_techniques();
+    t.extend(python_techniques(scripts_dir, python_path, timeout_seconds));
+    t
 }

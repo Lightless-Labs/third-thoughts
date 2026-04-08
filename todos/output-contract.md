@@ -102,3 +102,9 @@ Core idea: middens output is a *reproducible notebook backed by columnar storage
 - Parquet export todo in `todos/remaining-cli.md` — absorbed into the storage layer work here
 - Vega-Lite figure specs todo in `todos/remaining-cli.md` — absorbed into `FigureKind::VegaLite` + ipynb renderer
 - `middens fingerprint` stub — retrofitted as a technique
+
+## Post-reshape cleanup
+
+When the reshape lands, delete techniques that exist only because there is currently no canonical sessions table to query at view-render time:
+
+- **`corpus-timeline`** (added in Batch 4 — see `todos/python-techniques-batch4.md`). Exists because reports must be reproducible without the source corpus, which forced (date, project, session_count) into a stored DataTable. Once `sessions.parquet` exists with `(session_id, project, started_at, ended_at, n_messages, …)`, `corpus-timeline` becomes a trivial GROUP BY at view-render time. Delete the technique, its embedded script, and its manifest entry; replace with a view spec. ~30-line cleanup.

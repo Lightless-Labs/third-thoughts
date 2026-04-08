@@ -26,9 +26,12 @@ fn resolve_python_path() -> PathBuf {
 }
 
 fn technique_script_path(name: &str) -> PathBuf {
+    // Technique names are kebab-case in the public manifest; the underlying
+    // script files are snake_case on disk.
+    let filename = name.replace('-', "_");
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("python/techniques")
-        .join(format!("{}.py", name))
+        .join(format!("{}.py", filename))
 }
 
 fn make_tool_call(turn: usize) -> ToolCall {
@@ -394,6 +397,51 @@ fn given_sessions_across_projects(
             let mut session = create_session_indexed(&format!("session_{}", i), turns, false, i as usize);
             let project_id = format!("project_{}", i % project_count);
             session.metadata.cwd = Some(format!("/home/user/workspace/{}", project_id));
+            session
+        })
+        .collect();
+}
+
+/// Batch 4 fixture: sessions populated with `metadata.project` and per-message
+/// ISO-8601 timestamps so that `cross_project_graph` and `corpus_timeline` can
+/// exercise their happy paths. Dates span `day_span` consecutive days starting
+/// at 2026-03-01. Projects are named `project_0`..`project_{N-1}`; each session
+/// embeds one cross-project mention so the graph has edges to find.
+#[given(expr = "a set of {int} sessions across {int} projects spanning {int} days with timestamps, each with {int}-{int} turns")]
+fn given_sessions_with_projects_and_timestamps(
+    world: &mut MiddensWorld,
+    session_count: i32,
+    project_count: i32,
+    day_span: i32,
+    min: i32,
+    max: i32,
+) {
+    use chrono::{Duration, TimeZone, Utc};
+    assert!(project_count > 0, "project_count must be positive");
+    assert!(day_span > 0, "day_span must be positive");
+    assert!(max >= min, "max must be >= min");
+    let base = Utc.with_ymd_and_hms(2026, 3, 1, 10, 0, 0).unwrap();
+    world.sessions = (0..session_count)
+        .map(|i| {
+            let turns = (min as usize) + (i as usize % ((max - min + 1) as usize));
+            let mut session = create_session_indexed(&format!("session_{}", i), turns, false, i as usize);
+            let project_id = format!("project_{}", i % project_count);
+            let other_project = format!("project_{}", (i as i32 + 1) % project_count);
+            session.metadata.project = Some(project_id.clone());
+            session.metadata.cwd = Some(format!("/home/user/workspace/{}", project_id));
+            let day_offset = i % day_span;
+            let session_start = base + Duration::days(day_offset as i64) + Duration::minutes(i as i64);
+            let mut injected = false;
+            for (turn_idx, msg) in session.messages.iter_mut().enumerate() {
+                msg.timestamp = Some(session_start + Duration::seconds(turn_idx as i64 * 30));
+                if !injected && msg.role == MessageRole::User {
+                    msg.text = format!(
+                        "{} — also look at how {} does it, based on CLAUDE.md",
+                        msg.text, other_project
+                    );
+                    injected = true;
+                }
+            }
             session
         })
         .collect();

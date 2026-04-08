@@ -170,6 +170,19 @@ fn main() -> anyhow::Result<()> {
                 }
             }
 
+            // Python-bridged techniques come from a static manifest so
+            // `list-techniques` doesn't need a working Python env to run.
+            if !essential {
+                for (name, desc, _filename) in
+                    middens::techniques::PYTHON_TECHNIQUE_MANIFEST
+                {
+                    println!(
+                        "{:<30} {:<10} {:<8} {}",
+                        name, "no", "yes", desc,
+                    );
+                }
+            }
+
             Ok(())
         }
         Commands::Parse { file, format } => {

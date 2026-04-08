@@ -1,10 +1,72 @@
 # Session Handoff
 
-**Last updated:** 2026-04-06 (post PR #4 merge + GH#42796 replication work)
+**Last updated:** 2026-04-07 (3 PRs open, 3 rounds of bot-review triage completed, all mergeable)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
-## This session (2026-04-06) accomplished
+## >>> Read this first <<<
+
+Three PRs are open as of this handoff. Check them with `gh pr list` before doing anything else.
+
+| PR | Branch | What it does | Status |
+|----|--------|-------------|--------|
+| **#5** | `feat/batch4-and-distribution-prep` | Batch 4 Python techniques (4 new) + embedded-assets distribution prep. 23 techniques total (6 Rust + 17 Python). 270/270 scenarios. | **Merge-ready** — 3 rounds of bot review, all P1/P2 addressed, CR SUCCESS, MERGEABLE. |
+| **#6** | `feat/corpus-anomaly-w10-w12` | Investigation report: W10–W12 "interactive" bucket is ~99.7% contaminated with Boucle autonomous agent loop iterations (1,820/1,826 queue-operation marker; 100% zero tool calls). Self-contained report. | **Merge-ready** — 3 rounds of bot review, all P1/P2 addressed, CR SUCCESS, MERGEABLE. |
+| **#7** | `feat/thinking-visibility-stratification` | `Session::thinking_visibility` field + parser heuristic + `thinking-divergence` guard. **Re-ran 85.5% finding on real corpus: superseded by 100% on visible-only sessions (N=828).** | **Merge-ready** — 3 rounds of bot review, all P1/P2 addressed, MERGEABLE. |
+
+**Next concrete move (per user):** start **Phase 1 of Autonomous Session Stratum** as follow-up commits on `feat/corpus-anomaly-w10-w12` (PR #6). The Boucle contamination is no longer treated as contamination-to-filter but as a **new first-class session-type stratum** worth studying. See `todos/autonomous-session-stratum.md` for the full plan. Phase 1 is a small classifier + 3-way split; Phase 2 is running the 23-technique battery on the new stratum and writing a comparative report.
+
+## Key findings (as of this handoff)
+
+| Finding | Status | Scope |
+|---------|--------|-------|
+| **100% risk-token suppression** in paired thinking/text messages | **Provisional** (PR #7) | `language=en AND thinking_visibility=Visible AND NOT contaminated_by_Boucle`. N=828 visible-thinking sessions, 4,819 risk tokens across 209 paired messages. Within-corpus observation. |
+| 85.5% risk suppression on mixed corpus | **SUPERSEDED** (PR #7) | Was a mixed-corpus artifact — redacted sessions trivially scored 0% and dragged the per-session mean down. The underlying phenomenon is unchanged; only the reported percentage moves. |
+| HSMM pre-failure state (24.6x lift) | Robust (mixed corpus) | Needs re-run under the new stratification axes. |
+| MVT violated (agents under-explore) | Robust | `experiments/full-corpus/information-foraging.md` |
+| Thinking blocks prevent corrections | **RETRACTED** (prior session) | Did not survive population split |
+| Session degradation (agents get worse) | Holds on interactive only | `experiments/interactive/survival_analysis.txt` |
+| **Boucle contamination in interactive W10–W12** | **Confirmed** (PR #6) | 100% of W10–W12 "interactive" sessions are autonomous agent loop iterations. Requires stratification, not filtering. |
+
+**Compound scoping rule:** every future headline finding on thinking or text behaviour should be scoped on at least four axes:
+
+1. `session_type ∈ {Interactive, Subagent, Autonomous}` (Autonomous is new — see Phase 1 plan)
+2. `thinking_visibility ∈ {Visible, Redacted, Unknown}` (PR #7)
+3. `language ∈ {en, other}` (remediation in `todos/multilingual-text-techniques.md`)
+4. Temporal window (pre/post rollouts, weeks)
+
+A finding that doesn't survive all four is not a finding.
+
+## Latest session (2026-04-06 full day) — Batch 4 + 2 P1s shipped
+
+1. **Batch 4 Python techniques shipped** — 4 new techniques via the foundry adversarial process:
+   - `user_signal_analysis` — English-only user-message classification (correction/redirect/directive/approval/question + frustration intensity). Emits `skipped_non_english_messages` finding via cheap ASCII-fraction language gate. Defers thinking-block parts pending `todos/redact-thinking-header-correction.md`.
+   - `cross_project_graph` — directed reference graph between projects via NetworkX, with hub/authority/cluster metrics. Adds `networkx>=3.0,<4.0` to requirements.
+   - `change_point_detection` — ruptures PELT regime-shift detection on 4 per-user-message signals (msg length, tool call rate, correction flag, tool diversity). Binseg fallback. Adds `ruptures>=1.1,<2.0` to requirements.
+   - `corpus_timeline` — provisional, per-day per-project session counts. Header comment marks it for deletion once storage/view reshape lands (`todos/output-contract.md`).
+2. **Test count: 270/270 scenarios passing** (was 261). 9 new scenarios in `python_batch4.feature`.
+3. **Process notes** — full adversarial workflow with information barrier:
+   - Red team: Gemini 3.1 Pro Preview via `gemini -y -s false --prompt`. Wrote `python_batch4.feature` from sections 1+2+6 of NLSpec only. Flagged 3 contract gaps (project_name vs project field name; missing per-message timestamps; no language-test fixture).
+   - Green team: 4 parallel Kimi K2.5 dispatches via `opencode run -m kimi-for-coding/k2p5 --format json`. Each got the shared contract + its own How section.
+   - Orchestrator (me) mediated contract gaps by (a) correcting NLSpec field name (`project_name` → `project`), (b) adding new fixture step `a set of {int} sessions across {int} projects spanning {int} days with timestamps, each with {int}-{int} turns` to `python_batch1.rs` that populates both `metadata.project` and per-message ISO timestamps and injects one cross-project mention per session, (c) routing 2 affected scenarios to use the new step.
+   - Two iteration cycles needed: Kimi's `cross_project_graph` first cut had a `project_name` reference (despite the corrected NLSpec — drift); fixed inline as a 1-line bug fix. Test fixture initially injected text on the wrong turn index (User/Assistant alternation off-by-one); fixed inline.
+4. **OpenCode dispatch gotchas re-confirmed** — message must come BEFORE `-f` flag (positional after `-f` gets parsed as another file). Kimi's `write` tool gets auto-rejected on `external_directory` for paths outside the OpenCode workspace; explicit "use bash heredoc, write tool is disabled" in the prompt was required for the second cross_project_graph dispatch.
+
+## Previous session (2026-04-06 PM)
+
+1. **Python techniques wired into production CLI (commit `2d1d367`)** — `middens analyze` now runs all 19 techniques (6 Rust + 13 Python), not just the 6 Rust ones. Done by:
+   - New `bridge::embedded` module — all 13 scripts + `requirements.txt` baked into the binary via `include_str!`. Extracted idempotently to `$XDG_CONFIG_HOME/middens/python-assets/` at runtime (content-hash compared, only rewritten on change). **This is the key change for distributability — the CLI is no longer source-tree-dependent.**
+   - New `techniques::PYTHON_TECHNIQUE_MANIFEST` (static list of name/desc/filename) + `python_techniques()` + `all_techniques_with_python()` helpers.
+   - Pipeline tries `prepare_python_env()` (extract → detect uv → init venv) and **falls back to Rust-only with a stderr warning** if `uv` isn't installed. Graceful degradation — the CLI works even on systems without Python tooling.
+   - `list-techniques` shows all 19 from the static manifest, with no Python env required.
+   - Cucumber row count assertion updated 6 → 19 (essential scenario stays at 6).
+   - 261/261 scenarios passing.
+2. **GH#42796 thinking-redaction insight captured** — the `redact-thinking-2026-02-12` beta header is **UI-only** per the Anthropic engineer comment. Thinking still happens; it just isn't written to local transcripts. This means our `thinking-divergence` technique (and the 85.5% risk-suppression finding) is measuring transcript presence, not actual thinking. **Logged as P1 in `todos/redact-thinking-header-correction.md`** — needs parser-level header detection + session-level `thinking_visibility` flag + re-run of the 4 replications before any thinking-based metric can be trusted again.
+3. **Batch 4 Python techniques scoped + triaged** at `todos/python-techniques-batch4.md`. Triage outcome: 4 techniques to port — `user-signal-analysis` (English-only, scoped), `cross-project-graph` (NetworkX → flat edge+node tables), `change-point-detection` (ruptures PELT, adds first new dep since Batch 1), `corpus-timeline` (option A: tiny technique now, option B: refactor to a view over `sessions.parquet` once the storage/view reshape lands — tracked in `todos/output-contract.md` post-reshape cleanup). v1 of `006_user_signal_analysis` dropped (superseded by v2). Adversarial port plan ready.
+4. **Multilingual audit** at `todos/multilingual-text-techniques.md` — discovered during Batch 4 triage that **3 production techniques are silently English-only**: `thinking-divergence` (RISK_TOKENS literals), `correction-rate` Priority-3 lexical layer (`classifier/correction.rs:35`), and the proposed `user-signal-analysis`. Non-English sessions classify as zero/minimal. **The 85.5% suppression headline finding has scope `language=en + thinking_visibility=visible`** and needs both gates before re-asserting. The other ~16 techniques are language-invariant by construction (operate on tool sequences or filesystem structure). Recommended remediation: option C (detect language + refuse), not per-language pattern packs.
+5. **Total technique tally clarified**: 19 wired (6 Rust + 13 Python), 4 to port in Batch 4, 3 utilities-not-techniques, 6 originals ported to Rust (double-counted in naive `ls scripts/` math). Real distinct analytical techniques in the codebase post-Batch-4: **23** (6 Rust + 17 Python).
+
+## Previous session (2026-04-06 AM) accomplished
 
 1. **Batch 3 Python techniques shipped (PR #4, merged as 9eca691)** — 13/13 Python techniques ported.
 2. **6 rounds of PR-review iteration** — 26 automated findings from Gemini (6) + Copilot (8) + Codex (12 across 6 review rounds). All addressed inline + replied with rationale. See commit `9eca691` for the full squashed set.
@@ -40,7 +102,8 @@ middens list-techniques                                # show 6 registered techn
 | Analyze pipeline | Done | discover → parse → classify → techniques → output |
 | `--split` | Done | Automatic interactive/subagent stratification |
 | Python bridge | Done | UvManager + PythonTechnique wrapper (merged PR #3) |
-| Python techniques | **13/13** | Batches 1 + 2 + 3 done. All registered dynamically in cucumber tests only — NOT wired into `all_techniques()` in `src/techniques/mod.rs` yet (pre-existing gap from Batch 1). |
+| Python techniques | **17/17 wired** | Batches 1+2+3+4 done AND wired into production via `PYTHON_TECHNIQUE_MANIFEST` + embedded scripts. Pipeline auto-prepares Python env, falls back to Rust-only on missing `uv`. |
+| Python asset embedding | Done | `bridge::embedded` extracts scripts + requirements.txt from binary to `$XDG_CONFIG_HOME/middens/python-assets/`. CLI is source-tree-independent. |
 | `fingerprint` | Stub, *superseded* | Reframed as a technique in `docs/design/output-contract.md` |
 | `report` | Stub, *reshaped* | New contract `(run_id, format) → view file`. See `todos/output-contract.md` |
 | Storage/view split | Designed, not implemented | `docs/design/output-contract.md`, `todos/output-contract.md` — next major work |
@@ -68,43 +131,48 @@ NLSpecs at `middens/docs/nlspecs/2026-04-{05,06}-python-techniques-batch{1,2,3}-
 
 ### Open work (prioritized for next session)
 
-1. **Investigate corpus composition anomaly W10→W11** — the interactive bucket jumped from 27 sessions/week (W09) to 141 (W10) to 1230 (W11) while tools-per-session collapsed from 572 → 114 → 8.9. Signature of mass influx of very short / empty / automation sessions. Needs `scripts/correction_classifier.py` re-pass on W10–W12 sessions. **Nothing in temporal analysis on this corpus is trustworthy until this is explained.** See `~/claude-reasoning-performance-counter-analysis/report.md` for the data.
-2. **Wire Python techniques into `src/techniques/mod.rs::all_techniques()`** — pre-existing gap from Batch 1. Right now `middens analyze` in production only runs the 6 Rust techniques; all 13 Python ones are invoked only by cucumber tests.
-3. **Storage/view reshape** (`todos/output-contract.md`) — big next step. Parquet + manifest canonical storage, `ViewRenderer` trait, `.ipynb` renderer, `middens report <run_id> --format <fmt>`, `middens runs list`. Fully designed.
-4. **Conclusions v1** (`todos/conclusions-v1-manual.md`) — small, lands alongside or after the reshape.
-5. **Deferred PR #4 review items** — `todos/batch3-coderabbit-deferred.md` has the P2/P3 spec clarifications that didn't land in PR #4. Mostly doc refinements.
+0. **PR review / merge triage.** Three PRs are open (#5, #6, #7 — see top of file). Check bot reviews with `gh pr view <n>` and `gh api repos/.../pulls/<n>/comments --paginate`. Triage discipline per HANDOFF "PR review iteration" section. Merge order matters: **#7 (thinking-visibility) depends conceptually on no code from #5 or #6 — can merge standalone. #5 (Batch 4) depends on nothing. #6 (corpus anomaly doc-only) depends on nothing BUT the Phase 1 code work (below) will land on the #6 branch, so don't merge #6 until Phase 1 is ready or just extend the PR.**
+1. **Autonomous Session Stratum — Phase 1 (code) + Phase 2 (research).** Follow-up commits on `feat/corpus-anomaly-w10-w12`. See `todos/autonomous-session-stratum.md` for the full plan. Phase 1: new `SessionType::Autonomous` variant, framework-agnostic classifier (`Autonomous = Interactive ∩ no_human_participation`), `corpus-split/autonomous/` bucket, cucumber. Phase 2: run the 23-technique battery on the new stratum and write a comparative analysis report. This is the interesting research direction the user explicitly chose. **Start here after PR triage.**
+2. **Distribution / install story** — the CLI is now self-contained (Python assets embedded in binary). Remaining gaps before users can `cargo install middens` or `brew install middens`:
+   - `Cargo.toml` package metadata (description, license, repository, keywords) — verify before publishing
+   - First-run UX: when `uv` is missing, the current stderr warning should become a one-time friendly message pointing at `https://docs.astral.sh/uv/getting-started/installation/`
+   - Cache-dir strategy on Windows (`%LOCALAPPDATA%`) — verify `bridge::embedded::cache_dir` handles it
+   - Release build profile in `Cargo.toml` (`[profile.release] strip = true, lto = "thin"`)
+   - GitHub release workflow for darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64, optionally windows-x86_64
+   - Homebrew tap or `cargo install` instructions in README
+   - Smoke-test installing on a clean machine where the source tree is absent
+3. **Multilingual remediation** (`todos/multilingual-text-techniques.md`) — implement option C (detect language + refuse) on `thinking-divergence`, `correction-rate` lexical layer, and `user_signal_analysis`. Adds `whatlang` (or equivalent) crate, populates `Session::language`. Re-runs the 4 risk-suppression replications under `language=en` stratification. This plus the Autonomous stratum plus thinking-visibility gives the full 4-axis stratification from the "compound scoping rule" above.
+4. **Storage/view reshape** (`todos/output-contract.md`) — big next step. Parquet + manifest canonical storage, `ViewRenderer` trait, `.ipynb` renderer, `middens report <run_id> --format <fmt>`, `middens runs list`. Fully designed. When this lands, `corpus-timeline` (Batch 4) becomes redundant and should be deleted (see post-reshape cleanup in `todos/output-contract.md`).
+5. **Conclusions v1** (`todos/conclusions-v1-manual.md`) — small, lands alongside or after the reshape.
+6. **Deferred PR review items:**
+   - `todos/batch3-coderabbit-deferred.md` — PR #4 (Batch 3) P2/P3 spec clarifications
+   - (Batch 4 / PR #5 review items, if any bots flagged things, should be triaged under item 0)
+7. **Update `CLAUDE.md` "Key Findings" table** — change the 85.5% row to the 100% stratified figure once PR #7 merges. Could happen in PR #7 or a follow-up.
+8. **HSMM re-run under 4-axis stratification** — the 24.6× pre-failure state lift is currently reported on a mixed corpus. Once PR #7 + Phase 1 + multilingual all land, re-run HSMM and check whether the finding survives. New solutions doc if it does, retraction if it doesn't.
+9. **File GH#42796 follow-up?** The original investigation (see previous HANDOFF sections) concluded the corpus couldn't refute or confirm Laurenzo's claims. With the new stratification axes in hand, a cleaner replication is now possible. Decide whether to pursue.
 
 ### Branches
 
-| Branch | Status |
-|--------|--------|
-| `main` | Current — all phases through Python bridge merged |
+| Branch | Tracks origin? | Status |
+|--------|:--------------:|--------|
+| `main` | yes | Base. Pre-session state. |
+| `feat/batch4-and-distribution-prep` | yes | **PR #5 open.** 5 commits ahead. |
+| `feat/corpus-anomaly-w10-w12` | yes | **PR #6 open.** 1 commit (docs only — will gain Phase 1 code on top). |
+| `feat/thinking-visibility-stratification` | yes | **PR #7 open.** 1 commit. |
 
 ### Test suite
 
-**261 Cucumber/Gherkin scenarios, 1433 steps — all passing** (post Batch 3). Runner at `middens/tests/cucumber.rs`. Feature files organized by domain under `middens/tests/features/`. Python technique tests at `tests/features/techniques/python_batch{1,3}.feature` (batch1 covers Batches 1+2 scripts despite the name; batch3 adds the 5 new ones).
+**270 Cucumber/Gherkin scenarios, 1549 steps — all passing** (post Batch 4). Runner at `middens/tests/cucumber.rs`. Feature files organized by domain under `middens/tests/features/`. Python technique tests at `tests/features/techniques/python_batch{1,3,4}.feature` (batch1 covers Batches 1+2 scripts despite the name; batch3 adds 5; batch4 adds 4).
 
-## Corpus composition anomaly (W10→W11) — HIGH PRIORITY
+## Corpus composition anomaly (W10→W11) — INVESTIGATED (PR #6)
 
-**What it is:** During the GH#42796 replication work, the interactive bucket's composition changed dramatically between ISO weeks W09 and W11 of 2026:
+**What it was:** Interactive-bucket session count exploded 45× (W09 27 → W11 1,230) with tools-per-session collapsing 64× (572 → 8.9) and total tool calls *dropping*. A model regression couldn't explain this.
 
-| Week | Sessions | Tool calls | Tools/session | Prompts/session |
-|------|---------:|-----------:|--------------:|----------------:|
-| W06 | 2 | 1,390 | 695 | 49 |
-| W09 | 27 | 15,442 | 572 | 58 |
-| W10 | 141 | 16,024 | **114** | 18 |
-| W11 | **1,230** | 10,902 | **8.9** | 30.6 |
-| W12 | 555 | 3,282 | **5.9** | 2.7 |
+**Resolution:** Investigated as PR #6. Root cause: **100% of W10–W12 "interactive" sessions are Boucle autonomous agent loop iterations** — zero tool calls, `queue-operation` type messages, `<run_context>` tags, explicit framework references. Not a model regression, not a stratification bug proper — the `corpus-split/` filter catches user/assistant alternation but doesn't exclude automation sessions that use the same message shapes.
 
-**Why it matters:** Session count exploded 45× (27 → 1,230) while total tool calls actually *dropped*. Mean tools-per-session collapsed 64× (572 → 8.9). **A model-behaviour regression cannot explain this** — it's the signature of mass influx of very short, empty, or automation sessions into the interactive bucket (misclassified subagent sessions, abandoned sessions, or a new automation layer that emits session metadata without real interaction). Until this is explained and/or corrected, **no temporal analysis on the interactive corpus after ~W10 can be trusted**.
+**Full report:** `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md`.
 
-This is directly analogous to the prior retracted Third Thoughts finding documented in `docs/solutions/methodology/population-contamination-interactive-vs-subagent-20260320.md` — another thinking-related finding that dissolved under population stratification.
-
-**Next session must:**
-1. Read `~/claude-reasoning-performance-counter-analysis/report.md` for the full analysis and numbers
-2. Re-run `scripts/correction_classifier.py` on W10–W12 sessions to verify they are actually interactive
-3. Quantify how many W11 "interactive" sessions are really <20 events (and therefore below `spc_control_charts.py`'s minimum-event filter anyway)
-4. Document findings in `docs/solutions/methodology/`
+**Follow-up plan:** rather than filter Boucle out, promote it to a first-class session type. See `todos/autonomous-session-stratum.md` and "Open work" item 1.
 
 ## GH#42796 replication
 
@@ -194,13 +262,17 @@ Process learnings documented in foundry: `~/Projects/lightless-labs/foundry/docs
 Individual files in `todos/` following phil-connors pattern (YAML frontmatter with status, priority, issue_id, tags, source). When triaging PR review comments, reply with the todo file link.
 
 Key todo files:
-- `todos/python-bridge.md` — Phase 4: 13 Python technique ports (DONE — all 13/13 merged)
+- `todos/autonomous-session-stratum.md` — **NEXT UP** — Phase 1: framework-agnostic `SessionType::Autonomous` classifier (Interactive ∩ no_human_participation). Phase 2: run 23-technique battery on new stratum + comparative report. Follow-up on PR #6.
+- `todos/python-bridge.md` — Phase 4: 13 Python technique ports (DONE — all 13/13 merged AND wired into production)
+- `todos/python-techniques-batch4.md` — **DONE** 2026-04-06 (PR #5). 4 techniques shipped.
+- `todos/redact-thinking-header-correction.md` — **DONE** 2026-04-06 (PR #7). 85.5% → 100% on visible-only.
+- `todos/multilingual-text-techniques.md` — P2 — 3 techniques are English-only (`thinking-divergence`, `correction-rate` lexical layer, `user-signal-analysis`); audit + remediation plan. Not started.
 - `todos/remaining-cli.md` — fingerprint, report, Parquet, Vega-Lite, config (most items *superseded* by output-contract reshape)
-- `todos/output-contract.md` — storage/view split full work breakdown (next major piece)
+- `todos/output-contract.md` — storage/view split full work breakdown. Will retire `corpus-timeline` technique when it lands.
 - `todos/conclusions-v1-manual.md` — manual analyst-authored conclusions sidecar
 - `todos/conclusions-v2-synthesize.md` — LLM-authored conclusions via future `middens synthesize`
-- `todos/batch3-coderabbit-deferred.md` — spec clarifications deferred from PR #4 review
-- `todos/research-reruns.md` — Granger, survival, process mining with corrected classifier
+- `todos/batch3-coderabbit-deferred.md` — spec clarifications deferred from PR #4 review (Batch 3)
+- `todos/research-reruns.md` — Granger, survival, process mining with corrected classifier. Needs re-run after Autonomous stratum lands.
 - `todos/023-pending-p1-peer-review-methodology-findings.md` — unaddressed research methodology issues
 - `todos/009-026` — individual P2/P3 code review fixes
 
