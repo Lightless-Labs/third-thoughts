@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-07 (PRs #5/#6/#7 merged after 4 rounds of bot review; CLAUDE.md Key Findings table refreshed)
+**Last updated:** 2026-04-07 PM (priority pivot — shipping a distributable middens; Autonomous stratum deferred)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
@@ -16,7 +16,27 @@ All three open PRs from the previous session are now merged into `main`:
 
 Bot-review story for the curious: 49 distinct inline findings across 4 review rounds (Codex / Gemini / Copilot / CodeRabbit). All P1/P2 addressed inline, all comments replied to with rationale, deferred items in `todos/batch4-coderabbit-deferred.md`.
 
-**Next concrete move:** start **Phase 1 of Autonomous Session Stratum** on a fresh branch off `main`. The Boucle contamination is no longer treated as contamination-to-filter but as a **new first-class session-type stratum** worth studying. See `todos/autonomous-session-stratum.md` for the full plan. Phase 1 is a small classifier + 3-way split; Phase 2 is running the 23-technique battery on the new stratum and writing a comparative report.
+**Next concrete move (priority pivot — 2026-04-07 PM):** ship a distributable middens. The Autonomous Session Stratum is deferred — we know we'll do it, but priority is having something shareable first. Three workstreams in order:
+
+1. **Repo hygiene.** Branches/commits/history in ship-shape. Audit `git log` on `main`, prune any stale branches, verify the squashed merges are clean, freshen README, check `Cargo.toml` package metadata (description, license, repository, keywords, categories), add a release profile (`[profile.release] strip = true, lto = "thin"`).
+
+2. **CLI reshape — analyze / interpret / export triad.** Implements the storage/view split designed in `docs/design/output-contract.md` and the Conclusions v2 design in `todos/conclusions-v2-synthesize.md`, but with the new three-command shape:
+   - `middens analyze [corpus] --format <fmt> --output-dir <dir>` — runs the techniques and methods. Default output dir: `~/.local/com.lightless-labs.third-thoughts/middens/analysis/<date>-<slug>/`. Canonical storage is the existing TechniqueResult JSON / parquet (TBD which lands first). `--format` is the *storage* format, not a view.
+   - `middens interpret <analysis-dir> --provider <claude|codex|gemini> --model <id> --output-dir <dir>` — runs an LLM CLI over the analysis output to author conclusions. **Provider fallback chain: Claude Code → Codex CLI → Gemini CLI**, picking the first one available on PATH unless explicitly overridden. Default output dir: `~/.local/com.lightless-labs.third-thoughts/middens/interpretation/<date>-<slug>/`. Output is markdown plus a manifest pointing back at the analysis run it interprets.
+   - `middens export <analysis-dir> [--interpretation <interpretation-dir>] --format <jupyter|html|...> --output <file>` — converts an analysis (and optional interpretation) into a view format. **Jupyter notebook is the only required format for v1.** HTML is generated from the notebook via `nbconvert` or equivalent — out of scope as a first-class exporter for this milestone.
+
+   Storage paths use `~/.local/com.lightless-labs.third-thoughts/...` not the XDG-default `~/.local/share/...` — this is intentional, mirrors macOS bundle-ID conventions, and gives the project a single namespaced root across analysis/interpretation/cache.
+
+   The existing `todos/output-contract.md` covers the storage half. The existing `todos/conclusions-v{1-manual,2-synthesize}.md` cover what `interpret` produces. Both stay relevant; this milestone is the integration layer that wires them into the new command shape.
+
+3. **Distribution.** Once 1+2 are working end-to-end on a real corpus:
+   - GitHub release workflow producing darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64, optionally windows-x86_64 binaries.
+   - `cargo install middens` via crates.io publish (requires Cargo.toml metadata from workstream 1).
+   - GitHub Pages site for the project — at minimum a landing page with install instructions, the headline findings (linking the methodology docs), and a sample exported notebook so visitors can see what the output looks like before installing.
+
+**Explicit non-goals for this milestone:** Autonomous session stratum work (Phase 1 + Phase 2), multilingual remediation, HSMM re-runs under 4-axis stratification, the GH#42796 follow-up. All deferred until the shippable artifact lands.
+
+**Format priority confirmed with user (2026-04-07):** Jupyter notebook is the only required first-class export format. HTML can be generated from the notebook via `nbconvert` post-hoc; that's good enough for the demo. Other formats (PDF, Pluto, Quarto, Julia notebook) follow once the `ViewRenderer` trait is in place.
 
 ## Key findings (as of this handoff)
 
