@@ -8,7 +8,7 @@ use regex::Regex;
 use serde_json::json;
 
 use super::{DataTable, Finding, Technique, TechniqueResult};
-use crate::session::Session;
+use crate::session::{Session, ThinkingVisibility};
 
 /// Thinking block divergence analysis technique.
 pub struct ThinkingDivergence;
@@ -55,8 +55,20 @@ impl Technique for ThinkingDivergence {
         let mut global_total_text_chars = 0;
 
         let mut session_data = Vec::new();
+        let mut skipped_redacted_sessions: usize = 0;
+        let mut analyzed_visible_sessions: usize = 0;
+        let mut analyzed_unknown_sessions: usize = 0;
 
         for session in sessions {
+            // Stratify by thinking_visibility: sessions captured under the
+            // `redact-thinking-2026-02-12` beta header have no thinking blocks
+            // in the transcript even though thinking still happened. Including
+            // them would silently deflate suppression-rate measurements.
+            let visibility = session.thinking_visibility;
+            if visibility == ThinkingVisibility::Redacted {
+                skipped_redacted_sessions += 1;
+                continue;
+            }
             let mut session_has_thinking = false;
             let mut session_messages_with_both = 0;
             let mut session_risk_tokens = 0;
@@ -97,6 +109,11 @@ impl Technique for ThinkingDivergence {
 
             if session_has_thinking {
                 total_sessions_with_thinking += 1;
+                match visibility {
+                    ThinkingVisibility::Visible => analyzed_visible_sessions += 1,
+                    ThinkingVisibility::Unknown => analyzed_unknown_sessions += 1,
+                    ThinkingVisibility::Redacted => {} // unreachable
+                }
                 total_messages_with_both += session_messages_with_both;
                 global_total_risk_tokens += session_risk_tokens;
                 global_suppressed_tokens += session_suppressed_tokens;
@@ -175,6 +192,30 @@ impl Technique for ThinkingDivergence {
                 value: json!(total_sessions_with_thinking),
                 description: Some("Total sessions with thinking blocks analyzed".to_string()),
             },
+            Finding {
+                label: "skipped_redacted_sessions".to_string(),
+                value: json!(skipped_redacted_sessions),
+                description: Some(
+                    "Sessions skipped because thinking was redacted from transcript \
+                     (post redact-thinking-2026-02-12 header)".to_string(),
+                ),
+            },
+            Finding {
+                label: "analyzed_visible_sessions".to_string(),
+                value: json!(analyzed_visible_sessions),
+                description: Some(
+                    "Analyzed sessions whose thinking_visibility is Visible".to_string(),
+                ),
+            },
+            Finding {
+                label: "analyzed_unknown_sessions".to_string(),
+                value: json!(analyzed_unknown_sessions),
+                description: Some(
+                    "Analyzed sessions whose thinking_visibility is Unknown \
+                     (parser could not determine visibility; included in the \
+                     analyzed cohort but not guaranteed to be pre-redaction)".to_string(),
+                ),
+            },
         ];
 
         let table = DataTable {
@@ -191,13 +232,22 @@ impl Technique for ThinkingDivergence {
             rows: session_data,
         };
 
-        let summary = format!(
+        let mut summary = format!(
             "Analyzed {} sessions with thinking blocks. Average risk suppression rate: {:.2}%. \
              Overall thinking-to-text divergence ratio: {:.2}.",
             total_sessions_with_thinking,
             avg_suppression_rate * 100.0,
             avg_divergence_ratio
         );
+        if skipped_redacted_sessions > 0 || analyzed_unknown_sessions > 0 {
+            summary.push_str(&format!(
+                " (analyzed {} visible + {} unknown-visibility sessions with thinking; \
+                 {} skipped as thinking-redacted)",
+                analyzed_visible_sessions,
+                analyzed_unknown_sessions,
+                skipped_redacted_sessions
+            ));
+        }
 
         Ok(TechniqueResult {
             name: self.name().to_string(),

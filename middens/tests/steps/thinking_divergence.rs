@@ -63,6 +63,7 @@ fn session_with_thinking_and_text(id: &str, thinking: Option<&str>, text: &str) 
         ],
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Visible,
     }
 }
 

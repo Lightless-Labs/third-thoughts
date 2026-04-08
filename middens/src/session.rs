@@ -23,6 +23,13 @@ pub struct Session {
     pub metadata: SessionMetadata,
     /// Environment fingerprint: what was active when this session ran.
     pub environment: EnvironmentFingerprint,
+    /// Whether thinking blocks are visible in this transcript.
+    ///
+    /// Placed on `Session` rather than `SessionMetadata` because it is a
+    /// derived property of the entire message stream (not a passively parsed
+    /// field), and downstream techniques must branch on it frequently.
+    #[serde(default)]
+    pub thinking_visibility: ThinkingVisibility,
 }
 
 /// Which agent tool produced this session.
@@ -49,6 +56,25 @@ impl std::fmt::Display for SourceTool {
             Self::Unknown => write!(f, "Unknown"),
         }
     }
+}
+
+/// Whether thinking blocks are present in the transcript.
+///
+/// On 2026-02-12 Anthropic rolled out the `redact-thinking-2026-02-12` beta
+/// header which hides thinking blocks from the Claude Code UI to reduce
+/// latency. Crucially, thinking still happens server-side; it simply is no
+/// longer written to local session transcripts. Any technique that counts
+/// thinking blocks in transcripts therefore measures *transcript presence*,
+/// not *actual thinking*.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub enum ThinkingVisibility {
+    /// Thinking blocks are present in the transcript (pre-Feb-12 or opted-in).
+    Visible,
+    /// Thinking is happening but not stored in the transcript (post-Feb-12 default).
+    Redacted,
+    /// Cannot be determined from the available data.
+    #[default]
+    Unknown,
 }
 
 /// Whether this session involved a human or was automated.

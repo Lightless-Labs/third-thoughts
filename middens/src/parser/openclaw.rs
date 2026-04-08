@@ -471,6 +471,7 @@ impl SessionParser for OpenClawParser {
             messages,
             metadata,
             environment,
+            thinking_visibility: crate::session::ThinkingVisibility::Unknown,
         };
 
         Ok(vec![session])

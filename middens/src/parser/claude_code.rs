@@ -17,8 +17,24 @@ use serde_json::Value;
 use super::SessionParser;
 use crate::session::{
     ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole, Session,
-    SessionMetadata, SessionType, SourceTool, ToolCall, ToolResult,
+    SessionMetadata, SessionType, SourceTool, ThinkingVisibility, ToolCall, ToolResult,
 };
+
+/// Cutoff timestamp for the `redact-thinking-2026-02-12` beta header rollout.
+/// Sessions starting on/after this instant with no thinking blocks are
+/// assumed to have been captured under the redacted default.
+const REDACT_THINKING_CUTOFF: &str = "2026-02-12T00:00:00Z";
+
+/// Parse the cutoff once and reuse across `parse` calls.
+fn redact_thinking_cutoff() -> &'static DateTime<Utc> {
+    use std::sync::OnceLock;
+    static CUTOFF: OnceLock<DateTime<Utc>> = OnceLock::new();
+    CUTOFF.get_or_init(|| {
+        REDACT_THINKING_CUTOFF
+            .parse()
+            .expect("REDACT_THINKING_CUTOFF must be a valid RFC 3339 timestamp")
+    })
+}
 
 pub struct ClaudeCodeParser;
 
@@ -326,6 +342,38 @@ impl SessionParser for ClaudeCodeParser {
             .map(|s| s.to_string());
         metadata.project = project;
 
+        // Derive thinking_visibility heuristic.
+        //
+        // Limitations: we cannot read HTTP headers from a stored transcript,
+        // so this is a best-effort inference. A session could in principle
+        // be post-cutoff but have the beta header disabled (→ Visible) or
+        // be pre-cutoff yet have zero thinking for unrelated reasons (→
+        // misclassified Visible — conservative, keeps the session in the
+        // analysis). The Unknown bucket captures sessions with no usable
+        // timestamps.
+        let mut any_thinking = false;
+        let mut earliest_ts: Option<DateTime<Utc>> = None;
+        for m in &messages {
+            if m.thinking.is_some() {
+                any_thinking = true;
+            }
+            if let Some(ts) = m.timestamp {
+                if earliest_ts.map_or(true, |e| ts < e) {
+                    earliest_ts = Some(ts);
+                }
+            }
+        }
+        let cutoff: DateTime<Utc> = *redact_thinking_cutoff();
+        let thinking_visibility = if any_thinking {
+            ThinkingVisibility::Visible
+        } else {
+            match earliest_ts {
+                Some(ts) if ts < cutoff => ThinkingVisibility::Visible,
+                Some(_) => ThinkingVisibility::Redacted,
+                None => ThinkingVisibility::Unknown,
+            }
+        };
+
         let session = Session {
             id,
             source_path: path.to_path_buf(),
@@ -334,6 +382,7 @@ impl SessionParser for ClaudeCodeParser {
             messages,
             metadata,
             environment,
+            thinking_visibility,
         };
 
         Ok(vec![session])

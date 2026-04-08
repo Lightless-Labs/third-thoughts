@@ -88,6 +88,7 @@ fn make_session(path: &str, messages: Vec<Message>) -> Session {
         messages,
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Unknown,
     }
 }
 

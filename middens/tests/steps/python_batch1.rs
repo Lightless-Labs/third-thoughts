@@ -126,6 +126,7 @@ fn create_session_indexed(id: &str, num_turns: usize, high_correction: bool, ses
         messages,
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Visible,
     }
 }
 

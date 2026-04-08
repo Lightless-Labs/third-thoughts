@@ -515,6 +515,7 @@ fn given_markov_sessions(world: &mut MiddensWorld) {
         messages,
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Unknown,
     };
 
     world.sessions = vec![session];

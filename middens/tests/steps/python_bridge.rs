@@ -69,6 +69,7 @@ fn set_test_sessions(world: &mut MiddensWorld) {
             messages: vec![],
             metadata: SessionMetadata::default(),
             environment: EnvironmentFingerprint::default(),
+            thinking_visibility: middens::session::ThinkingVisibility::Unknown,
         },
         Session {
             id: "test2".to_string(),
@@ -78,6 +79,7 @@ fn set_test_sessions(world: &mut MiddensWorld) {
             messages: vec![],
             metadata: SessionMetadata::default(),
             environment: EnvironmentFingerprint::default(),
+            thinking_visibility: middens::session::ThinkingVisibility::Unknown,
         },
     ];
 }

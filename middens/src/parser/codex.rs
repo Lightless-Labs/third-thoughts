@@ -386,6 +386,7 @@ impl SessionParser for CodexParser {
             messages,
             metadata,
             environment,
+            thinking_visibility: crate::session::ThinkingVisibility::Unknown,
         };
 
         Ok(vec![session])

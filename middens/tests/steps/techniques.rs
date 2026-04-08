@@ -53,6 +53,7 @@ fn session_with_tools(id: &str, tool_names: &[&str]) -> Session {
         messages,
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Unknown,
     }
 }
 
@@ -87,6 +88,7 @@ fn session_with_tools_per_message(id: &str, tool_names: &[&str]) -> Session {
         messages,
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Unknown,
     }
 }
 
@@ -134,6 +136,7 @@ fn session_with_classifications(
             ..Default::default()
         },
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Unknown,
     }
 }
 
@@ -360,6 +363,7 @@ fn given_empty_session(world: &mut MiddensWorld, id: String) {
         messages: vec![],
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
+        thinking_visibility: middens::session::ThinkingVisibility::Unknown,
     });
 }
 
