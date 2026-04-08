@@ -46,17 +46,21 @@ todos/                      # Individual todo files (phil-connors pattern)
 
 **Use the validated correction classifier.** The regex-based approach fails on subagent sessions (90% false positive rate). The structural classifier at `scripts/correction_classifier.py` achieves 98% accuracy by checking for tool_result content blocks before applying lexical patterns.
 
-**Risk suppression is 85.5%.** This replicated identically across 4 independent analyses. It is the most robust finding in the corpus.
+**Risk suppression is 100% on visible-thinking sessions.** Across 209 paired thinking/text messages in 828 visible-thinking English sessions (4,819 risk-token observations), every risk token in the thinking block is absent from the paired user-facing text. The earlier "85.5%" headline was a mixed-corpus artifact — redacted sessions trivially scored 0% and dragged the per-session mean down. See `docs/solutions/methodology/redact-thinking-stratification-20260406.md`.
 
 ## Key Findings
 
 | Finding | Status | Evidence |
 |---------|--------|----------|
-| 85.5% risk suppression | **Robust** (4 replications) | `experiments/*/010_thinking_block_divergence.txt` |
-| HSMM pre-failure state (24.6x lift) | Robust (mixed corpus) | `experiments/full-corpus/hsmm_behavioral_states.txt` |
+| 100% risk suppression on visible-thinking sessions | **Provisional** (PR #7) | `language=en AND thinking_visibility=Visible AND NOT contaminated_by_Boucle`. N=828 sessions, 4,819 risk tokens across 209 paired messages. `docs/solutions/methodology/redact-thinking-stratification-20260406.md` |
+| 85.5% risk suppression on mixed corpus | **SUPERSEDED** (PR #7) | Mixed-corpus artifact — redacted sessions trivially scored 0% and dragged the per-session mean down. The phenomenon is unchanged; only the reported percentage moves. |
+| HSMM pre-failure state (24.6x lift) | Robust (mixed corpus) | `experiments/full-corpus/hsmm_behavioral_states.txt` — needs re-run under 4-axis stratification |
 | MVT violated (agents under-explore) | Robust | `experiments/full-corpus/information-foraging.md` |
 | Thinking blocks prevent corrections | **RETRACTED** (did not survive population split) | `experiments/interactive/survival-results.json` |
 | Session degradation (agents get worse) | Holds on interactive only | `experiments/interactive/survival_analysis.txt` |
+| W10–W12 Boucle contamination in interactive bucket | **Confirmed** (PR #6) | 1,820 of 1,826 sessions carry the `queue-operation` marker; 100% have zero tool calls. `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md` |
+
+**Compound scoping rule:** every future headline finding on thinking or text behaviour should be scoped on at least four axes: `session_type ∈ {Interactive, Subagent, Autonomous}`, `thinking_visibility ∈ {Visible, Redacted, Unknown}`, `language ∈ {en, other}`, and a temporal window. A finding that doesn't survive all four is not a finding.
 
 ## Middens CLI
 
