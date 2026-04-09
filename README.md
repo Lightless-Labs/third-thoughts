@@ -1,6 +1,6 @@
 # Third Thoughts
 
-A Lightless Labs research project studying AI agent behavior at scale through multi-disciplinary corpus analysis.
+A Lightless Labs research project studying AI agent behavior at scale through multi-disciplinary corpus analysis (basically, throwing stuff at the wall and seeing what sticks).
 
 Named after Tiffany Aching's concept from Discworld: *first thoughts* (agents thinking), *second thoughts* (agents analyzing their thinking), *third thoughts* (this project analyzing **that**).
 
