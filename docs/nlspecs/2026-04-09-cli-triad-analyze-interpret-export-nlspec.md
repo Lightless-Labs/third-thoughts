@@ -241,6 +241,38 @@ The split-on-first-`/` rule is deliberate so OpenCode's native `<provider>/<mode
 5. Writes `default-view.md` unless `--no-default-view` is set. Default view is produced via the same `ViewRenderer` path that `export` uses — no shortcut from in-memory results to markdown.
 6. On technique error: write the error into `TechniqueEntry.errors` and continue. Non-zero exit only if zero techniques succeeded.
 7. Prints the run-id and storage path to stdout on success.
+8. **`--split` stratification under the storage layer.** When `--split` is set, the pipeline partitions discovered sessions into the `interactive` and `subagent` strata (existing behaviour, preserved) and runs the full technique battery on each stratum independently. The storage layout becomes:
+
+    ```text
+    $XDG_DATA_HOME/com.lightless-labs.third-thoughts/analysis/run-<uuidv7>/
+        manifest.json                  # top-level — carries run_id, corpus fingerprint,
+                                       #   analyzer fingerprint, and a `strata` field
+                                       #   listing {name, session_count, manifest_ref}
+                                       #   for each stratum.
+        interactive/
+            manifest.json              # stratum manifest — same schema as the non-split
+                                       #   manifest, but `run_id` is inherited from the
+                                       #   top-level and the stratum manifest adds a
+                                       #   `stratum: "interactive"` field.
+            data/
+                <technique_slug>.parquet
+                ...
+            sessions.parquet           # only interactive sessions
+            default-view.md
+        subagent/
+            manifest.json              # `stratum: "subagent"`
+            data/
+                <technique_slug>.parquet
+                ...
+            sessions.parquet           # only subagent sessions
+            default-view.md
+    ```
+
+    Rationale for the nested layout (rather than two separate top-level run dirs): `--split` is logically one analysis of one corpus, not two separate runs. Sharing a single `run_id` lets `export` render a single notebook with both strata side-by-side (future work), and keeps `interpret` addressable by run ID the same way the non-split case is.
+
+    When `--split` is **not** set, there is no top-level `strata` field and no `interactive/` / `subagent/` subdirs — the layout is exactly as described in §2.1.
+
+    `interpret` and `export` default-path resolution for a split run: if `--analysis-dir` points at the top-level `run-<uuidv7>/` dir, those commands treat it as a split run and operate over both strata. If the caller points at `<run>/interactive/` or `<run>/subagent/`, they operate over that single stratum only. This is the only place `interpret` / `export` accept a sub-directory of a run; in all other cases `--analysis-dir` points at the `run-<uuidv7>/` root.
 
 **`interpret`:**
 
@@ -380,7 +412,7 @@ Group A (storage foundation) is the natural first dispatch since every other gro
 
 1. **Round-trip a minimal analysis.** Given a fixture corpus with 2 sessions, when `analyze` runs, then `manifest.json` and at least one `data/*.parquet` file exist, the manifest validates against the schema, and `AnalysisRun::load` reads them back and returns a structure where technique count, per-technique row counts, and scalar findings match what the pipeline computed in memory.
 2. **Corpus fingerprint is stable.** Running `analyze` twice against the same corpus produces the same `corpus_fingerprint.manifest_hash` and the same `corpus_fingerprint.short`; only the `run_id` (different UUIDv7 per invocation) differs between runs.
-3. **One table per technique.** Attempting to construct a `TechniqueEntry` with more than one table via the test API fails at the type level (the field is `Option<TableRef>`, not `List<TableRef>`). A single-table technique round-trips through Parquet at `data/<technique_slug>.parquet` and back via `AnalysisRun::load`.
+3. **One table per technique, round-trips through Parquet.** A single-table technique writes to `data/<technique_slug>.parquet`, and `AnalysisRun::load` reads it back such that the loaded `TechniqueEntry.table` has the same row count, column count, column types, and first-row values as the in-memory state. (The "only one table per technique" rule is enforced by the type system — `TechniqueEntry.table: Option<TableRef>` — so there is nothing to *test* for multi-table rejection; the compiler rejects it. This scenario covers only the happy-path round-trip.)
 4. **Type-homogeneous columns survive round-trip.** A technique that declares `column_types: [Int, Float, String]` produces a Parquet file whose schema matches, and loading it back preserves the types.
 5. **`column_types` mismatch is rejected.** A technique that declares `column_types: [Int]` but supplies a `Float` column at position 0 causes `analyze` to fail loudly, naming the column index, the declared type, and the actual type. No partial output.
 6. **PII tokenised column-name blocklist — blocked cases.** A test technique declaring a column named `raw_data` (or `total_messages`, or `file_path`) causes `analyze` to fail, naming the offending technique + column + matched blocklist token, suggesting a rename, and leaving no partial run directory on disk.
@@ -398,49 +430,53 @@ Group A (storage foundation) is the natural first dispatch since every other gro
 15. **`--default-view invalid-format` fails at parse time.** Running `analyze --default-view json` (or any non-`markdown` value) exits non-zero with clap's usual "invalid value for '--default-view'" error, no partial output written.
 16. **Technique errors do not abort the run.** With a fixture that causes one technique to fail, `manifest.json` still exists, the failing technique's `errors` field is non-empty, and at least one other technique's output is present.
 17. **Analyze default output dir is XDG.** With no `--output-dir`, runs land under `$XDG_DATA_HOME/com.lightless-labs.third-thoughts/analysis/`.
+18. **`--split` writes nested stratum subdirs.** `middens analyze --split <mixed-corpus>` produces a single `run-<uuidv7>/` dir containing `manifest.json` (top-level with `strata` field), `interactive/{manifest.json,data/,sessions.parquet,default-view.md}`, and `subagent/{manifest.json,data/,sessions.parquet,default-view.md}`. There is no `data/` at the top level and no top-level `sessions.parquet`.
+19. **`--split` top-level manifest references strata.** The top-level `manifest.json` carries a `strata` field that is a list of `{name, session_count, manifest_ref}` entries, with `manifest_ref` pointing at the per-stratum `manifest.json` by relative path.
+20. **`--split` stratum manifests carry stratum name.** Each per-stratum `manifest.json` contains `stratum: "interactive"` (or `"subagent"`) and inherits the same `run_id` as the top-level.
+21. **Without `--split`, no stratum subdirs.** `middens analyze <mixed-corpus>` (no `--split`) produces a flat layout with `data/` and `sessions.parquet` at the top level, no `interactive/` or `subagent/` subdirs, and no `strata` field in the manifest.
 
 #### Interpret
 
-18. **Default analysis discovery by name sort.** With two valid runs under the XDG analysis dir, `interpret` with no `--analysis-dir` picks the one whose directory name sorts descending first (equivalently, the one with the higher UUIDv7). Discovery does **not** consult `mtime` — a test that `touch`es the older run's directory does not change the selection.
-19. **Invalid analysis runs are skipped during discovery.** With two runs present where the lexicographically-greater one has a corrupt/missing `manifest.json`, `interpret` picks the lexicographically-lesser valid one instead.
-20. **No analysis runs → clear error.** With an empty XDG analysis dir, `interpret` exits non-zero with a message containing `no analysis runs found`.
-21. **Runner fallback picks first available.** With mocked `which` resolving `claude-code` only, `interpret` selects `claude-code`. With only `gemini` available, it selects `gemini`. With none of `{claude-code, codex, gemini, opencode}` available, it fails with a message listing all four.
-22. **Explicit `--model` overrides fallback with runner prefix.** `--model codex/gpt-5.4-codex` with `codex` absent from `PATH` fails cleanly with a message naming `codex`.
-23. **`--model` parses on first `/` only.** `--model opencode/kimi-for-coding/k2p5` resolves to runner=`opencode`, model-id=`kimi-for-coding/k2p5` (the second `/` is preserved). Captured in the interpretation manifest as `runner: "opencode"`, `model_id: "kimi-for-coding/k2p5"`.
-24. **`--model` without a slash fails at parse time.** `--model claude-code` (no `/`) exits non-zero with a message showing the expected `<runner>/<model-id>` form and at least four concrete examples (one per runner). No runner auto-resolution, no best-guess.
-25. **Unknown runner prefix fails with helpful error.** `--model foo/bar` exits non-zero with a message listing the four supported runner slugs.
-26. **Dry-run writes prompt, skips runner, lands in interpretation-dryruns/.** `--dry-run` produces a `prompt.md` under `interpretation-dryruns/<analysis-run-slug>/<interpretation-slug>/`, prints its path to stdout, does not invoke any subprocess, and exits 0. The dry-run dir never appears under `interpretation/` or `interpretation-failures/`.
-27. **Interpretation output layout on success.** The interpretation dir contains `manifest.json`, `prompt.md`, `conclusions.md`, and one `<technique_slug>-conclusions.md` per technique present in the analysis.
-28. **Empty `conclusions.md` on leading marker.** With a mocked runner emitting a response that starts immediately with `<!-- technique: <slug> -->` (no pre-marker content), the successful interpretation dir still contains a `conclusions.md` file — empty, zero bytes. Not omitted.
-29. **Interpretation manifest references analysis.** The interpretation `manifest.json` carries `analysis_run_id` and `analysis_run_path` matching the analysis it interpreted, plus `runner` and `model_id`.
-30. **Response parsing failure moves artifacts to failures dir.** With a mocked runner emitting output without section markers, `interpret` fails non-zero, the temp dir is renamed to `interpretation-failures/<analysis-run-slug>/<slug>/` containing `prompt.md` + `raw-response.txt` + `error.txt`, all three of which were written *before* the final rename call, and no directory appears under `interpretation/<analysis-run-slug>/`.
-31. **Atomic write on success.** During a successful `interpret`, no directory exists at the final destination path until after the temp dir is fully written and `manifest.json` is serialised. (Test: inspect filesystem state mid-run via a pause hook.)
-32. **Interpretation slug format.** The interpretation subdir matches `^(claude-code|codex|gemini|opencode)-[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`.
-33. **OpenCode without `--model` is an error.** Running `interpret` with runner auto-detected to `opencode` (the only runner on PATH) but without `--model` fails with `opencode requires an explicit --model` because opencode's CLI has no native default.
+22. **Default analysis discovery by name sort.** With two valid runs under the XDG analysis dir, `interpret` with no `--analysis-dir` picks the one whose directory name sorts descending first (equivalently, the one with the higher UUIDv7). Discovery does **not** consult `mtime` — a test that `touch`es the older run's directory does not change the selection.
+23. **Invalid analysis runs are skipped during discovery.** With two runs present where the lexicographically-greater one has a corrupt/missing `manifest.json`, `interpret` picks the lexicographically-lesser valid one instead.
+24. **No analysis runs → clear error.** With an empty XDG analysis dir, `interpret` exits non-zero with a message containing `no analysis runs found`.
+25. **Runner fallback picks first available.** With mocked `which` resolving `claude-code` only, `interpret` selects `claude-code`. With only `gemini` available, it selects `gemini`. With none of `{claude-code, codex, gemini, opencode}` available, it fails with a message listing all four.
+26. **Explicit `--model` overrides fallback with runner prefix.** `--model codex/gpt-5.4-codex` with `codex` absent from `PATH` fails cleanly with a message naming `codex`.
+27. **`--model` parses on first `/` only.** `--model opencode/kimi-for-coding/k2p5` resolves to runner=`opencode`, model-id=`kimi-for-coding/k2p5` (the second `/` is preserved). Captured in the interpretation manifest as `runner: "opencode"`, `model_id: "kimi-for-coding/k2p5"`.
+28. **`--model` without a slash fails at parse time.** `--model claude-code` (no `/`) exits non-zero with a message showing the expected `<runner>/<model-id>` form and at least four concrete examples (one per runner). No runner auto-resolution, no best-guess.
+29. **Unknown runner prefix fails with helpful error.** `--model foo/bar` exits non-zero with a message listing the four supported runner slugs.
+30. **Dry-run writes prompt, skips runner, lands in interpretation-dryruns/.** `--dry-run` produces a `prompt.md` under `interpretation-dryruns/<analysis-run-slug>/<interpretation-slug>/`, prints its path to stdout, does not invoke any subprocess, and exits 0. The dry-run dir never appears under `interpretation/` or `interpretation-failures/`.
+31. **Interpretation output layout on success.** The interpretation dir contains `manifest.json`, `prompt.md`, `conclusions.md`, and one `<technique_slug>-conclusions.md` per technique present in the analysis.
+32. **Empty `conclusions.md` on leading marker.** With a mocked runner emitting a response that starts immediately with `<!-- technique: <slug> -->` (no pre-marker content), the successful interpretation dir still contains a `conclusions.md` file — empty, zero bytes. Not omitted.
+33. **Interpretation manifest references analysis.** The interpretation `manifest.json` carries `analysis_run_id` and `analysis_run_path` matching the analysis it interpreted, plus `runner` and `model_id`.
+34. **Response parsing failure moves artifacts to failures dir.** With a mocked runner emitting output without section markers, `interpret` fails non-zero, the temp dir is renamed to `interpretation-failures/<analysis-run-slug>/<slug>/` containing `prompt.md` + `raw-response.txt` + `error.txt`, all three of which were written *before* the final rename call, and no directory appears under `interpretation/<analysis-run-slug>/`.
+35. **Atomic write on success.** During a successful `interpret`, no directory exists at the final destination path until after the temp dir is fully written and `manifest.json` is serialised. (Test: inspect filesystem state mid-run via a pause hook.)
+36. **Interpretation slug format.** The interpretation subdir matches `^(claude-code|codex|gemini|opencode)-[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`.
+37. **OpenCode without `--model` is an error.** Running `interpret` with runner auto-detected to `opencode` (the only runner on PATH) but without `--model` fails with `opencode requires an explicit --model` because opencode's CLI has no native default.
 
 #### Export
 
-34. **Export with interpretation.** Given an analysis + an interpretation, `export --format jupyter -o report.ipynb` produces a file that validates as nbformat v4, contains a top-level conclusions cell with text from the overall `conclusions.md`, and contains per-technique cells each including the corresponding `<slug>-conclusions.md` text.
-35. **Export without interpretation.** With `--no-interpretation` (or no interpretation present), the notebook still renders with all technique sections but no conclusions cells. Exit 0.
-36. **Export default-path discovery.** With no flags, `export` resolves to the latest valid analysis and latest valid matching interpretation automatically via name-sort descending (no `mtime`). The produced notebook's `metadata.middens` object contains `analysis_run_id` + `analysis_run_path` matching the analysis, and `interpretation_id` + `interpretation_path` matching the interpretation.
-37. **Export ignores failed and dry-run interpretations.** With a valid analysis + one valid interpretation + one later failed interpretation (under `interpretation-failures/`) + one later dry-run (under `interpretation-dryruns/`), `export` picks the valid one — both non-success locations are invisible to discovery.
-38. **Export with `--interpretation-dir` override.** Explicit flag wins over default discovery.
-39. **Export does not validate cross-run pairing.** Given an analysis `A1` and an interpretation `I2` whose manifest's `analysis_run_id` references a different analysis `A2`, `export --analysis-dir A1 --interpretation-dir I2` succeeds, produces a notebook with analysis `A1`'s data and `I2`'s narrative, and does not warn or fail. The `--help` text for `--interpretation-dir` documents this as a caller-beware behaviour.
-40. **Export fails cleanly on missing analysis.** Empty XDG analysis dir → non-zero exit, message contains `no analysis runs found`.
-41. **Export silently overwrites existing output file.** `-o report.ipynb` targeting a pre-existing file overwrites it without prompting. (See `todos/middens-export-overwrite-ux.md` for future refinement.)
-42. **Export rejects invalid `--format` values at parse time.** `export --format html` (or any non-`jupyter` value) exits non-zero with clap's usual "invalid value for '--format'" error, no partial output written.
-43. **Notebook metadata contract.** The notebook's top-level `metadata.middens` object contains keys `analysis_run_id`, `analysis_run_path`, `middens_version`, and (when an interpretation was loaded) `interpretation_id`, `interpretation_path`.
-44. **Notebook embeds pre-executed outputs.** Per-technique code cells that load the technique's single table (`technique.table`) have non-empty `outputs` arrays containing at least one `display_data` entry with both `text/html` and `text/plain` mime bundles; the first 10 rows of that table round-trip through the HTML bundle.
-45. **Notebook is self-contained.** Opening `report.ipynb` in a viewer that cannot execute Python still renders all tables, findings, and conclusions from the embedded pre-executed outputs.
+38. **Export with interpretation.** Given an analysis + an interpretation, `export --format jupyter -o report.ipynb` produces a file that validates as nbformat v4, contains a top-level conclusions cell with text from the overall `conclusions.md`, and contains per-technique cells each including the corresponding `<slug>-conclusions.md` text.
+39. **Export without interpretation.** With `--no-interpretation` (or no interpretation present), the notebook still renders with all technique sections but no conclusions cells. Exit 0.
+40. **Export default-path discovery.** With no flags, `export` resolves to the latest valid analysis and latest valid matching interpretation automatically via name-sort descending (no `mtime`). The produced notebook's `metadata.middens` object contains `analysis_run_id` + `analysis_run_path` matching the analysis, and `interpretation_id` + `interpretation_path` matching the interpretation.
+41. **Export ignores failed and dry-run interpretations.** With a valid analysis + one valid interpretation + one later failed interpretation (under `interpretation-failures/`) + one later dry-run (under `interpretation-dryruns/`), `export` picks the valid one — both non-success locations are invisible to discovery.
+42. **Export with `--interpretation-dir` override.** Explicit flag wins over default discovery.
+43. **Export does not validate cross-run pairing.** Given an analysis `A1` and an interpretation `I2` whose manifest's `analysis_run_id` references a different analysis `A2`, `export --analysis-dir A1 --interpretation-dir I2` succeeds, produces a notebook with analysis `A1`'s data and `I2`'s narrative, and does not warn or fail. The `--help` text for `--interpretation-dir` documents this as a caller-beware behaviour.
+44. **Export fails cleanly on missing analysis.** Empty XDG analysis dir → non-zero exit, message contains `no analysis runs found`.
+45. **Export silently overwrites existing output file.** `-o report.ipynb` targeting a pre-existing file overwrites it without prompting. (See `todos/middens-export-overwrite-ux.md` for future refinement.)
+46. **Export rejects invalid `--format` values at parse time.** `export --format html` (or any non-`jupyter` value) exits non-zero with clap's usual "invalid value for '--format'" error, no partial output written.
+47. **Notebook metadata contract.** The notebook's top-level `metadata.middens` object contains keys `analysis_run_id`, `analysis_run_path`, `middens_version`, and (when an interpretation was loaded) `interpretation_id`, `interpretation_path`.
+48. **Notebook embeds pre-executed outputs.** Per-technique code cells that load the technique's single table (`technique.table`) have non-empty `outputs` arrays containing at least one `display_data` entry with both `text/html` and `text/plain` mime bundles; the first 10 rows of that table round-trip through the HTML bundle.
+49. **Notebook is self-contained.** Opening `report.ipynb` in a viewer that cannot execute Python still renders all tables, findings, and conclusions from the embedded pre-executed outputs.
 
 #### Integration
 
-46. **End-to-end triad.** `analyze <fixture>` → `interpret` (with mocked runner) → `export` produces a notebook whose top cell names the analysis run ID, middle cells contain per-technique summaries + tables + interpretations, and the bottom cells expose exploratory starters.
-47. **Idempotent re-export.** Running `export` twice in a row with the same analysis + interpretation produces byte-equal `.ipynb` files — all timestamps in the notebook are sourced from the analysis `created_at`, not generation time.
+50. **End-to-end triad.** `analyze <fixture>` → `interpret` (with mocked runner) → `export` produces a notebook whose top cell names the analysis run ID, middle cells contain per-technique summaries + tables + interpretations, and the bottom cells expose exploratory starters.
+51. **Idempotent re-export.** Running `export` twice in a row with the same analysis + interpretation produces byte-equal `.ipynb` files — all timestamps in the notebook are sourced from the analysis `created_at`, not generation time.
 
 ### 4.2 Definition of done
 
-- [ ] All 47 acceptance scenarios pass under `cargo test`.
+- [ ] All 51 acceptance scenarios pass under `cargo test`.
 - [ ] `cargo build --release` succeeds with the chosen Parquet library.
 - [ ] Release binary size increase documented in the PR description; `arrow2` fallback taken if polars adds >5MB.
 - [ ] `middens analyze`, `middens interpret`, `middens export` all show up in `middens --help`.
@@ -461,3 +497,4 @@ Group A (storage foundation) is the natural first dispatch since every other gro
 
 - **2026-04-09 (pass 1):** Initial draft reviewed by CodeRabbit (8 findings), Gemini 2.5 Pro (11 findings), Codex (8 findings). Amended in a single pass resolving all P1s and most P2s; deferred items filed as todos (`todos/middens-export-markdown-format.md`, `todos/middens-export-overwrite-ux.md`, `todos/interpret-parser-strictness.md`).
 - **2026-04-09 (pass 2):** Amended spec re-reviewed by CodeRabbit (2 findings, both fixed on the spot) and Gemini 3.1 Pro (11 new findings). Second amendment: dropped date prefix from run/interpretation slugs (UUIDv7 alone handles ordering and uniqueness), collapsed `TechniqueEntry.tables: List<TableRef>` → `table: Option<TableRef>` (one-table-per-technique as a v1 constraint), reworked PII blocklist as tokenised exact-match to avoid substring false positives, made `--model` without `/` fail at parse time (see new fail-fast convention in parent CLAUDE.md), added `--default-view` and `--format` as clap enums rejecting unknown values, introduced `interpretation-dryruns/` as a third sibling location so dry runs are neither successes nor failures, moved failure diagnostic writes (`error.txt` + `raw-response.txt`) inside the temp dir before the rename to preserve atomicity, and synchronised the UUIDv7 timestamp with manifest `created_at` via a single `now()` capture. Scenario count 38 → 47.
+- **2026-04-09 (pass 3):** Third-pass Codex review got stuck on its `adversarial-document-reviewer` skill auto-activation and had to be killed, but two real findings were extracted from the partial JSONL stream: (1) the existing `split.feature` exercises `middens analyze --split` but the spec never said how `--split` interacts with the new storage layer, and (2) scenario 3's "fails at the type level" phrasing is untestable as a Cucumber feature without a `trybuild` compile-fail harness. Third amendment: added full `--split` storage contract (nested `interactive/` + `subagent/` stratum subdirs sharing one top-level `run_id`, with a `strata` field on the top-level manifest and `stratum` field on each per-stratum manifest), four new acceptance scenarios for `--split`, and rewrote scenario 3 as a pure happy-path round-trip with a parenthetical noting that the one-table rule is enforced by the compiler and has nothing to test. Scenario count 47 → 51.
