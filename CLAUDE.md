@@ -103,6 +103,7 @@ This repo has Codex, Copilot, Gemini, and CodeRabbit automated reviews. When add
 
 ## Conventions
 
+- **Prose tone: light and self-deprecating, never pompous.** When writing READMEs, project blurbs, commit messages, or any user-facing copy, prefer the honest/wry register over earnest research-speak. Example: "studying AI agent behavior at scale through multi-disciplinary corpus analysis (basically, throwing stuff at the wall and seeing what sticks)" is the voice we want. Technical precision in methodology docs is still fine — this rule is about framing and register, not rigor.
 - Follow Lightless Labs conventions from parent `CLAUDE.md` (Rust, Bazel aspirational, TDD, atomic commits)
 - Analysis outputs go to `experiments/{context}/` (gitignored — contain private data)
 - All techniques documented in `docs/methods-catalog.md` with academic references
