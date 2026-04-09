@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-07 PM (priority pivot — shipping a distributable middens; Autonomous stratum deferred)
+**Last updated:** 2026-04-09 (repo hygiene workstream complete; CLI reshape is next)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
@@ -16,9 +16,11 @@ All three open PRs from the previous session are now merged into `main`:
 
 Bot-review story for the curious: 49 distinct inline findings across 4 review rounds (Codex / Gemini / Copilot / CodeRabbit). All P1/P2 addressed inline, all comments replied to with rationale, deferred items in `todos/batch4-coderabbit-deferred.md`.
 
-**Next concrete move (priority pivot — 2026-04-07 PM):** ship a distributable middens. The Autonomous Session Stratum is deferred — we know we'll do it, but priority is having something shareable first. Three workstreams in order:
+**Next concrete move (2026-04-09):** workstream 1 (repo hygiene) is done. The next thing to pick up is **workstream 2 — CLI reshape (analyze / interpret / export triad)**. Start by reading the four design docs listed at the end of that workstream, then write an NLSpec before any code lands. Non-trivial feature → adversarial process applies (red team writes tests from the DoD, green team implements from the How, orchestrator never fixes step defs directly).
 
-1. **Repo hygiene.** Branches/commits/history in ship-shape. Audit `git log` on `main`, prune any stale branches, verify the squashed merges are clean, freshen README, check `Cargo.toml` package metadata (description, license, repository, keywords, categories), add a release profile (`[profile.release] strip = true, lto = "thin"`).
+Three workstreams in order:
+
+1. **Repo hygiene.** ✅ **Done 2026-04-09.** History rewritten to a single author (`El-Fitz`) via `git-filter-repo --mailmap`; remote repo was deleted and recreated at `git@github.com:Lightless-Labs/third-thoughts.git` to purge old SHAs from PR history; all stale local branches pruned (only `main` remains); root `README.md` + `middens/README.md` written (tone: light, self-deprecating — see the new prose-tone convention in `CLAUDE.md`); `LICENSE` (AGPL-3.0-or-later) added at repo root and inside the crate; `middens/Cargo.toml` enriched with `authors`, `repository`, `homepage`, `readme`, `keywords`, `categories`, license changed MIT → AGPL-3.0-or-later, and a release profile added (`[profile.release] strip = true, lto = "thin", codegen-units = 1`). Release build verified clean. Commits: `ef339d2` (history rewrite baseline) → `55869a5` (hygiene) → `c28a038` (README tone fix) → `3a07038` (CLAUDE.md prose-tone convention) → register-drift-detection todo.
 
 2. **CLI reshape — analyze / interpret / export triad.** Implements the storage/view split designed in `docs/design/output-contract.md` and the Conclusions v2 design in `todos/conclusions-v2-synthesize.md`, but with the new three-command shape:
    - `middens analyze [corpus] --format <fmt> --output-dir <dir>` — runs the techniques and methods. Default output dir: `~/.local/com.lightless-labs.third-thoughts/middens/analysis/<date>-<slug>/`. Canonical storage is the existing TechniqueResult JSON / parquet (TBD which lands first). `--format` is the *storage* format, not a view.
@@ -28,6 +30,8 @@ Bot-review story for the curious: 49 distinct inline findings across 4 review ro
    Storage paths use `~/.local/com.lightless-labs.third-thoughts/...` not the XDG-default `~/.local/share/...` — this is intentional, mirrors macOS bundle-ID conventions, and gives the project a single namespaced root across analysis/interpretation/cache.
 
    The existing `todos/output-contract.md` covers the storage half. The existing `todos/conclusions-v{1-manual,2-synthesize}.md` cover what `interpret` produces. Both stay relevant; this milestone is the integration layer that wires them into the new command shape.
+
+   **Read before starting:** `docs/design/output-contract.md`, `todos/output-contract.md`, `todos/conclusions-v1-manual.md`, `todos/conclusions-v2-synthesize.md`. Then write an NLSpec for the triad (Why / What / How / Done) under `docs/nlspecs/`, review it, and only then dispatch red/green via `/codex-cli`, `/gemini-cli`, or `/opencode-cli`. Match tool to task: CLI tools for self-contained units, subagents for crate-context work, inline for small surgical fixes.
 
 3. **Distribution.** Once 1+2 are working end-to-end on a real corpus:
    - GitHub release workflow producing darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64, optionally windows-x86_64 binaries.
@@ -59,7 +63,17 @@ Bot-review story for the curious: 49 distinct inline findings across 4 review ro
 
 A finding that doesn't survive all four is not a finding.
 
-## Latest session (2026-04-06 full day) — Batch 4 + 2 P1s shipped
+## Latest session (2026-04-09) — Repo hygiene workstream complete
+
+1. **Git history rewritten to a single author.** `git filter-repo --mailmap` collapsed `a stray local-hostname identity` into `El-Fitz <8971906+El-Fitz@users.noreply.github.com>` across all refs. Reflog expired and aggressive GC run. The old GitHub repo was then **deleted and recreated** from scratch to purge the old SHAs from PR history — force-push alone would have left them accessible via `/commit/<oldsha>` URLs. Verified: `git log --all --format='%an <%ae>' | sort -u` shows only El-Fitz.
+2. **License switched MIT → AGPL-3.0-or-later.** Fetched the canonical text from gnu.org into `LICENSE` at the repo root and copied into `middens/LICENSE`. `middens/Cargo.toml` updated to match.
+3. **Cargo.toml distribution metadata added.** `authors`, `repository`, `homepage`, `readme`, `keywords`, `categories`, plus `[profile.release] strip = true, lto = "thin", codegen-units = 1`. Release build clean (22s, 2 pre-existing warnings).
+4. **Two READMEs written.** Root `README.md` frames Third Thoughts as a research project with middens as one half and the docs/methodology as the other. `middens/README.md` is CLI-specific: install, usage, techniques, methodological guardrails. Both use the light/self-deprecating register the user prefers — after one correction on the root README ("basically, throwing stuff at the wall and seeing what sticks").
+5. **Prose-tone convention captured durably.** Added as a feedback memory (`feedback_tone.md`) and as a top-line entry in `third-thoughts/CLAUDE.md` Conventions. Rule: prose in READMEs, project blurbs, commit messages, and user-facing copy should be light and self-deprecating, not pompous research-speak. Technical precision in methodology docs is still fine.
+6. **Register drift detection todo filed.** `todos/register-drift-detection.md` — a technique to detect when agents drift into pompous/ceremonial register. Framed as a sibling of the 100% risk-suppression finding: likely the agent's thinking voice and user-facing voice diverge stylistically the same way they diverge on risk. Possibly decomposes into two techniques (ceremonial-prose feature extractor + register-correction classifier).
+7. **Branches pruned.** Only `main` remains locally. 6 stale branches deleted (2 pre-existing `feat/output-engine`, `feat/python-bridge`; 4 left over from filter-repo rewriting the old merged PR branches).
+
+## Previous session (2026-04-06 full day) — Batch 4 + 2 P1s shipped
 
 1. **Batch 4 Python techniques shipped** — 4 new techniques via the foundry adversarial process:
    - `user_signal_analysis` — English-only user-message classification (correction/redirect/directive/approval/question + frustration intensity). Emits `skipped_non_english_messages` finding via cheap ASCII-fraction language gate. Defers thinking-block parts pending `todos/redact-thinking-header-correction.md`.
