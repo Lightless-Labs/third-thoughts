@@ -51,19 +51,26 @@ If you see paths under `~/.codex/skills/` or `~/.claude/skills/` being read befo
 
 ## Solution
 
-**Workaround 1 (verified, reliable):** include an explicit anti-skill directive at the start of the prompt.
+**Workaround 1 (verified, reliable, and the actual fix):** include an explicit anti-skill directive at the start of the prompt. This is the load-bearing change; everything else is a safety net.
 
 ```bash
 codex exec --skip-git-repo-check --full-auto \
-  -c model_reasoning_effort=medium \
+  -c model_reasoning_effort=high \
   --json \
   "DIRECT TASK — DO NOT invoke any skills, agents, or meta-workflows. Just read the file and respond with your findings in one message. <actual task>" \
   > events.jsonl 2>stderr.log
 ```
 
-Pass-4 retry of the Codex review returned in **90 seconds** with 7 usable findings using this exact pattern.
+Pass-4 retry of the Codex review returned in **90 seconds** with 7 usable findings using this exact pattern. The anti-skill directive blocks the heavyweight workflow from activating; reasoning effort stays at `high` because review is a genuinely high-cognitive task.
 
-**Workaround 2 (partial):** always override `model_reasoning_effort` at invocation time. The `~/.codex/config.toml` default of `xhigh` amplifies every other problem; `medium` is sufficient for review tasks and completes in under 2 minutes even when a skill does activate.
+**Do not** "fix" the stall by dropping `model_reasoning_effort` to `medium` or below for planning/review tasks. Review is exactly where you want the deeper reasoning — trading reasoning depth for wall-clock speed masks the real problem (skill auto-activation) while degrading the output quality you came to codex for in the first place. Reasoning-effort guidance by task:
+
+- **Planning, review, audit, architecture:** `high` minimum, `xhigh` for hard problems.
+- **Implementation with a clear spec:** `high` default, `medium` for unambiguous mechanical work.
+- **Boilerplate, formatting, transformations:** `low` / `minimal`.
+- **Text-only generation:** `none`.
+
+The `~/.codex/config.toml` default of `xhigh` is reasonable; override it only when the task's actual cognitive demands justify less, not to make codex finish faster.
 
 **Workaround 3 (recommended for any long-running codex call):** always run codex in the background with a hard wall-clock timer. macOS has no `timeout` binary by default; use a bash-sidecar pattern:
 
