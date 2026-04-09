@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-09 (repo hygiene workstream complete; CLI reshape scoped, NLSpec next)
+**Last updated:** 2026-04-09 (CLI triad NLSpec finalised after 4 review passes; red team next)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
@@ -16,7 +16,31 @@ All three open PRs from the previous session are now merged into `main`:
 
 Bot-review story for the curious: 49 distinct inline findings across 4 review rounds (Codex / Gemini / Copilot / CodeRabbit). All P1/P2 addressed inline, all comments replied to with rationale, deferred items in `todos/batch4-coderabbit-deferred.md`.
 
-**Next concrete move (2026-04-09):** workstream 1 (repo hygiene) is done. The next thing to pick up is **workstream 2 — CLI reshape (analyze / interpret / export triad)**. Start by reading the four design docs listed at the end of that workstream, then write an NLSpec before any code lands. Non-trivial feature → adversarial process applies (red team writes tests from the DoD, green team implements from the How, orchestrator never fixes step defs directly).
+**Next concrete move (2026-04-09 end of day):** the CLI triad NLSpec is finalised at `docs/nlspecs/2026-04-09-cli-triad-analyze-interpret-export-nlspec.md` after four review passes (CodeRabbit ×3, Gemini 2.5 Pro, Gemini 3.1 Pro, Codex) and 59 acceptance scenarios. **The next step is red team dispatch** — have a coding-agent CLI write Cucumber `.feature` files from sections 1+2+4 (Done) of the NLSpec only, without seeing section 3 (How).
+
+**Red team assignment: Gemini 3.1 Pro Preview** via `gemini -y -s false -m gemini-3.1-pro-preview --prompt "..."`. Rationale: Gemini 3.1 Pro caught the most substantive P1s in the review passes (parquet multiplicity, PII substring footgun, slug ordering across runners) and is strong at adversarial contract-level analysis. Codex stays out of this one — the skill auto-activation issue documented at `docs/solutions/workflow-issues/codex-skill-auto-activation-20260409.md` makes it the wrong tool for this specific task.
+
+**Red team dispatch prompt skeleton:**
+
+```
+DIRECT TASK — read the NLSpec at
+/Users/thomas/Projects/lightless-labs/third-thoughts/docs/nlspecs/2026-04-09-cli-triad-analyze-interpret-export-nlspec.md
+
+Write Cucumber .feature files that express every one of the 59 acceptance
+scenarios in section 4.1. Use ONLY sections 1 (Why), 2 (What), and 4 (Done).
+DO NOT read section 3 (How) — that's for the green team, not you.
+
+Feature files go under middens/tests/features/cli-triad/<area>.feature
+using the same style as the existing middens/tests/features/pipeline/split.feature.
+
+If a scenario has a contract gap that prevents you writing a testable
+feature, DO NOT guess — flag it explicitly as "CONTRACT GAP: <what is
+missing>" and keep going. I'll route gaps back to NLSpec amendments.
+```
+
+After red team returns: orchestrator reviews the feature files, amends the NLSpec for any contract gaps (without editing the feature files or the code), then dispatches green team (per-group, one dispatch per work group from section 3).
+
+Non-trivial feature → adversarial process applies (red team writes tests from the DoD, green team implements from the How, orchestrator never fixes step defs directly).
 
 Three workstreams in order:
 
@@ -70,7 +94,29 @@ Three workstreams in order:
 
 A finding that doesn't survive all four is not a finding.
 
-## Latest session (2026-04-09) — Repo hygiene workstream complete
+## Latest session (2026-04-09 PM) — CLI triad NLSpec finalised
+
+1. **NLSpec drafted** at `docs/nlspecs/2026-04-09-cli-triad-analyze-interpret-export-nlspec.md` covering the `analyze` / `interpret` / `export` command reshape. Initial draft: 30 acceptance scenarios across storage, analyze, interpret, export, and integration sections.
+2. **Four review passes driving 4 amendment commits:**
+   - **Pass 1** (CodeRabbit 8, Gemini 2.5 Pro 11, Codex 8): resolved with decisions on storage root path, Parquet-as-canonical, run-ID format, provider fallback, Jupyter-only v1 export, etc. Three deferred follow-up todos filed.
+   - **Pass 2** (CodeRabbit 2, Gemini 3.1 Pro 11): dropped date prefix from slugs in favour of UUIDv7-only ordering, collapsed `tables: List<TableRef>` → `table: Option<TableRef>` (one table per technique), reworked PII blocklist as tokenised exact-match, made `--model` without `/` fail at parse time, added `interpretation-dryruns/` as a third sibling location, synchronised UUIDv7 timestamp with manifest `created_at`. Scenario count 38 → 47.
+   - **Pass 3** (partial Codex via JSONL extraction from a killed run): added `--split` storage contract (nested `interactive/` + `subagent/` stratum subdirs), rewrote scenario 3 as pure happy-path round-trip. Scenario count 47 → 51.
+   - **Pass 4** (Codex with `DIRECT TASK — no skills` directive, clean run in 90s): flipped interpretation slug to `<uuidv7>-<runner-slug>` for cross-runner ordering, required monotonic UUIDv7, made zero-marker responses a hard failure, **refused top-level split runs in interpret/export** (cross-stratum composition deferred to follow-up todo), added `strata`/`stratum` fields to `AnalysisManifest`, clarified v1 parser tolerance. Scenario count 51 → 59.
+3. **Final CodeRabbit pass (pass 5):** 1 cosmetic finding (Workaround numbering gap in the codex solution doc), fixed inline. Spec is clean.
+4. **New conventions captured durably:**
+   - **Fail early, fail fast, fail clearly** → `lightless-labs/CLAUDE.md` + `AGENTS.md` (parent) and mirrored into `third-thoughts/CLAUDE.md` + `AGENTS.md`. Rule: never guess ambiguous user intent; fail loudly with expected form + concrete example. Surfaced from the `--model` parse-time debate during pass 2.
+5. **New deferred todos filed** at `todos/`:
+   - `middens-export-markdown-format.md` (P3)
+   - `middens-export-overwrite-ux.md` (P3)
+   - `interpret-parser-strictness.md` (P2)
+   - `interpret-export-split-composition.md` (P2)
+   - `fingerprint-technique-retrofit.md`, `corpus-timeline-deletion.md`, `batches-1-2-pii-and-type-audit.md` (all pass-1 scope cuts)
+6. **Codex skill auto-activation issue documented** at `docs/solutions/workflow-issues/codex-skill-auto-activation-20260409.md` and in `~/.claude/skills/codex-cli/SKILL.md`. Three consecutive Codex review runs stalled for 10–44 minutes each because codex silently auto-activated `adversarial-document-reviewer` from `~/.codex/skills/` and ground through a multi-persona workflow. The load-bearing fix: prefix the prompt with `"DIRECT TASK — DO NOT invoke any skills, agents, or meta-workflows."`. Don't drop reasoning effort as a workaround — that degrades review quality for no reason; the skill directive is what actually fixes the stall.
+7. **Commits landed on `main`:** `b6ce66f` (initial NLSpec + 3 todos) → `5ad4af7` (pass-1 amendment) → `b3201f1` (cleanup stray AGENTS.md) → `7fc5e8a` (pass-1 CodeRabbit fixes) → `600fdb9` (pass-2 amendment) → `12eb433` (pass-3 amendment) → `9765653` (pass-4 amendment) → `5274136` (Codex solution doc) → `8acf70c` (reasoning-effort correction).
+
+**Next session:** dispatch red team. Assignment, prompt skeleton, and process notes are in the "Next concrete move" block at the top of this doc.
+
+## Earlier session (2026-04-09 AM) — Repo hygiene workstream complete
 
 1. **Git history rewritten to a single author.** `git filter-repo --mailmap` collapsed a stray local-hostname identity into `El-Fitz <8971906+El-Fitz@users.noreply.github.com>` across all refs. Reflog expired and aggressive GC run. The old GitHub repo was then **deleted and recreated** from scratch to purge the old SHAs from PR history — force-push alone would have left them accessible via `/commit/<oldsha>` URLs. Verified: `git log --all --format='%an <%ae>' | sort -u` shows only El-Fitz.
 2. **License switched MIT → AGPL-3.0-or-later.** Fetched the canonical text from gnu.org into `LICENSE` at the repo root and copied into `middens/LICENSE`. `middens/Cargo.toml` updated to match.

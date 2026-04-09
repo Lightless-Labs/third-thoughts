@@ -72,7 +72,7 @@ Pass-4 retry of the Codex review returned in **90 seconds** with 7 usable findin
 
 The `~/.codex/config.toml` default of `xhigh` is reasonable; override it only when the task's actual cognitive demands justify less, not to make codex finish faster.
 
-**Workaround 3 (recommended for any long-running codex call):** always run codex in the background with a hard wall-clock timer. macOS has no `timeout` binary by default; use a bash-sidecar pattern:
+**Workaround 2 (recommended for any long-running codex call):** always run codex in the background with a hard wall-clock timer. macOS has no `timeout` binary by default; use a bash-sidecar pattern:
 
 ```bash
 ( codex exec ... > out.log 2>err.log; touch /tmp/codex-done ) &
