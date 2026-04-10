@@ -1,14 +1,14 @@
 # Session Handoff
 
-**Last updated:** 2026-04-10 (CLI triad adversarial process: red+green teams done, step defs in progress)
+**Last updated:** 2026-04-10 (CLI triad adversarial process complete — 332/332 scenarios pass)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
 ## >>> Read this first <<<
 
-**CLI triad adversarial process is mid-flight.** Red team (Gemini 3.1 Pro) wrote 59 Cucumber scenarios. Green team (GLM 5.1 via OpenCode) implemented all 6 work groups (A→F). Step definitions are being written to bridge the gap. 273/273 existing scenarios pass; 59 new ones pending step defs.
+**CLI triad adversarial process is complete.** Red team (Gemini 3.1 Pro) wrote 59 Cucumber scenarios. Green team (GLM 5.1 via OpenCode) implemented all 6 work groups (A→F). Step definitions written by Claude subagent. **332/332 scenarios pass (273 existing + 59 new). 1804/1804 steps.**
 
-**Next concrete move:** finish step definitions, run the 59 scenarios, iterate on failures (diagnose: spec unclear → amend NLSpec; implementation wrong → route to green without leaking test code). Then commit, update HANDOFF, and ship as a PR.
+**Next concrete move:** ship as a PR, then move to workstream 3 (distribution — GitHub release workflow, crates.io publish, GitHub Pages site).
 
 **Commits on `main` this session:**
 - `b76c3dc` — red team .feature files (59 scenarios, 7 files)
@@ -146,7 +146,9 @@ A finding that doesn't survive all four is not a finding.
    - **Group F** (wiring + docs): main.rs dispatch, README updates, worked example at `docs/examples/triad-workflow.md`.
 3. **PII blocklist trimmed** from 16 → 8 tokens (removed overly broad tokens blocking legitimate analytical columns).
 4. **Build status:** release builds clean (3 pre-existing warnings), 29 unit tests pass, 273/273 existing Cucumber pass, 59 new scenarios pending step defs.
-5. **Step definitions in progress** — subagent writing `tests/steps/cli_triad.rs`.
+5. **Step definitions completed** — `tests/steps/cli_triad.rs` (2952 lines) written by Claude subagent. 332/332 scenarios pass on first full run after one fix (FigureSpec JSON assertion for new FigureKind tagged enum).
+6. **Test artifacts cleaned up** — `middens-results/` (transient analyze output) removed from tracking, added to `.gitignore`.
+7. **Final commits:** `b76c3dc` → `bb7918a` → `ee7333d` → `c19e6b7` → `803b511` → `76d10e5`.
 
 ## Earlier session (2026-04-09 AM) — Repo hygiene workstream complete
 
