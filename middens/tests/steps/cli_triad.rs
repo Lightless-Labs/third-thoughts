@@ -715,9 +715,9 @@ fn then_run_succeeds(world: &mut MiddensWorld) {
 
 // ── PII value-length cap ────────────────────────────────────────────────────
 
-#[given("a test technique that emits a String column whose values exceed 200 characters")]
+#[given("a test technique that emits a String column whose values exceed the PII cap")]
 fn given_long_string_values(world: &mut MiddensWorld) {
-    let long_value = "x".repeat(201);
+    let long_value = "x".repeat(501);
     let table = DataTable {
         name: "long_values".to_string(),
         columns: vec!["label".to_string()],

@@ -47,7 +47,7 @@ Feature: Storage
     And the run succeeds
 
   Scenario: PII value-length cap
-    Given a test technique that emits a String column whose values exceed 200 characters
+    Given a test technique that emits a String column whose values exceed the PII cap
     When I run middens analyze
     Then it fails with an error naming the technique, column, and row index of the first offending cell
     And no partial output is written

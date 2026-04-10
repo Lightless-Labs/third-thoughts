@@ -27,7 +27,12 @@ const PII_BLOCKLIST: &[&str] = &[
     "body", "content", "cwd", "excerpt", "filepath", "prompt", "raw", "snippet",
 ];
 
-const VALUE_LENGTH_CAP: usize = 200;
+// 500 chars: catches raw session content (typically thousands of chars) while
+// allowing analytical summaries (deduplicated token lists, state sequences).
+// NLSpec originally said 200; real-corpus run showed that even deduplicated
+// risk token lists can reach ~300 chars. 500 gives headroom without allowing
+// raw content to leak through.
+const VALUE_LENGTH_CAP: usize = 500;
 
 // ── Data model ───────────────────────────────────────────────────────────────
 

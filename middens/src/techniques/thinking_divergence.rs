@@ -182,8 +182,19 @@ impl Technique for ThinkingDivergence {
                     json!(round4(divergence_ratio)),
                     json!(session_thinking_chars),
                     json!(session_text_chars),
-                    json!(session_all_found_risk.join(", ")),
-                    json!(session_all_suppressed.join(", ")),
+                    {
+                        // Deduplicate — the count is already in numeric columns
+                        let mut uniq: Vec<&str> = session_all_found_risk.iter().map(|s| s.as_str()).collect();
+                        uniq.sort_unstable();
+                        uniq.dedup();
+                        json!(uniq.join(", "))
+                    },
+                    {
+                        let mut uniq: Vec<&str> = session_all_suppressed.iter().map(|s| s.as_str()).collect();
+                        uniq.sort_unstable();
+                        uniq.dedup();
+                        json!(uniq.join(", "))
+                    },
                 ]);
             }
         }

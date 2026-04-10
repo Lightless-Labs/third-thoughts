@@ -44,10 +44,15 @@ impl Runner for ClaudeCodeRunner {
         model_id: Option<&str>,
         _work_dir: &Path,
     ) -> Result<Command> {
-        let prompt =
-            std::fs::read_to_string(prompt_path).context("reading prompt for claude-code")?;
+        // claude -p reads prompt from positional arg, but large prompts hit E2BIG.
+        // Use -p - to read from stdin instead.
         let mut cmd = Command::new(self.binary());
-        cmd.arg("-p").arg(&prompt);
+        cmd.arg("-p")
+            .arg("-") // read from stdin
+            .stdin(std::process::Stdio::from(
+                std::fs::File::open(prompt_path)
+                    .context("opening prompt file for claude-code stdin")?,
+            ));
         if let Some(mid) = model_id {
             cmd.arg("--model").arg(mid);
         }
@@ -72,14 +77,19 @@ impl Runner for CodexRunner {
         model_id: Option<&str>,
         work_dir: &Path,
     ) -> Result<Command> {
-        let prompt = std::fs::read_to_string(prompt_path).context("reading prompt for codex")?;
+        // Pass prompt via stdin ("-") to avoid E2BIG on large prompts.
+        // codex exec reads from stdin when no positional prompt is given.
         let mut cmd = Command::new(self.binary());
         cmd.arg("exec")
             .arg("--skip-git-repo-check")
             .arg("--full-auto")
             .arg("-o")
             .arg(work_dir.join("response.md"))
-            .arg(&prompt);
+            .arg("-") // read prompt from stdin
+            .stdin(std::process::Stdio::from(
+                std::fs::File::open(prompt_path)
+                    .context("opening prompt file for codex stdin")?,
+            ));
         if let Some(mid) = model_id {
             cmd.arg("--model").arg(mid);
         }
@@ -294,7 +304,15 @@ fn parse_response(response: &str) -> Result<ParsedResponse> {
 }
 
 fn build_prompt(manifest: &AnalysisManifest, run: &AnalysisRun) -> Result<String> {
-    let manifest_json = serde_json::to_string_pretty(manifest)
+    // Serialize manifest without source_paths (can be 13k+ entries, blows up prompt size).
+    // Keep the hash and count — that's what matters for reproducibility.
+    let mut prompt_manifest = manifest.clone();
+    prompt_manifest.corpus_fingerprint.source_paths = vec![format!(
+        "[{} paths omitted — hash: {}]",
+        manifest.corpus_fingerprint.source_paths.len(),
+        manifest.corpus_fingerprint.short,
+    )];
+    let manifest_json = serde_json::to_string_pretty(&prompt_manifest)
         .context("failed to serialize analysis manifest for prompt")?;
 
     let mut technique_sections = String::new();
