@@ -2532,6 +2532,16 @@ fn when_interpret_top_level_split(world: &mut MiddensWorld) {
     );
 }
 
+#[when("I run middens export with --analysis-dir pointing to the top-level run directory")]
+fn when_export_top_level_split(world: &mut MiddensWorld) {
+    let state = triad_state(world);
+    let run_dir = state["run_dir"].as_str().unwrap().to_string();
+    run_middens_cmd(
+        world,
+        &["export", "--analysis-dir", &run_dir, "--no-interpretation"],
+    );
+}
+
 #[then("it exits non-zero with a message directing the user to pass <run>/interactive or <run>/subagent")]
 fn then_split_run_error_message(world: &mut MiddensWorld) {
     let code = world.cli_exit_code.unwrap_or(-1);
@@ -2806,7 +2816,27 @@ fn when_export_to_report(world: &mut MiddensWorld) {
     );
 }
 
-#[then("it silently overwrites the existing output file")]
+#[when(expr = "I run middens export with -o report.ipynb --force")]
+fn when_export_to_report_force(world: &mut MiddensWorld) {
+    let state = triad_state(world);
+    let run_dir = state["run_dir"].as_str().unwrap().to_string();
+    let output = state["export_output"].as_str().unwrap().to_string();
+
+    run_middens_cmd(
+        world,
+        &[
+            "export",
+            "--analysis-dir",
+            &run_dir,
+            "--no-interpretation",
+            "-o",
+            &output,
+            "--force",
+        ],
+    );
+}
+
+#[then("it overwrites the existing output file")]
 fn then_overwrites(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let output = state["export_output"].as_str().unwrap();

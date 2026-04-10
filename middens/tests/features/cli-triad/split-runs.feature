@@ -7,7 +7,9 @@ Feature: Split runs
     And there is no temp dir, no dry-run artifacts, and no partial output
 
   Scenario: export refuses top-level split runs
-    # CONTRACT GAP: Spec says "Same contract as scenario 50, but for middens export" which makes no sense, because Scenario 50 is about "Notebook embeds pre-executed outputs". It likely meant Scenario 52 ("interpret refuses top-level split runs"). Cannot write testable steps without guessing.
+    Given a split analysis run
+    When I run middens export with --analysis-dir pointing to the top-level run directory
+    Then it exits non-zero with a message directing the user to pass <run>/interactive or <run>/subagent
 
   Scenario: Per-stratum interpret succeeds
     Given a split analysis run

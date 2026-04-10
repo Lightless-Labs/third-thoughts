@@ -128,6 +128,10 @@ enum Commands {
         /// Output file path. Default: report.ipynb in cwd.
         #[arg(short, long)]
         output: Option<PathBuf>,
+
+        /// Overwrite output file if it already exists.
+        #[arg(long)]
+        force: bool,
     },
 }
 
@@ -174,6 +178,9 @@ fn main() -> anyhow::Result<()> {
             eprintln!("  techniques run: {}", result.techniques_run);
             eprintln!("  technique errors: {}", result.technique_errors);
             eprintln!("  results written to: {}", result.output_dir.display());
+            if let Some(ref storage) = result.storage_dir {
+                eprintln!("  storage (parquet + manifest): {}", storage.display());
+            }
 
             if result.sessions_parsed == 0 {
                 std::process::exit(1);
@@ -267,6 +274,7 @@ fn main() -> anyhow::Result<()> {
             no_interpretation,
             format,
             output,
+            force,
         } => {
             use middens::commands::export::{self, ExportConfig, ExportFormat};
 
@@ -280,6 +288,7 @@ fn main() -> anyhow::Result<()> {
                 no_interpretation,
                 format: export_format,
                 output,
+                force,
             };
 
             export::run_export(config)

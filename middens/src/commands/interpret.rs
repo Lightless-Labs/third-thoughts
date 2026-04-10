@@ -401,13 +401,42 @@ pub fn run_interpret(config: InterpretConfig) -> Result<()> {
     let interp_slug = format!("{}-{}", uuid, runner.slug());
 
     let xdg_root = xdg_app_root();
-    let analysis_run_slug = analysis_path
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| "unknown".into());
+    let xdg_analysis_root = xdg_root.join("analysis");
+    let analysis_run_slug = if analysis_path.starts_with(&xdg_analysis_root) {
+        analysis_path
+            .strip_prefix(&xdg_analysis_root)
+            .unwrap()
+            .to_string_lossy()
+            .replace(std::path::MAIN_SEPARATOR, "/")
+    } else {
+        analysis_path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "unknown".into())
+    };
 
-    let tmp_dir_name = format!(".tmp-{}", uuid);
-    let tmp_path = xdg_root.join(&tmp_dir_name);
+    // Compute final destination based on dry-run vs real
+    let final_dest = if config.dry_run {
+        xdg_root
+            .join("interpretation-dryruns")
+            .join(&analysis_run_slug)
+            .join(&interp_slug)
+    } else if let Some(ref out) = config.output_dir {
+        out.clone()
+    } else {
+        xdg_root
+            .join("interpretation")
+            .join(&analysis_run_slug)
+            .join(&interp_slug)
+    };
+
+    // Create temp dir as sibling of destination (avoids EXDEV on rename)
+    let tmp_parent = final_dest
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| xdg_root.clone());
+    std::fs::create_dir_all(&tmp_parent)?;
+    let tmp_path = tmp_parent.join(format!(".tmp-{}", uuid));
     std::fs::create_dir_all(&tmp_path)
         .with_context(|| format!("creating temp dir {}", tmp_path.display()))?;
 
@@ -416,21 +445,14 @@ pub fn run_interpret(config: InterpretConfig) -> Result<()> {
     std::fs::write(&prompt_path, &prompt).context("writing prompt.md")?;
 
     if config.dry_run {
-        let dryrun_dest = xdg_root
-            .join("interpretation-dryruns")
-            .join(&analysis_run_slug)
-            .join(&interp_slug);
-        if let Some(parent) = dryrun_dest.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::rename(&tmp_path, &dryrun_dest).with_context(|| {
+        std::fs::rename(&tmp_path, &final_dest).with_context(|| {
             format!(
                 "renaming {} -> {}",
                 tmp_path.display(),
-                dryrun_dest.display()
+                final_dest.display()
             )
         })?;
-        println!("{}", dryrun_dest.display());
+        println!("{}", final_dest.display());
         return Ok(());
     }
 
@@ -574,26 +596,16 @@ pub fn run_interpret(config: InterpretConfig) -> Result<()> {
     std::fs::write(tmp_path.join("manifest.json"), manifest_json)
         .context("writing interpretation manifest")?;
 
-    let output_dest = if let Some(ref out) = config.output_dir {
-        out.clone()
-    } else {
-        xdg_root
-            .join("interpretation")
-            .join(&analysis_run_slug)
-            .join(&interp_slug)
-    };
-    if let Some(parent) = output_dest.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::rename(&tmp_path, &output_dest).with_context(|| {
+    // final_dest already computed earlier (sibling temp dir strategy)
+    std::fs::rename(&tmp_path, &final_dest).with_context(|| {
         format!(
             "renaming {} -> {}",
             tmp_path.display(),
-            output_dest.display()
+            final_dest.display()
         )
     })?;
 
-    println!("{}", output_dest.display());
+    println!("{}", final_dest.display());
     Ok(())
 }
 

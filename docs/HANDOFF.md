@@ -82,10 +82,24 @@ Three workstreams in order:
 
    **Read before starting:** `docs/design/output-contract.md`, `todos/output-contract.md`, `todos/conclusions-v1-manual.md`, `todos/conclusions-v2-synthesize.md`. Then write an NLSpec for the triad (Why / What / How / Done) under `docs/nlspecs/`, review it, and only then dispatch red/green via `/codex-cli`, `/gemini-cli`, or `/opencode-cli`. Match tool to task: CLI tools for self-contained units, subagents for crate-context work, inline for small surgical fixes.
 
-3. **Distribution.** Once 1+2 are working end-to-end on a real corpus:
-   - GitHub release workflow producing darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64, optionally windows-x86_64 binaries.
-   - `cargo install middens` via crates.io publish (requires Cargo.toml metadata from workstream 1).
-   - GitHub Pages site for the project — at minimum a landing page with install instructions, the headline findings (linking the methodology docs), and a sample exported notebook so visitors can see what the output looks like before installing.
+3. **Distribution.** Once 1+2 are working end-to-end on a real corpus. Detailed todos in `todos/distribution-*.md`. Execution order:
+
+   **Step A — e2e verb.** Add `middens run` (or similar) that chains `analyze → interpret → export` in one invocation. Without this there's no clean demo command for the landing page and no way to do the validation runs below. (`todos/distribution-e2e-verb.md`)
+
+   **Step B — release workflow.** GitHub Actions on tag push (`v*`): matrix build for darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64 (windows stretch). Produces tarballs + SHA256SUMS attached to a GitHub Release. (`todos/distribution-release-workflow.md`)
+
+   **Step C — Homebrew tap.** Primary install channel (`brew install lightless-labs/tap/middens`). Formula downloads release binary, verifies SHA. `uv` is a `recommend`, not a `depend` — CLI degrades to Rust-only without it. crates.io is secondary (can happen in parallel). (`todos/distribution-homebrew-tap.md`)
+
+   **Step D — two validation runs.** Source-built middens does a full e2e run on the real corpus; export stashed. Then remove source install, `brew install`, second e2e on same corpus; export stashed. Both exports must be structurally identical (same techniques, same row counts, same notebook shape — UUIDs and timestamps will differ). This catches anything that accidentally depends on the source tree. (`todos/distribution-validation-runs.md`)
+
+   **Step E — GitHub Pages landing page.** Orphan `www` branch (otherwise empty). Static HTML/CSS, no JS framework. Content: pitch, install instructions, both validation exports embedded, headline findings, current capabilities, known limits, medium-term goals (framed as distributed effort), where third-party help is welcome. Copy reviewed by **Gemini 3.1 Pro** and **Codex 5.4 (reasoning: high)** — both tasked with stripping em dashes, killing superlatives, flagging ungrounded claims, enforcing the light/self-deprecating register. Copy is done when both reviewers have zero P1/P2 findings. (`todos/distribution-github-pages.md`)
+
+   **Open questions / needs clarification before starting:**
+   - **Step A:** verb name — `run`, `full`, `go`, something else? Should `--provider` be required or should it skip interpret when omitted? If interpret fails (no runner on PATH), hard-fail or fall through to export-without-interpretation?
+   - **Step B:** cross-compile via `cross` crate or use native GitHub-hosted runners (macOS + Linux)? Apple Silicon runner availability on GH Actions (free tier has x86 only — may need `cross` for darwin-arm64). Windows: in or out for v1?
+   - **Step C:** tap repo name — `Lightless-Labs/homebrew-tap` (generic, supports future tools) or `Lightless-Labs/homebrew-middens` (single-formula)? crates.io publish: do it now or defer?
+   - **Step D:** which corpus for the validation runs — the full private corpus, or a small public fixture corpus that can be checked in? If private, the exports can't go on the landing page verbatim (PII risk). If public, we need to create one.
+   - **Step E:** domain — use default `lightless-labs.github.io/third-thoughts` or custom? How much design polish — minimal/functional or invest in something that looks good? Who writes the first draft of the copy — an LLM with heavy revision, or user writes and LLMs review?
 
 **Explicit non-goals for this milestone:** Autonomous session stratum work (Phase 1 + Phase 2), multilingual remediation, HSMM re-runs under 4-axis stratification, the GH#42796 follow-up. All deferred until the shippable artifact lands.
 

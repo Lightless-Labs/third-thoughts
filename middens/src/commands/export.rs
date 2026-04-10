@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::ValueEnum;
 
-use crate::storage::discovery::{discover_latest_analysis, discover_latest_interpretation};
+use crate::storage::discovery::{discover_latest_analysis, discover_latest_interpretation, xdg_app_root};
 use crate::storage::AnalysisRun;
 use crate::view::ipynb::IpynbRenderer;
 use crate::view::ViewRenderer;
@@ -19,16 +19,26 @@ pub struct ExportConfig {
     pub no_interpretation: bool,
     pub format: ExportFormat,
     pub output: Option<PathBuf>,
+    pub force: bool,
 }
 
 pub fn run_export(config: ExportConfig) -> Result<()> {
     let analysis_path = discover_latest_analysis(config.analysis_dir.as_deref())?;
     let run = AnalysisRun::load(&analysis_path)?;
 
-    let analysis_run_slug = analysis_path
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| "unknown".into());
+    let xdg_analysis_root = xdg_app_root().join("analysis");
+    let analysis_run_slug = if analysis_path.starts_with(&xdg_analysis_root) {
+        analysis_path
+            .strip_prefix(&xdg_analysis_root)
+            .unwrap()
+            .to_string_lossy()
+            .replace(std::path::MAIN_SEPARATOR, "/")
+    } else {
+        analysis_path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "unknown".into())
+    };
 
     let interp_dir = if config.no_interpretation {
         None
@@ -54,6 +64,13 @@ pub fn run_export(config: ExportConfig) -> Result<()> {
             std::fs::create_dir_all(parent)
                 .with_context(|| format!("creating output directory {}", parent.display()))?;
         }
+    }
+
+    if output_path.exists() && !config.force {
+        bail!(
+            "output file already exists: {}. Use --force to overwrite.",
+            output_path.display()
+        );
     }
 
     std::fs::write(&output_path, &notebook)

@@ -2,14 +2,20 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::Utc;
+use sha2::{Digest, Sha256};
 
 use crate::bridge::{embedded, UvManager};
 use crate::corpus::discovery::discover_sessions;
 use crate::output::{render_json, render_markdown, OutputMetadata};
 use crate::parser::auto_detect::parse_auto;
-use crate::techniques::{all_techniques, all_techniques_with_python, Technique};
+use crate::storage::discovery::xdg_app_root;
+use crate::storage::{
+    AnalysisManifest, AnalyzerFingerprint, CorpusFingerprint, ManifestWriter, ParquetWriter,
+    StratumRef, TechniqueEntry, TableRef,
+};
+use crate::techniques::{all_techniques, all_techniques_with_python, Technique, TechniqueResult};
 
 pub struct PipelineConfig {
     pub corpus_path: Option<PathBuf>,
@@ -34,6 +40,7 @@ pub struct PipelineResult {
     pub techniques_run: usize,
     pub technique_errors: usize,
     pub output_dir: PathBuf,
+    pub storage_dir: Option<PathBuf>,
 }
 
 pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
@@ -46,8 +53,8 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     let mut parse_errors = 0;
     let mut sessions_parsed = 0;
 
-    for file in files {
-        match parse_auto(&file) {
+    for file in &files {
+        match parse_auto(file) {
             Ok(sessions) => {
                 sessions_parsed += sessions.len();
                 all_sessions.extend(sessions);
@@ -149,6 +156,9 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     let mut interactive_sessions = 0;
     let mut subagent_sessions = 0;
 
+    let corpus_fp = compute_corpus_fingerprint(&files, sessions_parsed);
+    let mut storage_dir = None;
+
     if config.split {
         use crate::session::SessionType;
         let interactive: Vec<_> = all_sessions
@@ -169,26 +179,87 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
         interactive_sessions = interactive.len();
         subagent_sessions = subagent.len();
 
+        let run_id = format!("run-{}", uuid7::uuid7());
+        let run_dir = xdg_app_root().join("analysis").join(&run_id);
+        fs::create_dir_all(&run_dir)?;
+
+        let mut strata_refs = Vec::new();
         let populations = vec![("interactive", interactive), ("subagent", subagent)];
 
         for (pop_name, pop_sessions) in populations {
             let pop_dir = config.output_dir.join(pop_name);
             fs::create_dir_all(&pop_dir)?;
 
+            let mut technique_results = Vec::new();
             for technique in &techniques {
                 match run_technique(technique, &pop_sessions, &pop_dir) {
-                    Ok(_) => techniques_run += 1,
+                    Ok(result) => {
+                        technique_results.push(result);
+                        techniques_run += 1;
+                    }
                     Err(_) => technique_errors += 1,
                 }
             }
+
+            let stratum_dir = run_dir.join(pop_name);
+            write_storage_layer(
+                technique_results,
+                &corpus_fp,
+                &run_id,
+                Some(pop_name),
+                None,
+                &stratum_dir,
+            )?;
+
+            strata_refs.push(StratumRef {
+                name: pop_name.to_string(),
+                session_count: pop_sessions.len() as i64,
+                manifest_ref: format!("{}/manifest.json", pop_name),
+            });
         }
+
+        // Top-level split manifest (strata refs, no technique data)
+        let top_manifest = AnalysisManifest {
+            run_id: run_id.clone(),
+            created_at: Utc::now(),
+            analyzer_fingerprint: AnalyzerFingerprint {
+                middens_version: env!("CARGO_PKG_VERSION").to_string(),
+                git_sha: None,
+                technique_versions: BTreeMap::new(),
+                python_bridge: None,
+            },
+            corpus_fingerprint: corpus_fp.clone(),
+            strata: Some(strata_refs),
+            stratum: None,
+            techniques: vec![],
+        };
+        ManifestWriter::write(&top_manifest, &run_dir.join("manifest.json"))?;
+
+        storage_dir = Some(run_dir);
     } else {
+        let mut technique_results = Vec::new();
         for technique in &techniques {
             match run_technique(technique, &all_sessions, &config.output_dir) {
-                Ok(_) => techniques_run += 1,
+                Ok(result) => {
+                    technique_results.push(result);
+                    techniques_run += 1;
+                }
                 Err(_) => technique_errors += 1,
             }
         }
+
+        let run_id = format!("run-{}", uuid7::uuid7());
+        let run_dir = xdg_app_root().join("analysis").join(&run_id);
+        write_storage_layer(
+            technique_results,
+            &corpus_fp,
+            &run_id,
+            None,
+            None,
+            &run_dir,
+        )?;
+
+        storage_dir = Some(run_dir);
     }
 
     // Step 6: Return result
@@ -201,6 +272,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
         techniques_run,
         technique_errors,
         output_dir: config.output_dir,
+        storage_dir,
     })
 }
 
@@ -208,7 +280,7 @@ fn run_technique(
     technique: &Box<dyn Technique>,
     sessions: &[crate::session::Session],
     output_dir: &std::path::Path,
-) -> Result<()> {
+) -> Result<TechniqueResult> {
     match technique.run(sessions) {
         Ok(result) => {
             let meta = OutputMetadata {
@@ -253,13 +325,107 @@ fn run_technique(
                 anyhow::anyhow!(e).context(format!("writing {}", json_path.display()))
             })?;
 
-            Ok(())
+            Ok(result)
         }
         Err(e) => {
             eprintln!("middens: technique '{}' failed: {}", technique.name(), e);
             Err(e)
         }
     }
+}
+
+fn compute_corpus_fingerprint(files: &[PathBuf], session_count: usize) -> CorpusFingerprint {
+    let mut path_strings: Vec<String> = files
+        .iter()
+        .map(|p| p.to_string_lossy().to_string())
+        .collect();
+    path_strings.sort();
+
+    let mut hasher = Sha256::new();
+    for p in &path_strings {
+        hasher.update(p.as_bytes());
+        hasher.update(b"\n");
+    }
+    let manifest_hash = format!("{:x}", hasher.finalize());
+    let short = manifest_hash[..8].to_string();
+
+    CorpusFingerprint {
+        manifest_hash,
+        short,
+        session_count: session_count as i64,
+        source_paths: path_strings,
+    }
+}
+
+fn write_storage_layer(
+    results: Vec<TechniqueResult>,
+    corpus_fp: &CorpusFingerprint,
+    run_id: &str,
+    stratum: Option<&str>,
+    strata: Option<Vec<StratumRef>>,
+    run_dir: &std::path::Path,
+) -> Result<()> {
+    fs::create_dir_all(run_dir)?;
+    let data_dir = run_dir.join("data");
+    fs::create_dir_all(&data_dir)?;
+
+    let mut technique_entries = Vec::new();
+    let mut technique_versions = BTreeMap::new();
+
+    for result in results {
+        let TechniqueResult {
+            name,
+            summary,
+            findings,
+            tables,
+            figures,
+        } = result;
+
+        let table_ref = if let Some(table) = tables.into_iter().next() {
+            let parquet_rel = format!("data/{}.parquet", name);
+            let parquet_path = run_dir.join(&parquet_rel);
+            ParquetWriter::write_table(&table, &name, &parquet_path)
+                .with_context(|| format!("writing parquet for technique '{}'", name))?;
+            Some(TableRef {
+                name: table.name.clone(),
+                parquet: parquet_rel,
+                row_count: table.rows.len() as i64,
+                column_types: table.column_types.clone(),
+            })
+        } else {
+            None
+        };
+
+        let version = env!("CARGO_PKG_VERSION").to_string();
+        technique_versions.insert(name.clone(), version.clone());
+
+        technique_entries.push(TechniqueEntry {
+            name,
+            version,
+            summary,
+            findings,
+            table: table_ref,
+            figures,
+            errors: vec![],
+        });
+    }
+
+    let manifest = AnalysisManifest {
+        run_id: run_id.to_string(),
+        created_at: Utc::now(),
+        analyzer_fingerprint: AnalyzerFingerprint {
+            middens_version: env!("CARGO_PKG_VERSION").to_string(),
+            git_sha: None,
+            technique_versions,
+            python_bridge: None,
+        },
+        corpus_fingerprint: corpus_fp.clone(),
+        strata,
+        stratum: stratum.map(String::from),
+        techniques: technique_entries,
+    };
+
+    ManifestWriter::write(&manifest, &run_dir.join("manifest.json"))
 }
 
 /// Extract embedded Python assets, detect `uv`, and initialise the shared

@@ -16,8 +16,11 @@ middens/                    # Rust CLI tool — usable end-to-end
   src/classifier/           # Message + session type classification
   src/corpus/               # Discovery, indexing, manifests
   src/techniques/           # 6 Rust-native analytical techniques
-  src/output/               # Markdown, JSON, ASCII renderers
-  src/pipeline.rs           # analyze pipeline orchestration
+  src/output/               # Legacy renderers: Markdown, JSON, ASCII (pre-triad)
+  src/view/                 # View renderers: Jupyter notebook (post-triad)
+  src/storage/              # Parquet writer, manifest model, PII validation, XDG discovery
+  src/commands/             # interpret + export command implementations
+  src/pipeline.rs           # analyze pipeline orchestration (writes storage + legacy output)
   src/bridge/               # Python bridge (UvManager, PythonTechnique)
   python/techniques/        # Python technique scripts (echo.py test fixture)
   tests/features/           # Cucumber/Gherkin .feature files

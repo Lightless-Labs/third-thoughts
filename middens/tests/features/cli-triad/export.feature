@@ -45,10 +45,15 @@ Feature: Export
     When I run middens export
     Then it exits non-zero with a message containing "no analysis runs found"
 
-  Scenario: Export silently overwrites existing output file
+  Scenario: Export refuses to overwrite without --force
     Given a pre-existing report.ipynb file
     When I run middens export with -o report.ipynb
-    Then it silently overwrites the existing output file
+    Then it exits non-zero with a message containing "Use --force to overwrite"
+
+  Scenario: Export overwrites existing output file with --force
+    Given a pre-existing report.ipynb file
+    When I run middens export with -o report.ipynb --force
+    Then it overwrites the existing output file
 
   Scenario: Export rejects invalid --format values at parse time
     When I run middens export with --format html
