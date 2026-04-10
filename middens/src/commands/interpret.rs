@@ -7,13 +7,12 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::storage::discovery::{discover_latest_analysis, xdg_app_root};
 use crate::storage::{AnalysisManifest, AnalysisRun};
 
 pub const TEMPLATE_VERSION: &str = "1";
 
 const PROMPT_TEMPLATE: &str = include_str!("interpret/prompt-template.md");
-
-const XDG_APP_DIR: &str = "com.lightless-labs.third-thoughts";
 
 const RUNNER_SLUGS: &[&str] = &["claude-code", "codex", "gemini", "opencode"];
 
@@ -221,74 +220,6 @@ pub fn detect_runner(model_flag: Option<&str>) -> Result<Box<dyn Runner>> {
          Install one of these CLIs and try again.",
         RUNNER_SLUGS.join(", ")
     );
-}
-
-fn xdg_data_home() -> PathBuf {
-    if let Ok(xdg) = std::env::var("XDG_DATA_HOME") {
-        PathBuf::from(xdg)
-    } else {
-        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-        PathBuf::from(home).join(".local/share")
-    }
-}
-
-fn xdg_app_root() -> PathBuf {
-    xdg_data_home().join(XDG_APP_DIR)
-}
-
-pub fn discover_latest_analysis(analysis_dir: Option<&Path>) -> Result<PathBuf> {
-    if let Some(dir) = analysis_dir {
-        let run = AnalysisRun::load(dir)
-            .with_context(|| format!("failed to load analysis at {}", dir.display()))?;
-        check_not_split(run.manifest())?;
-        return Ok(dir.to_path_buf());
-    }
-
-    let root = xdg_app_root().join("analysis");
-    if !root.exists() {
-        bail!(
-            "no analysis runs found. Run 'middens analyze' first. \
-             Expected runs under {}",
-            root.display()
-        );
-    }
-
-    let mut entries: Vec<String> = std::fs::read_dir(&root)
-        .context("failed to read analysis directory")?
-        .filter_map(|e| e.ok())
-        .filter_map(|e| e.file_name().to_str().map(String::from))
-        .filter(|name| name.starts_with("run-"))
-        .collect();
-
-    entries.sort();
-    entries.reverse();
-
-    for name in &entries {
-        let candidate = root.join(name);
-        if candidate.join("manifest.json").exists() {
-            if let Ok(run) = AnalysisRun::load(&candidate) {
-                if check_not_split(run.manifest()).is_ok() {
-                    return Ok(candidate);
-                }
-            }
-        }
-    }
-
-    bail!(
-        "no analysis runs found, run 'middens analyze' first. \
-         Checked: {}",
-        root.display()
-    )
-}
-
-fn check_not_split(manifest: &AnalysisManifest) -> Result<()> {
-    if manifest.strata.is_some() && manifest.strata.as_ref().map_or(false, |s| !s.is_empty()) {
-        bail!(
-            "split runs must be addressed per stratum; pass \
-             --analysis-dir <run>/interactive or <run>/subagent"
-        );
-    }
-    Ok(())
 }
 
 fn generate_uuidv7() -> String {

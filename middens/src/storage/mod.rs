@@ -24,14 +24,7 @@ use crate::techniques::{ColumnType, DataTable, FigureSpec, Finding};
 // Aggregate/statistical names like "user_messages" (a count) or "text_length"
 // are legitimate — the blocklist targets raw-content indicators, not derived metrics.
 const PII_BLOCKLIST: &[&str] = &[
-    "body",
-    "content",
-    "cwd",
-    "excerpt",
-    "filepath",
-    "prompt",
-    "raw",
-    "snippet",
+    "body", "content", "cwd", "excerpt", "filepath", "prompt", "raw", "snippet",
 ];
 
 const VALUE_LENGTH_CAP: usize = 200;
@@ -322,6 +315,8 @@ impl AnalysisRun {
     }
 }
 
+pub mod discovery;
+
 // ── Conversion helpers ───────────────────────────────────────────────────────
 
 fn infer_column_type(values: &[&serde_json::Value]) -> ColumnType {
@@ -528,7 +523,12 @@ mod tests {
         // Statistical/aggregate column names should NOT be blocked
         let table = make_test_table(
             "test",
-            vec!["user_messages", "text_length", "message_count", "file_path_count"],
+            vec![
+                "user_messages",
+                "text_length",
+                "message_count",
+                "file_path_count",
+            ],
             vec![],
         );
         assert!(check_pii_column_names(&table, "t").is_ok());
