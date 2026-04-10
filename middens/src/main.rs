@@ -114,7 +114,7 @@ enum Commands {
         analysis_dir: Option<PathBuf>,
 
         /// Interpretation directory. Default: latest valid under interpretation/.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "no_interpretation")]
         interpretation_dir: Option<PathBuf>,
 
         /// Skip interpretation even if present.

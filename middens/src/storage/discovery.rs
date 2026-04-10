@@ -69,12 +69,18 @@ pub fn discover_latest_interpretation(
     interpretation_dir: Option<&Path>,
 ) -> Result<Option<PathBuf>> {
     if let Some(dir) = interpretation_dir {
-        if !dir.join("manifest.json").exists() {
+        let manifest_path = dir.join("manifest.json");
+        if !manifest_path.exists() {
             bail!(
-                "interpretation directory does not contain a valid manifest.json: {}",
+                "interpretation directory does not contain a manifest.json: {}",
                 dir.display()
             );
         }
+        // Validate manifest is parseable JSON
+        let raw = std::fs::read_to_string(&manifest_path)
+            .with_context(|| format!("reading manifest at {}", manifest_path.display()))?;
+        let _: serde_json::Value = serde_json::from_str(&raw)
+            .with_context(|| format!("corrupt manifest.json at {}", manifest_path.display()))?;
         return Ok(Some(dir.to_path_buf()));
     }
 
@@ -97,8 +103,14 @@ pub fn discover_latest_interpretation(
 
     for name in &entries {
         let candidate = interp_root.join(name);
-        if candidate.join("manifest.json").exists() {
-            return Ok(Some(candidate));
+        let manifest_path = candidate.join("manifest.json");
+        if manifest_path.exists() {
+            // Validate parseable before selecting
+            if let Ok(raw) = std::fs::read_to_string(&manifest_path) {
+                if serde_json::from_str::<serde_json::Value>(&raw).is_ok() {
+                    return Ok(Some(candidate));
+                }
+            }
         }
     }
 

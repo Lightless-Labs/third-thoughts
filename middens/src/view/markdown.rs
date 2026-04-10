@@ -219,11 +219,10 @@ impl ViewRenderer for MarkdownRenderer {
             }
 
             if let Some(table_ref) = &entry.table {
-                if let Ok(table) = run.load_table(table_ref) {
-                    output.push_str(&format!("### {}\n\n", table_ref.name));
-                    output.push_str(&render_markdown_table(&table));
-                    output.push('\n');
-                }
+                let table = run.load_table(table_ref)?;
+                output.push_str(&format!("### {}\n\n", table_ref.name));
+                output.push_str(&render_markdown_table(&table));
+                output.push('\n');
             }
 
             if !entry.errors.is_empty() {

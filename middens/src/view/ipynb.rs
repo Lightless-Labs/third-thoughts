@@ -100,7 +100,8 @@ impl ViewRenderer for IpynbRenderer {
                     path = run.dir().join(&table_ref.parquet).display(),
                 );
                 let mut outputs = Vec::new();
-                if let Ok(table) = run.load_table(table_ref) {
+                let table = run.load_table(table_ref)?;
+                {
                     let head_rows = table.rows.len().min(10);
                     let mut html = String::from("<table>\n<thead>\n<tr>");
                     for col in &table.columns {

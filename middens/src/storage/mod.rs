@@ -131,24 +131,30 @@ fn check_pii_column_names(table: &DataTable, technique_name: &str) -> Result<()>
 }
 
 fn check_value_length_cap(table: &DataTable, technique_name: &str) -> Result<()> {
-    if let Some(types) = &table.column_types {
-        for (col_idx, col_type) in types.iter().enumerate() {
-            if matches!(col_type, ColumnType::String) {
-                for (row_idx, row) in table.rows.iter().enumerate() {
-                    if let Some(val) = row.get(col_idx).and_then(|v| v.as_str()) {
-                        ensure!(
-                            val.len() <= VALUE_LENGTH_CAP,
-                            "PII value-length cap violation in technique '{}', \
-                             table '{}', column '{}', row {}: value is {} chars \
-                             (max {}). No partial output on disk.",
-                            technique_name,
-                            table.name,
-                            table.columns.get(col_idx).unwrap_or(&"?".to_string()),
-                            row_idx,
-                            val.len(),
-                            VALUE_LENGTH_CAP,
-                        );
-                    }
+    for (col_idx, _col_name) in table.columns.iter().enumerate() {
+        let is_string_col = table
+            .column_types
+            .as_ref()
+            .and_then(|ct| ct.get(col_idx).copied())
+            .map(|ct| matches!(ct, ColumnType::String))
+            // When column_types is absent, check all columns (any value could be a string)
+            .unwrap_or(true);
+
+        if is_string_col {
+            for (row_idx, row) in table.rows.iter().enumerate() {
+                if let Some(val) = row.get(col_idx).and_then(|v| v.as_str()) {
+                    ensure!(
+                        val.len() <= VALUE_LENGTH_CAP,
+                        "PII value-length cap violation in technique '{}', \
+                         table '{}', column '{}', row {}: value is {} chars \
+                         (max {}). No partial output on disk.",
+                        technique_name,
+                        table.name,
+                        table.columns.get(col_idx).unwrap_or(&"?".to_string()),
+                        row_idx,
+                        val.len(),
+                        VALUE_LENGTH_CAP,
+                    );
                 }
             }
         }
