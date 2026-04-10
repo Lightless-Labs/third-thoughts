@@ -268,6 +268,7 @@ impl Technique for Diversity {
             name: "per_session_diversity".to_string(),
             columns,
             rows,
+            column_types: None,
         };
 
         // Summary text.

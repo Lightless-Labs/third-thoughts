@@ -14,13 +14,57 @@ use crate::session::{Session, ThinkingVisibility};
 pub struct ThinkingDivergence;
 
 const RISK_TOKENS: &[&str] = &[
-    "risk", "concern", "worry", "problem", "issue", "error", "fail", "wrong", "careful",
-    "uncertain", "maybe", "might", "however", "but", "although", "caveat", "warning",
-    "danger", "tricky", "edge case", "caution", "potential", "possibly", "unclear",
-    "unsafe", "malicious", "exploit", "untrusted", "vulnerability", "flaw", "security",
-    "leak", "sensitive", "confidential", "hazard", "threat", "harm", "insecure", "peril",
-    "jeopardy", "suspicious", "unauthorized", "leakage", "password", "secret", "token",
-    "credential", "apikey", "key", "access", "auth",
+    "risk",
+    "concern",
+    "worry",
+    "problem",
+    "issue",
+    "error",
+    "fail",
+    "wrong",
+    "careful",
+    "uncertain",
+    "maybe",
+    "might",
+    "however",
+    "but",
+    "although",
+    "caveat",
+    "warning",
+    "danger",
+    "tricky",
+    "edge case",
+    "caution",
+    "potential",
+    "possibly",
+    "unclear",
+    "unsafe",
+    "malicious",
+    "exploit",
+    "untrusted",
+    "vulnerability",
+    "flaw",
+    "security",
+    "leak",
+    "sensitive",
+    "confidential",
+    "hazard",
+    "threat",
+    "harm",
+    "insecure",
+    "peril",
+    "jeopardy",
+    "suspicious",
+    "unauthorized",
+    "leakage",
+    "password",
+    "secret",
+    "token",
+    "credential",
+    "apikey",
+    "key",
+    "access",
+    "auth",
 ];
 
 impl Technique for ThinkingDivergence {
@@ -86,7 +130,7 @@ impl Technique for ThinkingDivergence {
                 if let Some(thinking) = &message.thinking {
                     session_has_thinking = true;
                     let text = &message.text;
-                    
+
                     if !text.is_empty() {
                         session_messages_with_both += 1;
                     }
@@ -170,22 +214,30 @@ impl Technique for ThinkingDivergence {
             Finding {
                 label: "sessions_with_thinking".to_string(),
                 value: json!(total_sessions_with_thinking),
-                description: Some("Count of sessions containing at least one thinking block".to_string()),
+                description: Some(
+                    "Count of sessions containing at least one thinking block".to_string(),
+                ),
             },
             Finding {
                 label: "messages_with_both".to_string(),
                 value: json!(total_messages_with_both),
-                description: Some("Assistant messages containing both thinking and text".to_string()),
+                description: Some(
+                    "Assistant messages containing both thinking and text".to_string(),
+                ),
             },
             Finding {
                 label: "total_risk_tokens".to_string(),
                 value: json!(global_total_risk_tokens),
-                description: Some("Total instances of risk tokens found in thinking blocks".to_string()),
+                description: Some(
+                    "Total instances of risk tokens found in thinking blocks".to_string(),
+                ),
             },
             Finding {
                 label: "suppressed_tokens".to_string(),
                 value: json!(global_suppressed_tokens),
-                description: Some("Total risk tokens found in thinking but absent from text".to_string()),
+                description: Some(
+                    "Total risk tokens found in thinking but absent from text".to_string(),
+                ),
             },
             Finding {
                 label: "sessions_analyzed".to_string(),
@@ -197,7 +249,8 @@ impl Technique for ThinkingDivergence {
                 value: json!(skipped_redacted_sessions),
                 description: Some(
                     "Sessions skipped because thinking was redacted from transcript \
-                     (post redact-thinking-2026-02-12 header)".to_string(),
+                     (post redact-thinking-2026-02-12 header)"
+                        .to_string(),
                 ),
             },
             Finding {
@@ -213,7 +266,8 @@ impl Technique for ThinkingDivergence {
                 description: Some(
                     "Analyzed sessions whose thinking_visibility is Unknown \
                      (parser could not determine visibility; included in the \
-                     analyzed cohort but not guaranteed to be pre-redaction)".to_string(),
+                     analyzed cohort but not guaranteed to be pre-redaction)"
+                        .to_string(),
                 ),
             },
         ];
@@ -230,6 +284,7 @@ impl Technique for ThinkingDivergence {
                 "suppressed_tokens".to_string(),
             ],
             rows: session_data,
+            column_types: None,
         };
 
         let mut summary = format!(
@@ -243,9 +298,7 @@ impl Technique for ThinkingDivergence {
             summary.push_str(&format!(
                 " (analyzed {} visible + {} unknown-visibility sessions with thinking; \
                  {} skipped as thinking-redacted)",
-                analyzed_visible_sessions,
-                analyzed_unknown_sessions,
-                skipped_redacted_sessions
+                analyzed_visible_sessions, analyzed_unknown_sessions, skipped_redacted_sessions
             ));
         }
 

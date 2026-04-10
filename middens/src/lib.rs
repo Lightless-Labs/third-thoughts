@@ -7,4 +7,5 @@ pub mod parser;
 pub mod pipeline;
 pub mod report;
 pub mod session;
+pub mod storage;
 pub mod techniques;

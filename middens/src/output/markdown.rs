@@ -146,8 +146,12 @@ pub fn render_markdown(result: &TechniqueResult, meta: &OutputMetadata) -> Strin
         output.push_str("|---------|-------|-------------|\n");
         for finding in &result.findings {
             let label = finding.label.replace('|', "\\|").replace('\n', " ");
-            let desc = finding.description.as_deref().unwrap_or("")
-                .replace('|', "\\|").replace('\n', " ");
+            let desc = finding
+                .description
+                .as_deref()
+                .unwrap_or("")
+                .replace('|', "\\|")
+                .replace('\n', " ");
             output.push_str(&format!(
                 "| {} | {} | {} |\n",
                 label,
@@ -169,7 +173,7 @@ pub fn render_markdown(result: &TechniqueResult, meta: &OutputMetadata) -> Strin
     for figure in &result.figures {
         output.push_str(&format!("## {}\n\n", figure.title));
         output.push_str("```json\n");
-        output.push_str(&serde_json::to_string_pretty(&figure.spec).unwrap_or_default());
+        output.push_str(&serde_json::to_string_pretty(&figure.kind).unwrap_or_default());
         output.push_str("\n```\n\n");
     }
 

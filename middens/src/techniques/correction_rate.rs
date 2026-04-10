@@ -304,6 +304,7 @@ impl Technique for CorrectionRate {
                     ]
                 })
                 .collect(),
+            column_types: None,
         };
 
         let per_project_table = DataTable {
@@ -327,6 +328,7 @@ impl Technique for CorrectionRate {
                     ]
                 })
                 .collect(),
+            column_types: None,
         };
 
         // --- Summary ---

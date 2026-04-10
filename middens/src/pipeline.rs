@@ -5,11 +5,11 @@ use std::path::PathBuf;
 use anyhow::Result;
 use chrono::Utc;
 
-use crate::bridge::{UvManager, embedded};
+use crate::bridge::{embedded, UvManager};
 use crate::corpus::discovery::discover_sessions;
-use crate::output::{OutputMetadata, render_json, render_markdown};
+use crate::output::{render_json, render_markdown, OutputMetadata};
 use crate::parser::auto_detect::parse_auto;
-use crate::techniques::{Technique, all_techniques, all_techniques_with_python};
+use crate::techniques::{all_techniques, all_techniques_with_python, Technique};
 
 pub struct PipelineConfig {
     pub corpus_path: Option<PathBuf>,
@@ -153,22 +153,23 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
         use crate::session::SessionType;
         let interactive: Vec<_> = all_sessions
             .iter()
-            .filter(|s| s.session_type == SessionType::Interactive || s.session_type == SessionType::Unknown)
+            .filter(|s| {
+                s.session_type == SessionType::Interactive || s.session_type == SessionType::Unknown
+            })
             .cloned()
             .collect();
         let subagent: Vec<_> = all_sessions
             .iter()
-            .filter(|s| s.session_type == SessionType::Subagent || s.session_type == SessionType::Unknown)
+            .filter(|s| {
+                s.session_type == SessionType::Subagent || s.session_type == SessionType::Unknown
+            })
             .cloned()
             .collect();
 
         interactive_sessions = interactive.len();
         subagent_sessions = subagent.len();
 
-        let populations = vec![
-            ("interactive", interactive),
-            ("subagent", subagent),
-        ];
+        let populations = vec![("interactive", interactive), ("subagent", subagent)];
 
         for (pop_name, pop_sessions) in populations {
             let pop_dir = config.output_dir.join(pop_name);
@@ -203,7 +204,11 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     })
 }
 
-fn run_technique(technique: &Box<dyn Technique>, sessions: &[crate::session::Session], output_dir: &std::path::Path) -> Result<()> {
+fn run_technique(
+    technique: &Box<dyn Technique>,
+    sessions: &[crate::session::Session],
+    output_dir: &std::path::Path,
+) -> Result<()> {
     match technique.run(sessions) {
         Ok(result) => {
             let meta = OutputMetadata {
@@ -222,21 +227,28 @@ fn run_technique(technique: &Box<dyn Technique>, sessions: &[crate::session::Ses
             if let Err(e) = fs::write(&md_path, md) {
                 eprintln!(
                     "middens: failed to write markdown for '{}' to {}: {}",
-                    technique.name(), md_path.display(), e
+                    technique.name(),
+                    md_path.display(),
+                    e
                 );
                 return Err(e.into());
             }
 
-            let json_pretty = serde_json::to_string_pretty(&json_val)
-                .map_err(|e| {
-                    eprintln!("middens: failed to serialize JSON for '{}': {}", technique.name(), e);
-                    anyhow::anyhow!(e).context(format!("serializing {} JSON", technique.name()))
-                })?;
+            let json_pretty = serde_json::to_string_pretty(&json_val).map_err(|e| {
+                eprintln!(
+                    "middens: failed to serialize JSON for '{}': {}",
+                    technique.name(),
+                    e
+                );
+                anyhow::anyhow!(e).context(format!("serializing {} JSON", technique.name()))
+            })?;
 
             fs::write(&json_path, json_pretty).map_err(|e| {
                 eprintln!(
                     "middens: failed to write JSON for '{}' to {}: {}",
-                    technique.name(), json_path.display(), e
+                    technique.name(),
+                    json_path.display(),
+                    e
                 );
                 anyhow::anyhow!(e).context(format!("writing {}", json_path.display()))
             })?;

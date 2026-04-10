@@ -30,6 +30,7 @@ anyhow = "1"
 thiserror = "2"
 which = "7"
 tempfile = "3"
+polars = { version = "0.46", features = ["parquet"] }
 
 [dev-dependencies]
 cucumber = "0.22"
