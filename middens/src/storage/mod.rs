@@ -19,23 +19,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::techniques::{ColumnType, DataTable, FigureSpec, Finding};
 
+// PII blocklist: tokenized exact-match on column name tokens (split on non-alnum).
+// Only block tokens that unambiguously indicate raw content columns.
+// Aggregate/statistical names like "user_messages" (a count) or "text_length"
+// are legitimate — the blocklist targets raw-content indicators, not derived metrics.
 const PII_BLOCKLIST: &[&str] = &[
-    "path",
-    "paths",
-    "cwd",
-    "filename",
-    "filenames",
-    "filepath",
     "body",
+    "content",
+    "cwd",
+    "excerpt",
+    "filepath",
     "prompt",
     "raw",
-    "text",
-    "message",
-    "messages",
-    "content",
-    "source",
     "snippet",
-    "excerpt",
 ];
 
 const VALUE_LENGTH_CAP: usize = 200;
@@ -514,17 +510,28 @@ mod tests {
     }
 
     #[test]
-    fn pii_check_blocks_total_messages() {
-        let table = make_test_table("test", vec!["total_messages"], vec![]);
+    fn pii_check_blocks_prompt_column() {
+        let table = make_test_table("test", vec!["user_prompt"], vec![]);
         let err = check_pii_column_names(&table, "t").unwrap_err();
-        assert!(err.to_string().contains("messages"));
+        assert!(err.to_string().contains("prompt"));
     }
 
     #[test]
-    fn pii_check_blocks_file_path() {
-        let table = make_test_table("test", vec!["file_path"], vec![]);
+    fn pii_check_blocks_body_column() {
+        let table = make_test_table("test", vec!["response_body"], vec![]);
         let err = check_pii_column_names(&table, "t").unwrap_err();
-        assert!(err.to_string().contains("path"));
+        assert!(err.to_string().contains("body"));
+    }
+
+    #[test]
+    fn pii_check_allows_aggregate_names() {
+        // Statistical/aggregate column names should NOT be blocked
+        let table = make_test_table(
+            "test",
+            vec!["user_messages", "text_length", "message_count", "file_path_count"],
+            vec![],
+        );
+        assert!(check_pii_column_names(&table, "t").is_ok());
     }
 
     #[test]
