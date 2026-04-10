@@ -327,21 +327,39 @@ pub mod discovery;
 
 fn infer_column_type(values: &[&serde_json::Value]) -> ColumnType {
     use serde_json::Value;
+    let mut has_int = false;
+    let mut has_float = false;
+    let mut has_bool = false;
+    let mut has_string = false;
+
     for v in values {
         match v {
             Value::Null => continue,
-            Value::Bool(_) => return ColumnType::Bool,
+            Value::Bool(_) => has_bool = true,
             Value::Number(n) => {
-                if n.is_i64() || n.is_u64() {
-                    return ColumnType::Int;
+                if n.is_f64() && !n.is_i64() && !n.is_u64() {
+                    has_float = true;
+                } else {
+                    has_int = true;
                 }
-                return ColumnType::Float;
             }
-            Value::String(_) => return ColumnType::String,
-            _ => return ColumnType::String,
+            Value::String(_) => has_string = true,
+            _ => has_string = true,
         }
     }
-    ColumnType::String
+
+    // Supertype resolution: String absorbs everything, Float absorbs Int
+    if has_string || (has_bool && (has_int || has_float)) {
+        ColumnType::String
+    } else if has_float || (has_int && has_float) {
+        ColumnType::Float
+    } else if has_int {
+        ColumnType::Int
+    } else if has_bool {
+        ColumnType::Bool
+    } else {
+        ColumnType::String // all nulls
+    }
 }
 
 fn datatable_to_dataframe(table: &DataTable) -> Result<polars::frame::DataFrame> {
@@ -388,7 +406,11 @@ fn make_column(
         ColumnType::String => {
             let vals: Vec<Option<String>> = values
                 .iter()
-                .map(|v| v.as_str().map(String::from))
+                .map(|v| match v {
+                    serde_json::Value::String(s) => Some(s.clone()),
+                    serde_json::Value::Null => None,
+                    other => Some(other.to_string()),
+                })
                 .collect();
             Series::new(name.into(), vals)
         }

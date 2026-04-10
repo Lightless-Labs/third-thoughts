@@ -387,6 +387,7 @@ pub fn run_interpret(config: InterpretConfig) -> Result<()> {
         (r, Some(mid.to_string()))
     } else {
         let r = detect_runner(None)?;
+        eprintln!("middens: selected runner '{}' (auto-detected from PATH)", r.slug());
         if r.slug() == "opencode" {
             bail!(
                 "opencode requires an explicit --model (<runner>/<model-id>). \

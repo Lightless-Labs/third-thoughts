@@ -161,18 +161,16 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
 
     if config.split {
         use crate::session::SessionType;
+        // Unknown sessions are excluded from both strata to avoid
+        // contaminating either population. See CLAUDE.md compound scoping rule.
         let interactive: Vec<_> = all_sessions
             .iter()
-            .filter(|s| {
-                s.session_type == SessionType::Interactive || s.session_type == SessionType::Unknown
-            })
+            .filter(|s| s.session_type == SessionType::Interactive)
             .cloned()
             .collect();
         let subagent: Vec<_> = all_sessions
             .iter()
-            .filter(|s| {
-                s.session_type == SessionType::Subagent || s.session_type == SessionType::Unknown
-            })
+            .filter(|s| s.session_type == SessionType::Subagent)
             .cloned()
             .collect();
 

@@ -86,7 +86,7 @@ When running cross-model evaluations:
 |-------|-----|-------|
 | Kimi K2.5 | `kimi-for-coding/k2p5` | NOT `kimi/kimi-k2.5` — old ID fails silently |
 | GLM 5.1 | `zai-coding-plan/glm-5.1` | Slow (5-10 min), minimal output |
-| Minimax M2.7 | `minimax/minimax-m2.7` | Faster than GLM, but architectural bugs |
+| Minimax M2.7 | `minimax-coding-plan/MiniMax-M2.7` | Faster than GLM, but architectural bugs |
 
 - **Kimi has tool use** through OpenCode's tool layer. Use `--format json` to get NDJSON output — without it, ANSI escape codes corrupt code extraction. Validated in A²D project (skunkworks/a2d).
 - NDJSON output format: `{"type":"text","part":{"text":"..."}}` — parse by filtering for `type == "text"` and extracting `/part/text`.
