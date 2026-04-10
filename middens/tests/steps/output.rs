@@ -1368,9 +1368,16 @@ fn then_json_figure_has_spec(world: &mut MiddensWorld, title: String, key: Strin
         .iter()
         .find(|f| f.get("title").and_then(|t| t.as_str()) == Some(&title))
         .unwrap_or_else(|| panic!("figure '{}' not found", title));
+    // FigureSpec serializes as {title, kind: {type: "vegaLite", spec: {...}}}
+    // Check both top-level and inside kind for backwards compat with feature files
+    let found = figure.get(&key).map_or(false, |v| v.is_object())
+        || figure
+            .get("kind")
+            .and_then(|k| k.get(&key))
+            .map_or(false, |v| v.is_object());
     assert!(
-        figure.get(&key).map_or(false, |v| v.is_object()),
-        "figure '{}' should have '{}' object",
+        found,
+        "figure '{}' should have '{}' object (checked top-level and kind)",
         title,
         key
     );

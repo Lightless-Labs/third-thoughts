@@ -1,0 +1,20 @@
+{
+  "figures": [],
+  "findings": [
+    {
+      "description": "Total bigrams analyzed",
+      "label": "total_bigrams",
+      "value": 0
+    }
+  ],
+  "metadata": {
+    "corpus_size": 3,
+    "generated_at": "2026-04-10T05:54:03.330586+00:00",
+    "middens_version": "0.1.0",
+    "parameters": {},
+    "technique": "markov"
+  },
+  "name": "markov",
+  "summary": "No tool bigrams found (sessions had 0 or 1 tool calls each).",
+  "tables": []
+}

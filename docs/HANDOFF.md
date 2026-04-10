@@ -1,10 +1,28 @@
 # Session Handoff
 
-**Last updated:** 2026-04-09 (CLI triad NLSpec finalised after 4 review passes; red team next)
+**Last updated:** 2026-04-10 (CLI triad adversarial process: red+green teams done, step defs in progress)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
 ## >>> Read this first <<<
+
+**CLI triad adversarial process is mid-flight.** Red team (Gemini 3.1 Pro) wrote 59 Cucumber scenarios. Green team (GLM 5.1 via OpenCode) implemented all 6 work groups (A→F). Step definitions are being written to bridge the gap. 273/273 existing scenarios pass; 59 new ones pending step defs.
+
+**Next concrete move:** finish step definitions, run the 59 scenarios, iterate on failures (diagnose: spec unclear → amend NLSpec; implementation wrong → route to green without leaking test code). Then commit, update HANDOFF, and ship as a PR.
+
+**Commits on `main` this session:**
+- `b76c3dc` — red team .feature files (59 scenarios, 7 files)
+- `bb7918a` — Group A storage layer (polars 0.46, AnalysisManifest, ParquetWriter, PII validation)
+- `ee7333d` — Groups B+C+E (view rename + ipynb, analyze reshape, interpret command) + PII blocklist fix
+- `c19e6b7` — Groups D+F (export command, wiring, docs, worked example)
+
+**Key decision:** PII blocklist trimmed from 16 tokens to 8. Removed overly broad tokens (path, text, message, messages, source, filename, filenames, paths) that blocked legitimate analytical column names like `user_messages` and `text_length`. Kept unambiguous raw-content indicators (body, content, cwd, excerpt, filepath, prompt, raw, snippet).
+
+**Key observation:** GLM 5.1 via OpenCode is slow (5-15 min per dispatch) but produced working code that compiled on first try for Groups A, B, D, F. Groups C and E needed minor fixes (PII blocklist, test imports). GLM also ran `rustfmt` on the entire crate without being asked — harmless but chatty diffs.
+
+**Parallel dispatch hazard:** Three simultaneous OpenCode processes sharing the same working tree caused a race — one reverted an orchestrator edit. Fix: kill stale processes before editing, or use git worktrees for isolation next time.
+
+---
 
 All three open PRs from the previous session are now merged into `main`:
 
@@ -114,7 +132,21 @@ A finding that doesn't survive all four is not a finding.
 6. **Codex skill auto-activation issue documented** at `docs/solutions/workflow-issues/codex-skill-auto-activation-20260409.md` and in `~/.claude/skills/codex-cli/SKILL.md`. Three consecutive Codex review runs stalled for 10–44 minutes each because codex silently auto-activated `adversarial-document-reviewer` from `~/.codex/skills/` and ground through a multi-persona workflow. The load-bearing fix: prefix the prompt with `"DIRECT TASK — DO NOT invoke any skills, agents, or meta-workflows."`. Don't drop reasoning effort as a workaround — that degrades review quality for no reason; the skill directive is what actually fixes the stall.
 7. **Commits landed on `main`:** `b6ce66f` (initial NLSpec + 3 todos) → `5ad4af7` (pass-1 amendment) → `b3201f1` (cleanup stray AGENTS.md) → `7fc5e8a` (pass-1 CodeRabbit fixes) → `600fdb9` (pass-2 amendment) → `12eb433` (pass-3 amendment) → `9765653` (pass-4 amendment) → `5274136` (Codex solution doc) → `8acf70c` (reasoning-effort correction).
 
-**Next session:** dispatch red team. Assignment, prompt skeleton, and process notes are in the "Next concrete move" block at the top of this doc.
+**Next session:** finish step definitions and iterate red/green until all 59 scenarios pass. See "Read this first" block at top.
+
+## Session (2026-04-10) — CLI triad adversarial execution
+
+1. **Red team dispatched and completed.** Gemini 3.1 Pro Preview wrote 59 Cucumber scenarios across 7 feature files from NLSpec sections 1+2+4. One contract gap found: scenario 53 referenced scenario 50 instead of 52 — fixed in NLSpec.
+2. **Green team Groups A–F all implemented via GLM 5.1 (OpenCode):**
+   - **Group A** (storage foundation): `src/storage/mod.rs` — polars 0.46, AnalysisManifest, ParquetWriter, PII validation, 11 unit tests.
+   - **Group B** (view layer): renamed `output/` → `view/`, ViewRenderer trait, `ipynb.rs` (v4 nbformat, no Python dep).
+   - **Group C** (analyze reshape): pipeline writes Parquet + manifest.json, UUIDv7 run IDs, SHA-256 corpus fingerprint.
+   - **Group D** (export command): `src/commands/export.rs`, `storage/discovery.rs` for latest-run scanning.
+   - **Group E** (interpret command): `src/commands/interpret.rs`, runner abstraction (4 impls), prompt template, atomic write, fallback chain.
+   - **Group F** (wiring + docs): main.rs dispatch, README updates, worked example at `docs/examples/triad-workflow.md`.
+3. **PII blocklist trimmed** from 16 → 8 tokens (removed overly broad tokens blocking legitimate analytical columns).
+4. **Build status:** release builds clean (3 pre-existing warnings), 29 unit tests pass, 273/273 existing Cucumber pass, 59 new scenarios pending step defs.
+5. **Step definitions in progress** — subagent writing `tests/steps/cli_triad.rs`.
 
 ## Earlier session (2026-04-09 AM) — Repo hygiene workstream complete
 

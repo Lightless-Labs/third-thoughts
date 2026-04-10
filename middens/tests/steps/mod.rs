@@ -11,3 +11,4 @@ pub mod thinking_visibility;
 pub mod world;
 pub mod python_bridge;
 pub mod python_batch1;
+pub mod cli_triad;
