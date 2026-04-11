@@ -93,7 +93,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     } else {
         match prepare_python_env() {
             Ok((scripts_dir, python_path)) => {
-                all_techniques_with_python(&scripts_dir, &python_path, 300)
+                all_techniques_with_python(&scripts_dir, &python_path, 900)
             }
             Err(e) => {
                 eprintln!(
