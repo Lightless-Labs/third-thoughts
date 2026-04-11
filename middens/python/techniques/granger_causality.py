@@ -58,8 +58,8 @@ def create_time_series(session):
             assistant_msgs.append((msg, is_corrected))
 
     for msg, is_corrected in assistant_msgs:
-        text_len = len(msg.get('text', ''))
-        thinking_len = len(msg.get('thinking', ''))
+        text_len = len(msg.get('text') or '')
+        thinking_len = len(msg.get('thinking') or '')
         thinking_ratio = thinking_len / text_len if text_len > 0 else 0
         message_length = np.log1p(text_len)
         correction_indicator = 1 if is_corrected else 0

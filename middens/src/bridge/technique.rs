@@ -16,6 +16,9 @@ pub struct PythonTechnique {
     pub script_path: PathBuf,
     pub timeout_seconds: u64,
     pub python_path: PathBuf,
+    /// Pre-written session cache file. When set, `run()` uses this file
+    /// instead of re-serializing sessions — avoids 17× serialization cost.
+    shared_sessions_path: Option<PathBuf>,
 }
 
 impl PythonTechnique {
@@ -32,6 +35,7 @@ impl PythonTechnique {
             script_path,
             timeout_seconds,
             python_path,
+            shared_sessions_path: None,
         }
     }
 }
@@ -53,18 +57,28 @@ impl Technique for PythonTechnique {
         false
     }
 
+    fn set_session_cache(&mut self, path: &std::path::Path) {
+        self.shared_sessions_path = Some(path.to_path_buf());
+    }
+
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult> {
-        let mut temp_file = NamedTempFile::new().context("Failed to create temp file")?;
-        serde_json::to_writer(&mut temp_file, sessions)
-            .context("Failed to serialize sessions to temp file")?;
-        temp_file.flush().context("Failed to flush temp file")?;
-        // Convert to TempPath — drops the file handle so the subprocess can
-        // read it on Windows (avoids sharing violation).
-        let temp_path = temp_file.into_temp_path();
+        // Use shared cache if available (written once by the pipeline),
+        // otherwise create a per-technique temp file (fallback for standalone use).
+        let _temp_owner;
+        let input_path: &std::path::Path = if let Some(ref cached) = self.shared_sessions_path {
+            cached.as_path()
+        } else {
+            let mut temp_file = NamedTempFile::new().context("Failed to create temp file")?;
+            serde_json::to_writer(&mut temp_file, sessions)
+                .context("Failed to serialize sessions to temp file")?;
+            temp_file.flush().context("Failed to flush temp file")?;
+            _temp_owner = temp_file.into_temp_path();
+            _temp_owner.as_ref()
+        };
 
         let mut child = Command::new(&self.python_path)
             .arg(&self.script_path)
-            .arg(temp_path.as_os_str())
+            .arg(input_path)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()

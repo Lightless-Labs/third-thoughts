@@ -103,6 +103,11 @@ pub trait Technique {
 
     /// Run the technique on the given sessions.
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult>;
+
+    /// Set a pre-written session cache file path. Techniques that support it
+    /// (e.g. PythonTechnique) will read from this file instead of re-serializing
+    /// the sessions on every call. Default: no-op (Rust techniques don't need it).
+    fn set_session_cache(&mut self, _path: &std::path::Path) {}
 }
 
 /// All Rust-native techniques.

@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::fs;
+use std::io::Write as _;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -145,7 +146,23 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
         selected.retain(|t| !t.requires_python());
     }
 
-    let techniques = selected;
+    let mut techniques = selected;
+
+    // Step 3b: Write shared session cache for Python techniques.
+    // Serializes sessions to JSON once instead of 17× (once per Python technique).
+    let _session_cache_owner;
+    let has_python = techniques.iter().any(|t| t.requires_python());
+    if has_python {
+        let mut cache_file =
+            tempfile::NamedTempFile::new().context("creating session cache temp file")?;
+        serde_json::to_writer(&mut cache_file, &all_sessions)
+            .context("serializing sessions to cache file")?;
+        cache_file.flush().context("flushing session cache")?;
+        _session_cache_owner = cache_file.into_temp_path();
+        for technique in techniques.iter_mut() {
+            technique.set_session_cache(_session_cache_owner.as_ref());
+        }
+    }
 
     // Step 4: Create output directory
     fs::create_dir_all(&config.output_dir)?;
