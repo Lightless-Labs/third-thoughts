@@ -39,19 +39,52 @@ pub struct Finding {
     pub description: Option<String>,
 }
 
+/// Declared column type for Parquet serialisation and manifest metadata.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ColumnType {
+    Int,
+    Float,
+    String,
+    Bool,
+    Timestamp,
+}
+
+/// Chart type for table-derived figures.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ChartType {
+    Line,
+    Bar,
+    Heatmap,
+    Scatter,
+    Histogram,
+    Boxplot,
+}
+
+/// Kind of figure specification.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum FigureKind {
+    VegaLite { spec: serde_json::Value },
+    TableRef { chart_type: ChartType },
+}
+
 /// A data table for export.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataTable {
     pub name: String,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<serde_json::Value>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub column_types: Option<Vec<ColumnType>>,
 }
 
-/// A Vega-Lite figure specification.
+/// A figure specification.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FigureSpec {
     pub title: String,
-    pub spec: serde_json::Value,
+    pub kind: FigureKind,
 }
 
 /// Trait for analytical techniques.
@@ -90,7 +123,11 @@ pub fn all_techniques() -> Vec<Box<dyn Technique>> {
 /// directory (see `bridge::embedded::extract_to`). Keeping the list here
 /// means registration is in sync with the embedded asset list.
 pub const PYTHON_TECHNIQUE_MANIFEST: &[(&str, &str, &str)] = &[
-    ("hsmm", "Hidden semi-Markov behavioural-state modelling", "hsmm.py"),
+    (
+        "hsmm",
+        "Hidden semi-Markov behavioural-state modelling",
+        "hsmm.py",
+    ),
     (
         "information-foraging",
         "Charnov marginal-value-theorem patch analysis",

@@ -210,6 +210,7 @@ impl Technique for MarkovChain {
             name: "transition_matrix".into(),
             columns,
             rows,
+            column_types: None,
         };
 
         // Build summary.

@@ -23,6 +23,34 @@ cargo build --release
 
 Python techniques (17 of the 23) run in an embedded `uv`-managed virtualenv. If `uv` isn't on your `PATH`, middens gracefully degrades to the 6 Rust-native techniques and prints a warning. Install uv from <https://docs.astral.sh/uv/>.
 
+## The triad: analyze → interpret → export
+
+Middens has three core commands that form a pipeline:
+
+1. **`analyze`** — runs the technique battery, writes canonical storage (Parquet + manifest) to a predictable XDG path.
+2. **`interpret`** — sends the analysis to an LLM runner (`claude`, `codex`, `gemini`, or `opencode`), which produces a cross-technique narrative with per-technique conclusions.
+3. **`export`** — renders the analysis (and optional interpretation) as a Jupyter notebook.
+
+```bash
+# 1. Analyze — compute everything, store results
+middens analyze ~/.claude/projects/
+# → run-0190e4b4-... written to ~/.local/share/com.lightless-labs.third-thoughts/analysis/
+
+# 2. Interpret — ask an LLM to narrate the results
+middens interpret
+# → uses first available runner (claude-code → codex → gemini → opencode)
+middens interpret --model codex/gpt-5.4-codex
+# → explicit runner + model
+
+# 3. Export — produce a Jupyter notebook
+middens export
+# → report.ipynb in cwd
+middens export --no-interpretation
+# → notebook without LLM conclusions
+```
+
+All three commands use sane defaults — no flags required. They discover the latest run under `~/.local/share/com.lightless-labs.third-thoughts/` automatically. Flags override, they don't have to be set.
+
 ## Usage
 
 ```bash
@@ -50,7 +78,7 @@ middens list-techniques
 - **Parsers** — Claude Code, Codex, OpenClaw transcripts (Gemini is stubbed).
 - **Classifiers** — 5-priority message classifier + session-type classifier (interactive / subagent / autonomous). The correction classifier checks for `tool_result` blocks before applying lexical patterns — the naive regex approach has a 90% false-positive rate on subagent sessions.
 - **Techniques** — 6 Rust-native (Markov, entropy, thinking-divergence, survival, tool-diversity, correction-rate) + 17 Python (HSMM, SPC, NCD, ENA, convention epidemiology, lag-sequential, change-point detection, user-signal analysis, cross-project graph, and more).
-- **Outputs** — Markdown, JSON, ASCII.
+- **Outputs** — Markdown, JSON, ASCII, Jupyter notebooks (`.ipynb`) via `export`.
 - **Embedded assets** — all Python scripts and the `requirements.txt` are baked into the binary via `include_str!` and extracted idempotently at runtime to `$XDG_CONFIG_HOME/middens/python-assets/`. The CLI is fully self-contained.
 
 Full technique catalog with academic references: [`../docs/methods-catalog.md`](../docs/methods-catalog.md).

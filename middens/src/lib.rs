@@ -1,5 +1,6 @@
 pub mod bridge;
 pub mod classifier;
+pub mod commands;
 pub mod corpus;
 pub mod fingerprint;
 pub mod output;
@@ -7,4 +8,6 @@ pub mod parser;
 pub mod pipeline;
 pub mod report;
 pub mod session;
+pub mod storage;
 pub mod techniques;
+pub mod view;

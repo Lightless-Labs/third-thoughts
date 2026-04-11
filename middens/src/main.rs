@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 /// Middens — AI agent session log analyzer.
 ///
@@ -10,6 +10,11 @@ use clap::{Parser, Subcommand};
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+enum ExportFormatCli {
+    Jupyter,
 }
 
 #[derive(Subcommand)]
@@ -82,6 +87,52 @@ enum Commands {
         /// Path to session logs directory.
         path: PathBuf,
     },
+
+    /// Interpret an analysis run using an LLM runner.
+    Interpret {
+        /// Analysis run directory. Default: latest valid run under XDG.
+        #[arg(long)]
+        analysis_dir: Option<PathBuf>,
+
+        /// Runner and model in <runner>/<model-id> format.
+        #[arg(long)]
+        model: Option<String>,
+
+        /// Output directory for interpretation.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
+
+        /// Write prompt without calling a runner.
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Export an analysis run as a Jupyter notebook.
+    Export {
+        /// Analysis run directory. Default: latest valid run under XDG.
+        #[arg(long)]
+        analysis_dir: Option<PathBuf>,
+
+        /// Interpretation directory. Default: latest valid under interpretation/.
+        #[arg(long, conflicts_with = "no_interpretation")]
+        interpretation_dir: Option<PathBuf>,
+
+        /// Skip interpretation even if present.
+        #[arg(long)]
+        no_interpretation: bool,
+
+        /// Output format (v1: jupyter only).
+        #[arg(long, default_value = "jupyter")]
+        format: ExportFormatCli,
+
+        /// Output file path. Default: report.ipynb in cwd.
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// Overwrite output file if it already exists.
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -127,6 +178,9 @@ fn main() -> anyhow::Result<()> {
             eprintln!("  techniques run: {}", result.techniques_run);
             eprintln!("  technique errors: {}", result.technique_errors);
             eprintln!("  results written to: {}", result.output_dir.display());
+            if let Some(ref storage) = result.storage_dir {
+                eprintln!("  storage (parquet + manifest): {}", storage.display());
+            }
 
             if result.sessions_parsed == 0 {
                 std::process::exit(1);
@@ -170,16 +224,9 @@ fn main() -> anyhow::Result<()> {
                 }
             }
 
-            // Python-bridged techniques come from a static manifest so
-            // `list-techniques` doesn't need a working Python env to run.
             if !essential {
-                for (name, desc, _filename) in
-                    middens::techniques::PYTHON_TECHNIQUE_MANIFEST
-                {
-                    println!(
-                        "{:<30} {:<10} {:<8} {}",
-                        name, "no", "yes", desc,
-                    );
+                for (name, desc, _filename) in middens::techniques::PYTHON_TECHNIQUE_MANIFEST {
+                    println!("{:<30} {:<10} {:<8} {}", name, "no", "yes", desc,);
                 }
             }
 
@@ -203,6 +250,48 @@ fn main() -> anyhow::Result<()> {
             eprintln!("middens fingerprint: {}", path.display());
             eprintln!("[not yet implemented]");
             Ok(())
+        }
+        Commands::Interpret {
+            analysis_dir,
+            model,
+            output_dir,
+            dry_run,
+        } => {
+            use middens::commands::interpret::{self, InterpretConfig};
+
+            let config = InterpretConfig {
+                analysis_dir,
+                model,
+                output_dir,
+                dry_run,
+            };
+
+            interpret::run_interpret(config)
+        }
+        Commands::Export {
+            analysis_dir,
+            interpretation_dir,
+            no_interpretation,
+            format,
+            output,
+            force,
+        } => {
+            use middens::commands::export::{self, ExportConfig, ExportFormat};
+
+            let export_format = match format {
+                ExportFormatCli::Jupyter => ExportFormat::Jupyter,
+            };
+
+            let config = ExportConfig {
+                analysis_dir,
+                interpretation_dir,
+                no_interpretation,
+                format: export_format,
+                output,
+                force,
+            };
+
+            export::run_export(config)
         }
     }
 }

@@ -12,7 +12,7 @@ use middens::session::{
     EnvironmentFingerprint, Message, MessageClassification, MessageRole, Session, SessionMetadata,
     SessionType, SourceTool, ToolCall,
 };
-use middens::techniques::{DataTable, FigureSpec, Finding, TechniqueResult};
+use middens::techniques::{DataTable, FigureKind, FigureSpec, Finding, TechniqueResult};
 
 use super::world::MiddensWorld;
 
@@ -68,6 +68,7 @@ fn make_data_table(name: &str, columns: &[&str], num_rows: usize) -> DataTable {
         name: name.to_string(),
         columns: cols,
         rows,
+        column_types: None,
     }
 }
 
@@ -348,14 +349,16 @@ fn given_figure_spec(world: &mut MiddensWorld, title: String) {
     let result = world.technique_result.as_mut().expect("result must exist");
     result.figures.push(FigureSpec {
         title,
-        spec: json!({
-            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "mark": "bar",
-            "encoding": {
-                "x": {"field": "tool", "type": "nominal"},
-                "y": {"field": "count", "type": "quantitative"}
-            }
-        }),
+        kind: FigureKind::VegaLite {
+            spec: json!({
+                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                "mark": "bar",
+                "encoding": {
+                    "x": {"field": "tool", "type": "nominal"},
+                    "y": {"field": "count", "type": "quantitative"}
+                }
+            }),
+        },
     });
 }
 
@@ -477,6 +480,7 @@ fn given_ascii_table_long_value(
         name,
         columns,
         rows: vec![vec![json!(long_value)]],
+        column_types: None,
     };
     if world.technique_result.is_none() {
         world.technique_result = Some(empty_result("__ascii_table__"));
@@ -1364,9 +1368,16 @@ fn then_json_figure_has_spec(world: &mut MiddensWorld, title: String, key: Strin
         .iter()
         .find(|f| f.get("title").and_then(|t| t.as_str()) == Some(&title))
         .unwrap_or_else(|| panic!("figure '{}' not found", title));
+    // FigureSpec serializes as {title, kind: {type: "vegaLite", spec: {...}}}
+    // Check both top-level and inside kind for backwards compat with feature files
+    let found = figure.get(&key).map_or(false, |v| v.is_object())
+        || figure
+            .get("kind")
+            .and_then(|k| k.get(&key))
+            .map_or(false, |v| v.is_object());
     assert!(
-        figure.get(&key).map_or(false, |v| v.is_object()),
-        "figure '{}' should have '{}' object",
+        found,
+        "figure '{}' should have '{}' object (checked top-level and kind)",
         title,
         key
     );

@@ -230,6 +230,7 @@ impl Technique for EntropyRate {
             name: "per_session_entropy".to_string(),
             columns,
             rows,
+            column_types: None,
         }];
 
         let summary = format!(

@@ -8,7 +8,7 @@ Named after Tiffany Aching's concept from Discworld: *first thoughts* (agents th
 
 Third Thoughts has two halves that share a corpus and a methodology:
 
-1. **`middens/`** — a Rust CLI for extracting behavioral patterns from AI agent session logs. Parses transcripts from Claude Code, Codex, and OpenClaw (Gemini stub), classifies messages and sessions, and runs a battery of 23 analytical techniques (6 Rust-native + 17 Python, bundled via an embedded Python bridge). See [`middens/README.md`](middens/README.md).
+1. **`middens/`** — a Rust CLI for extracting behavioral patterns from AI agent session logs. Parses transcripts from Claude Code, Codex, and OpenClaw (Gemini stub), classifies messages and sessions, and runs a battery of 23 analytical techniques (6 Rust-native + 17 Python, bundled via an embedded Python bridge). The CLI has three core commands: `analyze` (run techniques → Parquet storage), `interpret` (LLM-powered cross-technique narrative), and `export` (Jupyter notebook). See [`middens/README.md`](middens/README.md).
 2. **Research artifacts** — methods catalog, natural-language specs, replication studies, and documented findings in `docs/`. This is where the scientific claims live.
 
 The corpus itself (`corpus/`, `experiments/`) is gitignored — the sessions contain private data and cannot be redistributed. The tooling and methodology are open; the raw data is not.
@@ -32,6 +32,7 @@ middens/              Rust CLI — parser, classifiers, techniques, Python bridg
 docs/
   HANDOFF.md          Session-continuity document, read this first
   methods-catalog.md  20 method families, 80+ references
+  examples/           Worked examples for the CLI triad workflow
   nlspecs/            Natural-language specs (Why / What / How / Done)
   reports/            Research reports
   reviews/            Multi-model peer reviews

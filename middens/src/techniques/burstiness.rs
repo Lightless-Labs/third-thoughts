@@ -230,6 +230,7 @@ impl Technique for Burstiness {
             name: "per_tool_burstiness".to_string(),
             columns,
             rows,
+            column_types: None,
         };
 
         let b_interp = if aggregate_b > 0.5 {
