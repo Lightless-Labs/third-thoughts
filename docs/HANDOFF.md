@@ -1,10 +1,18 @@
 # Session Handoff
 
-**Last updated:** 2026-04-10 (CLI triad adversarial process complete — 332/332 scenarios pass)
+**Last updated:** 2026-04-11 (Python bridge serialisation fix — techniques now complete instead of timing out)
 
 This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
 
 ## >>> Read this first <<<
+
+**Python bridge serialisation fix shipped (2026-04-11, commit `1cb858f`).**
+Root cause: `PythonTechnique::run()` was serialising the full 13k-session corpus to a new `NamedTempFile` on every technique call — 17×. Fixed by writing sessions once in the pipeline and distributing the path via `Technique::set_session_cache()`. Also fixed `granger_causality.py` crash on `None` thinking field.
+Validation run in progress on full corpus (13,497 sessions, --all). Confirmed completing: `hsmm` (~11 min), `information-foraging` (~6 min), `survival-analysis`, `process-mining`. No timeouts observed.
+
+**Next concrete move:** wait for validation run to finish; tally results; merge to `main`; then move to workstream 3 (distribution — GitHub release workflow, crates.io publish, GitHub Pages site).
+
+---
 
 **CLI triad adversarial process is complete.** Red team (Gemini 3.1 Pro) wrote 59 Cucumber scenarios. Green team (GLM 5.1 via OpenCode) implemented all 6 work groups (A→F). Step definitions written by Claude subagent. **332/332 scenarios pass (273 existing + 59 new). 1804/1804 steps.**
 
