@@ -20,7 +20,11 @@ Root cause was `PythonTechnique::run()` serialising the full 13k-session corpus 
 
 The 2 remaining timeouts are tracked in `todos/python-techniques-onk2-sampling.md` (sampling fix) and `todos/python-technique-dynamic-timeout.md` (dynamic timeout with floor/ceiling/--force).
 
-**Next concrete move:** workstream 3 — GitHub release workflow, crates.io publish, GitHub Pages site. The bridge scaling issues are in todos but not blocking the release.
+**Next concrete move:** fix the 2 remaining timeouts before any release work.
+1. `todos/python-techniques-onk2-sampling.md` — add per-technique input sampling so `prefixspan-mining` and `cross-project-graph` complete on large corpora
+2. `todos/python-technique-dynamic-timeout.md` — dynamic timeout with floor/ceiling/--force (pairs with sampling; do after)
+
+Workstream 3 (distribution) is blocked until all 23 techniques work on a full corpus.
 
 ---
 
