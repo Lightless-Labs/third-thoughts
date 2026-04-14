@@ -38,6 +38,12 @@ pub fn detect_format(path: &Path) -> Option<SourceTool> {
 /// method. This avoids a double-read: `can_parse` + `parse` would each read
 /// the file independently.
 pub fn parse_auto(path: &Path) -> Result<Vec<Session>> {
+    // Skip empty files silently — Claude Code creates placeholder .jsonl files
+    // for sessions that were opened but never had content written to them.
+    if path.metadata().map(|m| m.len() == 0).unwrap_or(false) {
+        return Ok(vec![]);
+    }
+
     let parsers = all_parsers();
 
     let mut sessions = None;

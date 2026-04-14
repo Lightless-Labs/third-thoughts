@@ -219,6 +219,8 @@ fn run_pipeline_no_python(world: &mut MiddensWorld) {
         technique_filter: TechniqueFilter::All,
         no_python: true,
         split: false,
+        explicit_timeout: None,
+        force: false,
     };
 
     match run(config) {

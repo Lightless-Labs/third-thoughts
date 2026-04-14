@@ -40,6 +40,15 @@ enum Commands {
         #[arg(long)]
         no_python: bool,
 
+        /// Override the auto-computed Python technique timeout (seconds).
+        /// Must be within [60, 1800] unless --force is also passed.
+        #[arg(long)]
+        timeout: Option<u64>,
+
+        /// Bypass timeout floor/ceiling checks. Only meaningful with --timeout.
+        #[arg(long)]
+        force: bool,
+
         /// Output directory for results.
         #[arg(short, long, default_value = "middens-results")]
         output: PathBuf,
@@ -145,9 +154,18 @@ fn main() -> anyhow::Result<()> {
             all,
             split,
             no_python,
+            timeout,
+            force,
             output,
         } => {
             use middens::pipeline::{self, PipelineConfig, TechniqueFilter};
+
+            if force && timeout.is_none() {
+                anyhow::bail!(
+                    "--force only applies to --timeout; pass --timeout <seconds> alongside it, \
+                     e.g. `--timeout 3600 --force`"
+                );
+            }
 
             let technique_filter = if all {
                 TechniqueFilter::All
@@ -163,6 +181,8 @@ fn main() -> anyhow::Result<()> {
                 technique_filter,
                 no_python,
                 split,
+                explicit_timeout: timeout,
+                force,
             };
 
             let result = pipeline::run(config)?;

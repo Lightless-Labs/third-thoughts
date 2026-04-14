@@ -99,7 +99,7 @@ def main():
 
     ps = PrefixSpan(sequences)
     # Use topk to limit combinatorial explosion, then filter by length
-    all_patterns = ps.topk(200, closed=True)
+    all_patterns = ps.topk(200)
 
     filtered_patterns = [(pattern, support) for support, pattern in all_patterns
                          if 3 <= len(pattern) <= 6 and support >= min_support]
@@ -110,17 +110,32 @@ def main():
     patterns_len_5 = sum(1 for p, _ in filtered_patterns if len(p) == 5)
     patterns_len_6 = sum(1 for p, _ in filtered_patterns if len(p) == 6)
 
-    low_corr_sessions = []
-    high_corr_sessions = []
-    for i, session in enumerate(sessions):
+    # Build correction-rate cohorts aligned with sequences.
+    # extract_tool_sequences() skips sessions with no tool calls, so we cannot
+    # use session indexes to index into sequences. Instead we build the cohorts
+    # in a single pass over sessions, appending only for sessions that
+    # contributed a sequence (same filter as extract_tool_sequences).
+    low_corr_sequences = []
+    high_corr_sequences = []
+    seq_idx = 0
+    for session in sessions:
+        messages = session.get("messages", [])
+        has_tools = any(
+            isinstance(tc, dict) and tc.get("name")
+            for msg in messages if msg.get("role") == "Assistant"
+            for tc in msg.get("tool_calls", [])
+        )
+        if not has_tools:
+            continue
+        if seq_idx >= len(sequences):
+            break
         rate = get_correction_rate(session)
+        seq = sequences[seq_idx]
         if rate <= 0.10:
-            low_corr_sessions.append(i)
+            low_corr_sequences.append(seq)
         elif rate > 0.25:
-            high_corr_sessions.append(i)
-
-    low_corr_sequences = [sequences[i] for i in low_corr_sessions if i < len(sequences) and sequences[i]]
-    high_corr_sequences = [sequences[i] for i in high_corr_sessions if i < len(sequences) and sequences[i]]
+            high_corr_sequences.append(seq)
+        seq_idx += 1
 
     def count_pattern_support(pattern: Tuple[str, ...], seq_list: List[List[str]]) -> int:
         count = 0
@@ -145,29 +160,29 @@ def main():
         high_pct = (high_support / len(high_corr_sequences) * 100) if high_corr_sequences else 0
         
         if high_support > 0 and low_support / high_support > 2:
-            discriminative_patterns.append({
-                "pattern": " -> ".join(pattern),
-                "group": "low-correction (success)",
-                "support_ratio": round(low_support / high_support, 2)
-            })
+            discriminative_patterns.append([
+                " -> ".join(pattern),
+                "low-correction (success)",
+                round(low_support / high_support, 2),
+            ])
             success_patterns += 1
         elif low_support > 0 and high_support / low_support > 2:
-            discriminative_patterns.append({
-                "pattern": " -> ".join(pattern),
-                "group": "high-correction (struggle)",
-                "support_ratio": round(high_support / low_support, 2)
-            })
+            discriminative_patterns.append([
+                " -> ".join(pattern),
+                "high-correction (struggle)",
+                round(high_support / low_support, 2),
+            ])
             struggle_patterns += 1
 
     frequent_table = []
     for pattern, support in sorted(filtered_patterns, key=lambda x: -x[1])[:50]:
         support_pct = (support / len(sequences)) * 100
-        frequent_table.append({
-            "pattern": " -> ".join(pattern),
-            "length": len(pattern),
-            "support": support,
-            "support_pct": round(support_pct, 2)
-        })
+        frequent_table.append([
+            " -> ".join(pattern),
+            len(pattern),
+            support,
+            round(support_pct, 2),
+        ])
 
     result = {
         "name": "prefixspan_mining",
@@ -181,8 +196,8 @@ def main():
             {"label": "patterns_length_4", "value": patterns_len_4, "description": "Patterns of length 4"},
             {"label": "patterns_length_5", "value": patterns_len_5, "description": "Patterns of length 5"},
             {"label": "patterns_length_6", "value": patterns_len_6, "description": "Patterns of length 6"},
-            {"label": "low_correction_sessions", "value": len(low_corr_sessions), "description": "Sessions with <=10% correction rate"},
-            {"label": "high_correction_sessions", "value": len(high_corr_sessions), "description": "Sessions with >25% correction rate"},
+            {"label": "low_correction_sessions", "value": len(low_corr_sequences), "description": "Sessions with <=10% correction rate"},
+            {"label": "high_correction_sessions", "value": len(high_corr_sequences), "description": "Sessions with >25% correction rate"},
             {"label": "success_patterns", "value": success_patterns, "description": "Patterns enriched in low-correction sessions (>2x)"},
             {"label": "struggle_patterns", "value": struggle_patterns, "description": "Patterns enriched in high-correction sessions (>2x)"}
         ],

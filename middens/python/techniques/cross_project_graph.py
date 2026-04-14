@@ -88,33 +88,48 @@ def main():
     
     # Step 2: Build set of known projects
     known_projects = set(proj for proj, _ in sessions_with_project)
-    
-    # Step 3 & 4: Scan for mentions and classify
+
+    # Step 3 & 4: Scan for mentions and classify.
+    # Build a single combined alternation pattern from all project names (sorted
+    # longest-first so the regex engine prefers longer matches on ambiguous input).
+    # This scans each message text once instead of once per project, reducing the
+    # inner loop from O(sessions × messages × projects) to O(sessions × messages).
     edge_weights = defaultdict(int)
     edge_types = defaultdict(lambda: defaultdict(int))
-    
-    for src_project, session in sessions_with_project:
-        messages = session.get("messages", [])
-        for msg in messages:
-            role = msg.get("role", "")
-            text = msg.get("text", "")
-            
-            if role not in ("User", "Assistant") or not text:
-                continue
-            
-            for dst_project in known_projects:
-                if dst_project == src_project:
+
+    if known_projects:
+        # Sort longest-first so longer project names take priority over shorter
+        # prefixes in the alternation, with alphabetical tie-breaking for a
+        # fully deterministic pattern regardless of set hash-ordering.
+        sorted_projects = sorted(known_projects, key=lambda p: (-len(p), p.lower()))
+        # Build lookup with deterministic collision resolution: among projects
+        # that share the same lowercase form, the alphabetically-first original
+        # name wins (reverse-iterate so first write is the winner).
+        project_lookup = {p.lower(): p for p in reversed(sorted_projects)}
+        combined_pattern = re.compile(
+            r'\b(' + '|'.join(re.escape(p) for p in sorted_projects) + r')\b',
+            re.IGNORECASE,
+        )
+
+        for src_project, session in sessions_with_project:
+            messages = session.get("messages", [])
+            for msg in messages:
+                role = msg.get("role", "")
+                text = msg.get("text", "")
+
+                if role not in ("User", "Assistant") or not text:
                     continue
-                
-                pattern = r'\b' + re.escape(dst_project) + r'\b'
-                for match in re.finditer(pattern, text, re.IGNORECASE):
-                    # Get context window (±100 chars)
+
+                for match in combined_pattern.finditer(text):
+                    dst_project = project_lookup.get(match.group(1).lower())
+                    if dst_project is None or dst_project == src_project:
+                        continue
+
                     start = max(0, match.start() - 100)
                     end = min(len(text), match.end() + 100)
                     context = text[start:end]
-                    
+
                     ref_type = classify_reference(context)
-                    
                     edge_weights[(src_project, dst_project)] += 1
                     edge_types[(src_project, dst_project)][ref_type] += 1
     

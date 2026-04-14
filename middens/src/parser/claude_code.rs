@@ -112,6 +112,8 @@ const KNOWN_TYPES: &[&str] = &[
     "turn_context",
     "last-prompt",
     "progress",
+    "file-history-snapshot",
+    "summary",
 ];
 
 // ---------------------------------------------------------------------------

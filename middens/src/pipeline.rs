@@ -24,6 +24,12 @@ pub struct PipelineConfig {
     pub technique_filter: TechniqueFilter,
     pub no_python: bool,
     pub split: bool,
+    /// Override the auto-computed Python technique timeout (seconds).
+    /// Subject to floor/ceiling checks unless `force` is true.
+    pub explicit_timeout: Option<u64>,
+    /// Bypass floor/ceiling timeout checks. Only meaningful when combined
+    /// with `explicit_timeout`.
+    pub force: bool,
 }
 
 pub enum TechniqueFilter {
@@ -88,13 +94,21 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
                 .any(|n| python_technique_names.contains(n.trim())),
         };
 
+    // Resolve timeout only when Python techniques will actually run — avoids
+    // spurious floor/ceiling errors on --no-python runs.
+    let timeout_seconds = if needs_python {
+        resolve_timeout(all_sessions.len(), config.explicit_timeout, config.force)?
+    } else {
+        0 // unused
+    };
+
     let mut python_env_failed: Option<String> = None;
     let mut all_possible: Vec<Box<dyn Technique>> = if !needs_python {
         all_techniques()
     } else {
         match prepare_python_env() {
             Ok((scripts_dir, python_path)) => {
-                all_techniques_with_python(&scripts_dir, &python_path, 900)
+                all_techniques_with_python(&scripts_dir, &python_path, timeout_seconds)
             }
             Err(e) => {
                 eprintln!(
@@ -369,6 +383,37 @@ fn compute_corpus_fingerprint(files: &[PathBuf], session_count: usize) -> Corpus
         short,
         session_count: session_count as i64,
         source_paths: path_strings,
+    }
+}
+
+const TIMEOUT_FLOOR: u64 = 60;
+const TIMEOUT_CEILING: u64 = 1800;
+
+/// Auto-computes a per-run timeout from corpus size: 100 × ln(n), clamped to
+/// [TIMEOUT_FLOOR, TIMEOUT_CEILING]. Scales from ~60s (tiny corpora) up to
+/// ~951s at 13k sessions — always within bounds, no --force needed.
+fn compute_timeout_secs(session_count: usize) -> u64 {
+    let raw = 100.0_f64 * (session_count.max(1) as f64).ln();
+    (raw as u64).clamp(TIMEOUT_FLOOR, TIMEOUT_CEILING)
+}
+
+/// Resolves the final timeout to use.
+/// - Auto (no explicit value): clamp silently within [floor, ceiling].
+/// - Explicit value: reject outside [floor, ceiling] unless force=true.
+fn resolve_timeout(session_count: usize, explicit: Option<u64>, force: bool) -> anyhow::Result<u64> {
+    match explicit {
+        None => Ok(compute_timeout_secs(session_count)),
+        Some(t) if force => Ok(t),
+        Some(t) if t < TIMEOUT_FLOOR => anyhow::bail!(
+            "explicit --timeout {}s is below the {}s floor to guard against accidental \
+             short-circuits; pass --force to override",
+            t, TIMEOUT_FLOOR
+        ),
+        Some(t) if t > TIMEOUT_CEILING => anyhow::bail!(
+            "explicit --timeout {}s exceeds the {}s ceiling; pass --force to run anyway",
+            t, TIMEOUT_CEILING
+        ),
+        Some(t) => Ok(t),
     }
 }
 
