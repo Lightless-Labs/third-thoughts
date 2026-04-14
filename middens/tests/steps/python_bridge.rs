@@ -225,21 +225,28 @@ fn run_pipeline_no_python(world: &mut MiddensWorld) {
         force: false,
     };
 
-    let previous_xdg = std::env::var_os("XDG_DATA_HOME");
+    struct EnvGuard {
+        key: &'static str,
+        previous: Option<std::ffi::OsString>,
+    }
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            match &self.previous {
+                Some(value) => unsafe { std::env::set_var(self.key, value) },
+                None => unsafe { std::env::remove_var(self.key) },
+            }
+        }
+    }
+
+    let _guard = EnvGuard {
+        key: "XDG_DATA_HOME",
+        previous: std::env::var_os("XDG_DATA_HOME"),
+    };
     unsafe {
         std::env::set_var("XDG_DATA_HOME", &xdg_data_home);
     }
 
     let run_result = run(config);
-
-    match previous_xdg {
-        Some(value) => unsafe {
-            std::env::set_var("XDG_DATA_HOME", value);
-        },
-        None => unsafe {
-            std::env::remove_var("XDG_DATA_HOME");
-        },
-    }
 
     match run_result {
         Ok(res) => {

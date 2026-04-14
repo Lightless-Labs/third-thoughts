@@ -2,6 +2,7 @@
 title: "Python bridge: pass Parquet path instead of JSON stdin"
 status: done
 priority: P0
+issue_id: null
 tags: [python-bridge, scaling, cli-triad]
 source: real-corpus-validation-2026-04-11
 ---

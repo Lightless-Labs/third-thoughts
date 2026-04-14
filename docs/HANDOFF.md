@@ -127,7 +127,7 @@ No open PRs. No feature branches.
 
 ## Test suite
 
-**332/332 Cucumber scenarios, 1804 steps — all passing.** One known pre-existing failure (`analyze.feature:28` wrong expectation — unrelated to any current work, not a regression).
+**333/333 Cucumber scenarios, 1810 steps — all passing.**
 
 Run: `cd middens && cargo test`
 
