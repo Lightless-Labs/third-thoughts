@@ -188,7 +188,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     let mut subagent_sessions = 0;
 
     let corpus_fp = compute_corpus_fingerprint(&files, sessions_parsed);
-    let mut storage_dir = None;
+    let storage_dir;
 
     if config.split {
         use crate::session::SessionType;

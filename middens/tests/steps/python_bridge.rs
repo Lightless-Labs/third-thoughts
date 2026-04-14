@@ -212,6 +212,8 @@ fn run_pipeline_no_python(world: &mut MiddensWorld) {
     // Use an isolated temp dir to avoid scanning real user session dirs
     let temp_dir = tempfile::tempdir().unwrap();
     let output_dir = temp_dir.path().join("output");
+    let xdg_data_home = temp_dir.path().join("xdg");
+    std::fs::create_dir_all(&xdg_data_home).unwrap();
 
     let config = PipelineConfig {
         corpus_path: Some(temp_dir.path().to_path_buf()),
@@ -223,7 +225,23 @@ fn run_pipeline_no_python(world: &mut MiddensWorld) {
         force: false,
     };
 
-    match run(config) {
+    let previous_xdg = std::env::var_os("XDG_DATA_HOME");
+    unsafe {
+        std::env::set_var("XDG_DATA_HOME", &xdg_data_home);
+    }
+
+    let run_result = run(config);
+
+    match previous_xdg {
+        Some(value) => unsafe {
+            std::env::set_var("XDG_DATA_HOME", value);
+        },
+        None => unsafe {
+            std::env::remove_var("XDG_DATA_HOME");
+        },
+    }
+
+    match run_result {
         Ok(res) => {
             world.numeric_result = Some(res.techniques_run as f64);
         }

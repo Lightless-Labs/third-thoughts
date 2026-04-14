@@ -34,10 +34,6 @@ fn technique_script_path(name: &str) -> PathBuf {
         .join(format!("{}.py", filename))
 }
 
-fn make_tool_call(turn: usize) -> ToolCall {
-    make_tool_call_varied(turn, 0)
-}
-
 fn make_tool_call_varied(turn: usize, session_idx: usize) -> ToolCall {
     let tools = ["Read", "Edit", "Bash", "Glob", "Grep", "Write", "Skill", "WebSearch"];
     // Vary tool selection by session index to create diverse patterns
@@ -58,10 +54,6 @@ fn make_tool_result(call_id: &str, is_error: bool) -> ToolResult {
         content: if is_error { "Error: command failed".to_string() } else { "ok".to_string() },
         is_error,
     }
-}
-
-fn make_message(role: MessageRole, turn: usize, is_correction: bool) -> Message {
-    make_message_varied(role, turn, is_correction, 0)
 }
 
 fn make_message_varied(role: MessageRole, turn: usize, is_correction: bool, session_idx: usize) -> Message {

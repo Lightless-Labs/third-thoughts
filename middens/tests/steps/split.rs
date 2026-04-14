@@ -45,6 +45,12 @@ fn output_dir(world: &MiddensWorld) -> PathBuf {
         .expect("output_path must be set before running analyze")
 }
 
+fn xdg_data_home(world: &mut MiddensWorld) -> PathBuf {
+    let xdg = temp_root(world).join("xdg");
+    fs::create_dir_all(&xdg).expect("failed to create XDG data home for split tests");
+    xdg
+}
+
 fn essential_technique_names() -> BTreeSet<String> {
     all_techniques()
         .into_iter()
@@ -95,6 +101,7 @@ fn assert_population_outputs(dir: &Path) {
 }
 
 fn run_analyze(world: &mut MiddensWorld, split: bool) {
+    let xdg_data_home = xdg_data_home(world);
     let mut command = Command::new(middens_bin());
     command.arg("analyze").arg(input_dir(world));
 
@@ -103,6 +110,7 @@ fn run_analyze(world: &mut MiddensWorld, split: bool) {
     }
 
     command.arg("--output").arg(output_dir(world));
+    command.env("XDG_DATA_HOME", &xdg_data_home);
 
     let output = command
         .output()

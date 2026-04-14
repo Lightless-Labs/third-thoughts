@@ -461,7 +461,7 @@ fn given_single_table_technique(world: &mut MiddensWorld) {
 }
 
 #[when("I run middens analyze")]
-fn when_run_middens_analyze(world: &mut MiddensWorld) {
+fn when_run_middens_analyze(_world: &mut MiddensWorld) {
     // For storage-layer tests, the run is already written by the Given step.
     // This When is effectively a no-op since we test the storage layer directly.
     // The run_dir is already set.
@@ -1118,6 +1118,8 @@ fn then_run_under_xdg(world: &mut MiddensWorld) {
 #[given("a mixed interactive and subagent corpus")]
 fn given_mixed_corpus(world: &mut MiddensWorld) {
     let root = temp_root(world);
+    let xdg = root.join("xdg");
+    fs::create_dir_all(&xdg).expect("create XDG data home");
     let analysis_dir = root.join("split-analysis");
     fs::create_dir_all(&analysis_dir).expect("create split analysis dir");
 
@@ -1236,6 +1238,7 @@ fn given_mixed_corpus(world: &mut MiddensWorld) {
 
     update_triad_state(world, "run_dir", json!(run_dir.to_string_lossy()));
     update_triad_state(world, "run_id", json!(run_id));
+    update_triad_state(world, "xdg_data_home", json!(xdg.to_string_lossy()));
     update_triad_state(
         world,
         "analysis_dir",
@@ -1244,7 +1247,7 @@ fn given_mixed_corpus(world: &mut MiddensWorld) {
 }
 
 #[when("I run middens analyze with --split")]
-fn when_analyze_with_split(world: &mut MiddensWorld) {
+fn when_analyze_with_split(_world: &mut MiddensWorld) {
     // Split layout is already created in the Given step for storage-layer tests
 }
 
@@ -1488,7 +1491,7 @@ fn then_picks_latest_run(world: &mut MiddensWorld) {
 }
 
 #[then("touching the older run's directory does not change the selection")]
-fn then_touch_does_not_change_selection(world: &mut MiddensWorld) {
+fn then_touch_does_not_change_selection(_world: &mut MiddensWorld) {
     // UUIDv7-based naming means mtime is irrelevant — name-sort is deterministic
     // This step is verified by the previous step's assertion
 }
@@ -1614,7 +1617,7 @@ fn given_mocked_which_claude_code(world: &mut MiddensWorld) {
 }
 
 #[then("it selects claude-code")]
-fn then_selects_claude_code(world: &mut MiddensWorld) {
+fn then_selects_claude_code(_world: &mut MiddensWorld) {
     // Runner detection is tested via the detect_runner function
     let runner = middens::commands::interpret::detect_runner(None);
     // This test depends on what's on the real PATH; the mock PATH test is
@@ -1623,7 +1626,7 @@ fn then_selects_claude_code(world: &mut MiddensWorld) {
 }
 
 #[then("when only gemini is available it selects gemini")]
-fn then_selects_gemini_when_available(world: &mut MiddensWorld) {
+fn then_selects_gemini_when_available(_world: &mut MiddensWorld) {
     // This is a unit-level assertion about the fallback chain order
     // Verified by the Runner trait implementations
 }
@@ -1679,7 +1682,7 @@ fn when_interpret_opencode_model(world: &mut MiddensWorld) {
 }
 
 #[then("it resolves runner to opencode and model-id to kimi-for-coding/k2p5")]
-fn then_resolves_opencode(world: &mut MiddensWorld) {
+fn then_resolves_opencode(_world: &mut MiddensWorld) {
     // Verified via parse_model_flag unit test
     let (runner, model) =
         middens::commands::interpret::parse_model_flag("opencode/kimi-for-coding/k2p5").unwrap();
@@ -1989,7 +1992,7 @@ fn then_fails_non_zero(world: &mut MiddensWorld) {
 fn then_temp_renamed_to_failures(world: &mut MiddensWorld) {
     let state = triad_state(world);
     if let Some(xdg) = state.get("xdg_data_home").and_then(|v| v.as_str()) {
-        let failures = Path::new(xdg)
+        let _failures = Path::new(xdg)
             .join("com.lightless-labs.third-thoughts")
             .join("interpretation-failures");
         // May or may not exist depending on whether the mock runner was invoked
@@ -2979,4 +2982,3 @@ fn when_open_static_viewer(_world: &mut MiddensWorld) {
 fn then_static_rendering(_world: &mut MiddensWorld) {
     // Verified by the display_data outputs being embedded
 }
-

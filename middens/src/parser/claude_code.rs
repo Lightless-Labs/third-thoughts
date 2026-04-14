@@ -87,8 +87,8 @@ struct RawMessage {
     content: Option<RawContent>,
     model: Option<String>,
     /// Usage info may contain model details.
-    #[serde(default)]
-    usage: Option<Value>,
+    #[serde(default, rename = "usage")]
+    _usage: Option<Value>,
 }
 
 /// Content is either a plain string or an array of content blocks.

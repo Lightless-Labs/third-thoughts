@@ -369,7 +369,7 @@ fn infer_column_type(values: &[&serde_json::Value]) -> ColumnType {
 
 fn datatable_to_dataframe(table: &DataTable) -> Result<polars::frame::DataFrame> {
     use polars::frame::DataFrame;
-    use polars::prelude::{Column, NamedFrom};
+    use polars::prelude::Column;
 
     let ncols = table.columns.len();
     if ncols == 0 {
@@ -616,7 +616,7 @@ mod tests {
 
     #[test]
     fn value_length_cap_rejects_long_strings() {
-        let long_val = "x".repeat(201);
+        let long_val = "x".repeat(VALUE_LENGTH_CAP + 1);
         let table = DataTable {
             name: "test".into(),
             columns: vec!["label".into()],
@@ -625,7 +625,7 @@ mod tests {
         };
         let err = check_value_length_cap(&table, "t").unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("201 chars"));
+        assert!(msg.contains(&format!("{} chars", VALUE_LENGTH_CAP + 1)));
         assert!(msg.contains("row 0"));
     }
 

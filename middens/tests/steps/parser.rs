@@ -8,7 +8,6 @@ use middens::parser::auto_detect::{detect_format, parse_auto};
 use middens::parser::claude_code::ClaudeCodeParser;
 use middens::parser::codex::CodexParser;
 use middens::parser::openclaw::OpenClawParser;
-use middens::session::{MessageRole, SourceTool};
 
 use super::world::MiddensWorld;
 

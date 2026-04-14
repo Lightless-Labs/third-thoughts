@@ -44,8 +44,15 @@ fn output_dir(world: &MiddensWorld) -> PathBuf {
         .expect("output_path must be set before running analyze")
 }
 
+fn xdg_data_home(world: &mut MiddensWorld) -> PathBuf {
+    let xdg = temp_root(world).join("xdg");
+    fs::create_dir_all(&xdg).expect("failed to create XDG data home for analyze tests");
+    xdg
+}
+
 fn run_analyze(world: &mut MiddensWorld, input_dir: &Path, all: bool, techniques: Option<&str>) {
     let output_dir = output_dir(world);
+    let xdg_data_home = xdg_data_home(world);
 
     let mut command = Command::new(middens_bin());
     command.arg("analyze").arg(input_dir);
@@ -59,6 +66,7 @@ fn run_analyze(world: &mut MiddensWorld, input_dir: &Path, all: bool, techniques
     }
 
     command.arg("--output").arg(&output_dir);
+    command.env("XDG_DATA_HOME", &xdg_data_home);
 
     let output = command
         .output()

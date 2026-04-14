@@ -4,7 +4,6 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
-use serde::Deserialize;
 use tempfile::NamedTempFile;
 
 use crate::session::Session;
