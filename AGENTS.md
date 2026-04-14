@@ -55,9 +55,9 @@ todos/                      # Individual todo files (phil-connors pattern)
 
 | Finding | Status | Evidence |
 |---------|--------|----------|
-| 100% risk suppression on visible-thinking sessions | **Provisional** (PR #7) | `language=en AND thinking_visibility=Visible AND NOT contaminated_by_Boucle`. N=828 sessions, 4,819 risk tokens across 209 paired messages. `docs/solutions/methodology/redact-thinking-stratification-20260406.md` |
+| 99.99% risk suppression on visible-thinking sessions | **Strengthened** (2026-04-14 full-corpus run) | `language=en AND thinking_visibility=Visible`. N=4,518 sessions, 31,679 risk tokens, 2 leaks. Prior provisional (PR #7): N=828, 4,819 tokens. `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md` |
 | 85.5% risk suppression on mixed corpus | **SUPERSEDED** (PR #7) | Mixed-corpus artifact — redacted sessions trivially scored 0% and dragged the per-session mean down. The phenomenon is unchanged; only the reported percentage moves. |
-| HSMM pre-failure state (24.6x lift) | Robust (mixed corpus) | `experiments/full-corpus/hsmm_behavioral_states.txt` — needs re-run under 4-axis stratification |
+| HSMM pre-failure state (24.6x lift) | **Provisional — magnitude unconfirmed** (2026-04-14 run: 2.15x) | Direction replicates; 24.6x likely a Boucle contamination artifact. Needs re-run with W10–W12 excluded. `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md` |
 | MVT violated (agents under-explore) | Robust | `experiments/full-corpus/information-foraging.md` |
 | Thinking blocks prevent corrections | **RETRACTED** (did not survive population split) | `experiments/interactive/survival-results.json` |
 | Session degradation (agents get worse) | Holds on interactive only | `experiments/interactive/survival_analysis.txt` |

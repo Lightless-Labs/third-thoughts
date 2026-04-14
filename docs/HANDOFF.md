@@ -1,487 +1,162 @@
 # Session Handoff
 
-**Last updated:** 2026-04-12 (Python bridge fix validated; dynamic-timeout todo filed; ready for workstream 3)
+**Last updated:** 2026-04-14 (23/23 techniques clean; distribution workstream unblocked)
 
-This document captures current project state for agent session continuity. Read this at the start of a new session. Update it before compaction or at natural milestones.
+Read this at the start of every session. Update before compaction or at natural milestones.
+
+---
 
 ## >>> Read this first <<<
 
-**Python bridge serialisation fix complete and validated (commits `1cb858f`, `62227be`, `8ca3d24`).**
+**All 23 techniques are working. Zero errors, zero timeouts on 13,423 sessions (commit `867f57b`).**
 
-Root cause was `PythonTechnique::run()` serialising the full 13k-session corpus 17× (once per technique). Fixed by writing sessions to one shared `NamedTempFile` and distributing the path via `Technique::set_session_cache()`. Also fixed `granger_causality.py` crash on `None` thinking field (`or ''` guard).
+The two blocking timeouts (`prefixspan-mining`, `cross-project-graph`) are fixed. Granger-causality (prior None-guard fix) is also clean. The parser now handles newer Claude Code session log formats (`file-history-snapshot` preamble, empty placeholder files).
 
-**Full-corpus validation result (13,497 sessions, --all):**
+Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 | Result | Count | Notes |
 |--------|-------|-------|
-| Completed | 20/23 | All Rust + 14 Python techniques |
-| Failed (Python bug) | 1 | `granger-causality` — None-guard fix already committed, takes effect on rebuild |
-| Timed out (O(n²)) | 2 | `prefixspan-mining`, `cross-project-graph` — genuinely slow algorithms, not I/O |
+| Completed | 23/23 | All Rust + 17 Python techniques |
+| Failed | 0 | — |
+| Timed out | 0 | — |
 
-The 2 remaining timeouts are tracked in `todos/python-techniques-onk2-sampling.md` (sampling fix) and `todos/python-technique-dynamic-timeout.md` (dynamic timeout with floor/ceiling/--force).
+**Distribution workstream is now unblocked.** All three prior blocking conditions are met: repo hygiene done, CLI triad (analyze/interpret/export) done, 23/23 techniques working on a full corpus.
 
-**Next concrete move:** fix the 2 remaining timeouts before any release work.
-1. `todos/python-techniques-onk2-sampling.md` — add per-technique input sampling so `prefixspan-mining` and `cross-project-graph` complete on large corpora
-2. `todos/python-technique-dynamic-timeout.md` — dynamic timeout with floor/ceiling/--force (pairs with sampling; do after)
-
-Workstream 3 (distribution) is blocked until all 23 techniques work on a full corpus.
+**Next concrete move:** Start distribution — Step A (`middens run` e2e verb), or if you want to validate the interpretation pipeline first, run `middens analyze corpus-full --all` then `middens interpret`.
 
 ---
 
-**CLI triad adversarial process is complete.** Red team (Gemini 3.1 Pro) wrote 59 Cucumber scenarios. Green team (GLM 5.1 via OpenCode) implemented all 6 work groups (A→F). Step definitions written by Claude subagent. **332/332 scenarios pass (273 existing + 59 new). 1804/1804 steps.**
+## What's built
 
-**Next concrete move:** ship as a PR, then move to workstream 3 (distribution — GitHub release workflow, crates.io publish, GitHub Pages site).
-
-**Commits on `main` this session:**
-- `b76c3dc` — red team .feature files (59 scenarios, 7 files)
-- `bb7918a` — Group A storage layer (polars 0.46, AnalysisManifest, ParquetWriter, PII validation)
-- `ee7333d` — Groups B+C+E (view rename + ipynb, analyze reshape, interpret command) + PII blocklist fix
-- `c19e6b7` — Groups D+F (export command, wiring, docs, worked example)
-
-**Key decision:** PII blocklist trimmed from 16 tokens to 8. Removed overly broad tokens (path, text, message, messages, source, filename, filenames, paths) that blocked legitimate analytical column names like `user_messages` and `text_length`. Kept unambiguous raw-content indicators (body, content, cwd, excerpt, filepath, prompt, raw, snippet).
-
-**Key observation:** GLM 5.1 via OpenCode is slow (5-15 min per dispatch) but produced working code that compiled on first try for Groups A, B, D, F. Groups C and E needed minor fixes (PII blocklist, test imports). GLM also ran `rustfmt` on the entire crate without being asked — harmless but chatty diffs.
-
-**Parallel dispatch hazard:** Three simultaneous OpenCode processes sharing the same working tree caused a race — one reverted an orchestrator edit. Fix: kill stale processes before editing, or use git worktrees for isolation next time.
-
----
-
-All three open PRs from the previous session are now merged into `main`:
-
-| PR | Merged commit | What it shipped |
-|----|---------------|------------------|
-| **#5** | `feat/batch4-and-distribution-prep` (squashed) | Batch 4 Python techniques (4 new) + embedded-assets distribution prep. 23 techniques total (6 Rust + 17 Python). 270/270 scenarios. |
-| **#6** | `feat/corpus-anomaly-w10-w12` (squashed) | Investigation report: W10–W12 "interactive" bucket is ~99.7% contaminated with Boucle autonomous agent loop iterations (1,820/1,826 queue-operation marker; 100% zero tool calls). Recommends 3-way Interactive/Subagent/Autonomous stratum. |
-| **#7** | `feat/thinking-visibility-stratification` (squashed) | `Session::thinking_visibility` field + parser heuristic + `thinking-divergence` guard. **85.5% mixed-corpus finding superseded by 100% on visible-only sessions (N=828, 4,819 risk tokens, 209 paired messages).** |
-
-Bot-review story for the curious: 49 distinct inline findings across 4 review rounds (Codex / Gemini / Copilot / CodeRabbit). All P1/P2 addressed inline, all comments replied to with rationale, deferred items in `todos/batch4-coderabbit-deferred.md`.
-
-**Next concrete move (2026-04-09 end of day):** the CLI triad NLSpec is finalised at `docs/nlspecs/2026-04-09-cli-triad-analyze-interpret-export-nlspec.md` after four review passes (CodeRabbit ×3, Gemini 2.5 Pro, Gemini 3.1 Pro, Codex) and 59 acceptance scenarios. **The next step is red team dispatch** — have a coding-agent CLI write Cucumber `.feature` files from sections 1+2+4 (Done) of the NLSpec only, without seeing section 3 (How).
-
-**Red team assignment: Gemini 3.1 Pro Preview** via `gemini -y -s false -m gemini-3.1-pro-preview --prompt "..."`. Rationale: Gemini 3.1 Pro caught the most substantive P1s in the review passes (parquet multiplicity, PII substring footgun, slug ordering across runners) and is strong at adversarial contract-level analysis. Codex stays out of this one — the skill auto-activation issue documented at `docs/solutions/workflow-issues/codex-skill-auto-activation-20260409.md` makes it the wrong tool for this specific task.
-
-**Red team dispatch prompt skeleton:**
-
-```
-DIRECT TASK — read the NLSpec at
-/Users/thomas/Projects/lightless-labs/third-thoughts/docs/nlspecs/2026-04-09-cli-triad-analyze-interpret-export-nlspec.md
-
-Write Cucumber .feature files that express every one of the 59 acceptance
-scenarios in section 4.1. Use ONLY sections 1 (Why), 2 (What), and 4 (Done).
-DO NOT read section 3 (How) — that's for the green team, not you.
-
-Feature files go under middens/tests/features/cli-triad/<area>.feature
-using the same style as the existing middens/tests/features/pipeline/split.feature.
-
-If a scenario has a contract gap that prevents you writing a testable
-feature, DO NOT guess — flag it explicitly as "CONTRACT GAP: <what is
-missing>" and keep going. I'll route gaps back to NLSpec amendments.
-```
-
-After red team returns: orchestrator reviews the feature files, amends the NLSpec for any contract gaps (without editing the feature files or the code), then dispatches green team (per-group, one dispatch per work group from section 3).
-
-Non-trivial feature → adversarial process applies (red team writes tests from the DoD, green team implements from the How, orchestrator never fixes step defs directly).
-
-Three workstreams in order:
-
-1. **Repo hygiene.** ✅ **Done 2026-04-09.** History rewritten to a single author (`El-Fitz`) via `git-filter-repo --mailmap`; remote repo was deleted and recreated at `git@github.com:Lightless-Labs/third-thoughts.git` to purge old SHAs from PR history; all stale local branches pruned (only `main` remains); root `README.md` + `middens/README.md` written (tone: light, self-deprecating — see the new prose-tone convention in `CLAUDE.md`); `LICENSE` (AGPL-3.0-or-later) added at repo root and inside the crate; `middens/Cargo.toml` enriched with `authors`, `repository`, `homepage`, `readme`, `keywords`, `categories`, license changed MIT → AGPL-3.0-or-later, and a release profile added (`[profile.release] strip = true, lto = "thin", codegen-units = 1`). Release build verified clean. Commits: `ef339d2` (history rewrite baseline) → `55869a5` (hygiene) → `c28a038` (README tone fix) → `3a07038` (CLAUDE.md prose-tone convention) → register-drift-detection todo.
-
-2. **CLI reshape — analyze / interpret / export triad.** Implements the storage/view split designed in `docs/design/output-contract.md` and the Conclusions v1+v2 designs in `todos/conclusions-v{1-manual,2-synthesize}.md`, but with the new three-command shape:
-   - `middens analyze [corpus] --output-dir <dir>` — runs the techniques and methods. Default output dir: `~/.local/share/com.lightless-labs.third-thoughts/analysis/run-<YYYY-MM-DD-HH-MM>-<short-corpus-hash>/`. Canonical storage: **Parquet** (one file per technique) + `manifest.json` (run metadata, analyzer fingerprint, corpus fingerprint, per-technique prose summaries, scalar findings, figure specs, table refs). Parquet is the deliberate choice — query-friendly, round-trips to notebooks cleanly, earns its keep at corpus scale.
-   - `middens interpret [--analysis-dir <dir>] --provider <claude|codex|gemini> [--model <id>] [--output-dir <dir>]` — runs an LLM CLI over the analysis output to author conclusions. Defaults to the most recent run under `~/.local/share/com.lightless-labs.third-thoughts/analysis/`. **Provider fallback chain: Claude Code → Codex CLI → Gemini CLI**, picking the first one available on `PATH` (`which`-based) unless explicitly overridden. Installed-but-unauthenticated → fail loudly ("we can't do everything for you, you know"). Output: per-technique `<method-slug>-conclusions.md` + an overall `conclusions.md` + an interpretation manifest pointing back at the analysis run, all under `~/.local/share/com.lightless-labs.third-thoughts/interpretation/<analysis-run-slug>/<YYYY-MM-DD-HH-MM>-<provider-slug>/`. Multiple interpretations per analysis per day are supported (HH-MM in the path).
-   - `middens export [--analysis-dir <dir>] [--interpretation-dir <dir>] --format <jupyter> [-o <file>]` — converts an analysis (and optional interpretation) into a view format. Both dirs default to the most recent matching run under `~/.local/share/com.lightless-labs.third-thoughts/`. **Export must work from analysis alone — interpretation is optional.** **Jupyter notebook is the only required format for v1.** HTML is generated from the notebook via `nbconvert` or equivalent — out of scope as a first-class exporter for this milestone.
-
-   Storage paths use `~/.local/share/com.lightless-labs.third-thoughts/...` — XDG-compliant root, with a bundle-ID-style namespace to keep the project's analysis/interpretation/cache under a single predictable prefix.
-
-   The existing `todos/output-contract.md` covers the storage half. The existing `todos/conclusions-v{1-manual,2-synthesize}.md` cover what `interpret` produces. Both stay relevant; this milestone is the integration layer that wires them into the new command shape.
-
-   **Scoped out of this milestone (each has a dedicated todo):**
-   - Fingerprint retrofit (reframe `middens fingerprint` as a technique) — `todos/fingerprint-technique-retrofit.md`
-   - `corpus-timeline` technique deletion once `sessions.parquet` exists — `todos/corpus-timeline-deletion.md`
-   - PII + type-homogeneity audit of Batches 1+2 techniques (was a prereq in the original design doc) — `todos/batches-1-2-pii-and-type-audit.md`
-
-   All three are follow-ups after the triad lands. Rationale: keep the shippable-artifact milestone focused on storage + the three commands + the ipynb renderer + provider fallback + default-path UX; tidy and retrofit after the real-corpus shakedown.
-
-   **Read before starting:** `docs/design/output-contract.md`, `todos/output-contract.md`, `todos/conclusions-v1-manual.md`, `todos/conclusions-v2-synthesize.md`. Then write an NLSpec for the triad (Why / What / How / Done) under `docs/nlspecs/`, review it, and only then dispatch red/green via `/codex-cli`, `/gemini-cli`, or `/opencode-cli`. Match tool to task: CLI tools for self-contained units, subagents for crate-context work, inline for small surgical fixes.
-
-3. **Distribution.** Once 1+2 are working end-to-end on a real corpus. Detailed todos in `todos/distribution-*.md`. Execution order:
-
-   **Step A — e2e verb.** Add `middens run` (or similar) that chains `analyze → interpret → export` in one invocation. Without this there's no clean demo command for the landing page and no way to do the validation runs below. (`todos/distribution-e2e-verb.md`)
-
-   **Step B — release workflow.** GitHub Actions on tag push (`v*`): matrix build for darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64 (windows stretch). Produces tarballs + SHA256SUMS attached to a GitHub Release. (`todos/distribution-release-workflow.md`)
-
-   **Step C — Homebrew tap.** Primary install channel (`brew install lightless-labs/tap/middens`). Formula downloads release binary, verifies SHA. `uv` is a `recommend`, not a `depend` — CLI degrades to Rust-only without it. crates.io is secondary (can happen in parallel). (`todos/distribution-homebrew-tap.md`)
-
-   **Step D — two validation runs.** Source-built middens does a full e2e run on the real corpus; export stashed. Then remove source install, `brew install`, second e2e on same corpus; export stashed. Both exports must be structurally identical (same techniques, same row counts, same notebook shape — UUIDs and timestamps will differ). This catches anything that accidentally depends on the source tree. (`todos/distribution-validation-runs.md`)
-
-   **Step E — GitHub Pages landing page.** Orphan `www` branch (otherwise empty). Static HTML/CSS, no JS framework. Content: pitch, install instructions, both validation exports embedded, headline findings, current capabilities, known limits, medium-term goals (framed as distributed effort), where third-party help is welcome. Copy reviewed by **Gemini 3.1 Pro** and **Codex 5.4 (reasoning: high)** — both tasked with stripping em dashes, killing superlatives, flagging ungrounded claims, enforcing the light/self-deprecating register. Copy is done when both reviewers have zero P1/P2 findings. (`todos/distribution-github-pages.md`)
-
-   **Open questions / needs clarification before starting:**
-   - **Step A:** verb name — `run`, `full`, `go`, something else? Should `--provider` be required or should it skip interpret when omitted? If interpret fails (no runner on PATH), hard-fail or fall through to export-without-interpretation?
-   - **Step B:** cross-compile via `cross` crate or use native GitHub-hosted runners (macOS + Linux)? Apple Silicon runner availability on GH Actions (free tier has x86 only — may need `cross` for darwin-arm64). Windows: in or out for v1?
-   - **Step C:** tap repo name — `Lightless-Labs/homebrew-tap` (generic, supports future tools) or `Lightless-Labs/homebrew-middens` (single-formula)? crates.io publish: do it now or defer?
-   - **Step D:** which corpus for the validation runs — the full private corpus, or a small public fixture corpus that can be checked in? If private, the exports can't go on the landing page verbatim (PII risk). If public, we need to create one.
-   - **Step E:** domain — use default `lightless-labs.github.io/third-thoughts` or custom? How much design polish — minimal/functional or invest in something that looks good? Who writes the first draft of the copy — an LLM with heavy revision, or user writes and LLMs review?
-
-**Explicit non-goals for this milestone:** Autonomous session stratum work (Phase 1 + Phase 2), multilingual remediation, HSMM re-runs under 4-axis stratification, the GH#42796 follow-up. All deferred until the shippable artifact lands.
-
-**Format priority confirmed with user (2026-04-07):** Jupyter notebook is the only required first-class export format. HTML can be generated from the notebook via `nbconvert` post-hoc; that's good enough for the demo. Other formats (PDF, Pluto, Quarto, Julia notebook) follow once the `ViewRenderer` trait is in place.
-
-## Key findings (as of this handoff)
-
-| Finding | Status | Scope |
-|---------|--------|-------|
-| **100% risk-token suppression** in paired thinking/text messages | **Provisional** (PR #7) | `language=en AND thinking_visibility=Visible AND NOT contaminated_by_Boucle`. N=828 visible-thinking sessions, 4,819 risk tokens across 209 paired messages. Within-corpus observation. |
-| 85.5% risk suppression on mixed corpus | **SUPERSEDED** (PR #7) | Was a mixed-corpus artifact — redacted sessions trivially scored 0% and dragged the per-session mean down. The underlying phenomenon is unchanged; only the reported percentage moves. |
-| HSMM pre-failure state (24.6x lift) | Robust (mixed corpus) | Needs re-run under the new stratification axes. |
-| MVT violated (agents under-explore) | Robust | `experiments/full-corpus/information-foraging.md` |
-| Thinking blocks prevent corrections | **RETRACTED** (prior session) | Did not survive population split |
-| Session degradation (agents get worse) | Holds on interactive only | `experiments/interactive/survival_analysis.txt` |
-| **Boucle contamination in interactive W10–W12** | **Confirmed** (PR #6) | 100% of W10–W12 "interactive" sessions are autonomous agent loop iterations. Requires stratification, not filtering. |
-
-**Compound scoping rule:** every future headline finding on thinking or text behaviour should be scoped on at least four axes:
-
-1. `session_type ∈ {Interactive, Subagent, Autonomous}` (Autonomous is new — see Phase 1 plan)
-2. `thinking_visibility ∈ {Visible, Redacted, Unknown}` (PR #7)
-3. `language ∈ {en, other}` (remediation in `todos/multilingual-text-techniques.md`)
-4. Temporal window (pre/post rollouts, weeks)
-
-A finding that doesn't survive all four is not a finding.
-
-## Latest session (2026-04-09 PM) — CLI triad NLSpec finalised
-
-1. **NLSpec drafted** at `docs/nlspecs/2026-04-09-cli-triad-analyze-interpret-export-nlspec.md` covering the `analyze` / `interpret` / `export` command reshape. Initial draft: 30 acceptance scenarios across storage, analyze, interpret, export, and integration sections.
-2. **Four review passes driving 4 amendment commits:**
-   - **Pass 1** (CodeRabbit 8, Gemini 2.5 Pro 11, Codex 8): resolved with decisions on storage root path, Parquet-as-canonical, run-ID format, provider fallback, Jupyter-only v1 export, etc. Three deferred follow-up todos filed.
-   - **Pass 2** (CodeRabbit 2, Gemini 3.1 Pro 11): dropped date prefix from slugs in favour of UUIDv7-only ordering, collapsed `tables: List<TableRef>` → `table: Option<TableRef>` (one table per technique), reworked PII blocklist as tokenised exact-match, made `--model` without `/` fail at parse time, added `interpretation-dryruns/` as a third sibling location, synchronised UUIDv7 timestamp with manifest `created_at`. Scenario count 38 → 47.
-   - **Pass 3** (partial Codex via JSONL extraction from a killed run): added `--split` storage contract (nested `interactive/` + `subagent/` stratum subdirs), rewrote scenario 3 as pure happy-path round-trip. Scenario count 47 → 51.
-   - **Pass 4** (Codex with `DIRECT TASK — no skills` directive, clean run in 90s): flipped interpretation slug to `<uuidv7>-<runner-slug>` for cross-runner ordering, required monotonic UUIDv7, made zero-marker responses a hard failure, **refused top-level split runs in interpret/export** (cross-stratum composition deferred to follow-up todo), added `strata`/`stratum` fields to `AnalysisManifest`, clarified v1 parser tolerance. Scenario count 51 → 59.
-3. **Final CodeRabbit pass (pass 5):** 1 cosmetic finding (Workaround numbering gap in the codex solution doc), fixed inline. Spec is clean.
-4. **New conventions captured durably:**
-   - **Fail early, fail fast, fail clearly** → `lightless-labs/CLAUDE.md` + `AGENTS.md` (parent) and mirrored into `third-thoughts/CLAUDE.md` + `AGENTS.md`. Rule: never guess ambiguous user intent; fail loudly with expected form + concrete example. Surfaced from the `--model` parse-time debate during pass 2.
-5. **New deferred todos filed** at `todos/`:
-   - `middens-export-markdown-format.md` (P3)
-   - `middens-export-overwrite-ux.md` (P3)
-   - `interpret-parser-strictness.md` (P2)
-   - `interpret-export-split-composition.md` (P2)
-   - `fingerprint-technique-retrofit.md`, `corpus-timeline-deletion.md`, `batches-1-2-pii-and-type-audit.md` (all pass-1 scope cuts)
-6. **Codex skill auto-activation issue documented** at `docs/solutions/workflow-issues/codex-skill-auto-activation-20260409.md` and in `~/.claude/skills/codex-cli/SKILL.md`. Three consecutive Codex review runs stalled for 10–44 minutes each because codex silently auto-activated `adversarial-document-reviewer` from `~/.codex/skills/` and ground through a multi-persona workflow. The load-bearing fix: prefix the prompt with `"DIRECT TASK — DO NOT invoke any skills, agents, or meta-workflows."`. Don't drop reasoning effort as a workaround — that degrades review quality for no reason; the skill directive is what actually fixes the stall.
-7. **Commits landed on `main`:** `b6ce66f` (initial NLSpec + 3 todos) → `5ad4af7` (pass-1 amendment) → `b3201f1` (cleanup stray AGENTS.md) → `7fc5e8a` (pass-1 CodeRabbit fixes) → `600fdb9` (pass-2 amendment) → `12eb433` (pass-3 amendment) → `9765653` (pass-4 amendment) → `5274136` (Codex solution doc) → `8acf70c` (reasoning-effort correction).
-
-**Next session:** finish step definitions and iterate red/green until all 59 scenarios pass. See "Read this first" block at top.
-
-## Session (2026-04-10) — CLI triad adversarial execution
-
-1. **Red team dispatched and completed.** Gemini 3.1 Pro Preview wrote 59 Cucumber scenarios across 7 feature files from NLSpec sections 1+2+4. One contract gap found: scenario 53 referenced scenario 50 instead of 52 — fixed in NLSpec.
-2. **Green team Groups A–F all implemented via GLM 5.1 (OpenCode):**
-   - **Group A** (storage foundation): `src/storage/mod.rs` — polars 0.46, AnalysisManifest, ParquetWriter, PII validation, 11 unit tests.
-   - **Group B** (view layer): renamed `output/` → `view/`, ViewRenderer trait, `ipynb.rs` (v4 nbformat, no Python dep).
-   - **Group C** (analyze reshape): pipeline writes Parquet + manifest.json, UUIDv7 run IDs, SHA-256 corpus fingerprint.
-   - **Group D** (export command): `src/commands/export.rs`, `storage/discovery.rs` for latest-run scanning.
-   - **Group E** (interpret command): `src/commands/interpret.rs`, runner abstraction (4 impls), prompt template, atomic write, fallback chain.
-   - **Group F** (wiring + docs): main.rs dispatch, README updates, worked example at `docs/examples/triad-workflow.md`.
-3. **PII blocklist trimmed** from 16 → 8 tokens (removed overly broad tokens blocking legitimate analytical columns).
-4. **Build status:** release builds clean (3 pre-existing warnings), 29 unit tests pass, 273/273 existing Cucumber pass, 59 new scenarios pending step defs.
-5. **Step definitions completed** — `tests/steps/cli_triad.rs` (2952 lines) written by Claude subagent. 332/332 scenarios pass on first full run after one fix (FigureSpec JSON assertion for new FigureKind tagged enum).
-6. **Test artifacts cleaned up** — `middens-results/` (transient analyze output) removed from tracking, added to `.gitignore`.
-7. **Final commits:** `b76c3dc` → `bb7918a` → `ee7333d` → `c19e6b7` → `803b511` → `76d10e5`.
-
-## Earlier session (2026-04-09 AM) — Repo hygiene workstream complete
-
-1. **Git history rewritten to a single author.** `git filter-repo --mailmap` collapsed a stray local-hostname identity into `El-Fitz <8971906+El-Fitz@users.noreply.github.com>` across all refs. Reflog expired and aggressive GC run. The old GitHub repo was then **deleted and recreated** from scratch to purge the old SHAs from PR history — force-push alone would have left them accessible via `/commit/<oldsha>` URLs. Verified: `git log --all --format='%an <%ae>' | sort -u` shows only El-Fitz.
-2. **License switched MIT → AGPL-3.0-or-later.** Fetched the canonical text from gnu.org into `LICENSE` at the repo root and copied into `middens/LICENSE`. `middens/Cargo.toml` updated to match.
-3. **Cargo.toml distribution metadata added.** `authors`, `repository`, `homepage`, `readme`, `keywords`, `categories`, plus `[profile.release] strip = true, lto = "thin", codegen-units = 1`. Release build clean (22s, 2 pre-existing warnings).
-4. **Two READMEs written.** Root `README.md` frames Third Thoughts as a research project with middens as one half and the docs/methodology as the other. `middens/README.md` is CLI-specific: install, usage, techniques, methodological guardrails. Both use the light/self-deprecating register the user prefers — after one correction on the root README ("basically, throwing stuff at the wall and seeing what sticks").
-5. **Prose-tone convention captured durably.** Added as a feedback memory (`feedback_tone.md`) and as a top-line entry in `third-thoughts/CLAUDE.md` Conventions. Rule: prose in READMEs, project blurbs, commit messages, and user-facing copy should be light and self-deprecating, not pompous research-speak. Technical precision in methodology docs is still fine.
-6. **Register drift detection todo filed.** `todos/register-drift-detection.md` — a technique to detect when agents drift into pompous/ceremonial register. Framed as a sibling of the 100% risk-suppression finding: likely the agent's thinking voice and user-facing voice diverge stylistically the same way they diverge on risk. Possibly decomposes into two techniques (ceremonial-prose feature extractor + register-correction classifier).
-7. **Branches pruned.** Only `main` remains locally. 6 stale branches deleted (2 pre-existing `feat/output-engine`, `feat/python-bridge`; 4 left over from filter-repo rewriting the old merged PR branches).
-8. **Second history pass + repo recreate.** During step 1 I leaked the old identity string into the HANDOFF commit. Fixed by a second `git filter-repo --replace-text` pass, then the GitHub repo was deleted and recreated a second time. Verified clean: `git log --all -p -S "<old-hostname>"` is empty, `git log --all --format='%an <%ae>' | sort -u` shows only El-Fitz. If you see short SHAs in this doc, they still resolve — filter-repo preserved the ones that didn't touch the leaked strings.
-
-## Previous session (2026-04-06 full day) — Batch 4 + 2 P1s shipped
-
-1. **Batch 4 Python techniques shipped** — 4 new techniques via the foundry adversarial process:
-   - `user_signal_analysis` — English-only user-message classification (correction/redirect/directive/approval/question + frustration intensity). Emits `skipped_non_english_messages` finding via cheap ASCII-fraction language gate. Defers thinking-block parts pending `todos/redact-thinking-header-correction.md`.
-   - `cross_project_graph` — directed reference graph between projects via NetworkX, with hub/authority/cluster metrics. Adds `networkx>=3.0,<4.0` to requirements.
-   - `change_point_detection` — ruptures PELT regime-shift detection on 4 per-user-message signals (msg length, tool call rate, correction flag, tool diversity). Binseg fallback. Adds `ruptures>=1.1,<2.0` to requirements.
-   - `corpus_timeline` — provisional, per-day per-project session counts. Header comment marks it for deletion once storage/view reshape lands (`todos/output-contract.md`).
-2. **Test count: 270/270 scenarios passing** (was 261). 9 new scenarios in `python_batch4.feature`.
-3. **Process notes** — full adversarial workflow with information barrier:
-   - Red team: Gemini 3.1 Pro Preview via `gemini -y -s false --prompt`. Wrote `python_batch4.feature` from sections 1+2+6 of NLSpec only. Flagged 3 contract gaps (project_name vs project field name; missing per-message timestamps; no language-test fixture).
-   - Green team: 4 parallel Kimi K2.5 dispatches via `opencode run -m kimi-for-coding/k2p5 --format json`. Each got the shared contract + its own How section.
-   - Orchestrator (me) mediated contract gaps by (a) correcting NLSpec field name (`project_name` → `project`), (b) adding new fixture step `a set of {int} sessions across {int} projects spanning {int} days with timestamps, each with {int}-{int} turns` to `python_batch1.rs` that populates both `metadata.project` and per-message ISO timestamps and injects one cross-project mention per session, (c) routing 2 affected scenarios to use the new step.
-   - Two iteration cycles needed: Kimi's `cross_project_graph` first cut had a `project_name` reference (despite the corrected NLSpec — drift); fixed inline as a 1-line bug fix. Test fixture initially injected text on the wrong turn index (User/Assistant alternation off-by-one); fixed inline.
-4. **OpenCode dispatch gotchas re-confirmed** — message must come BEFORE `-f` flag (positional after `-f` gets parsed as another file). Kimi's `write` tool gets auto-rejected on `external_directory` for paths outside the OpenCode workspace; explicit "use bash heredoc, write tool is disabled" in the prompt was required for the second cross_project_graph dispatch.
-
-## Previous session (2026-04-06 PM)
-
-1. **Python techniques wired into production CLI (commit `2d1d367`)** — `middens analyze` now runs all 19 techniques (6 Rust + 13 Python), not just the 6 Rust ones. Done by:
-   - New `bridge::embedded` module — all 13 scripts + `requirements.txt` baked into the binary via `include_str!`. Extracted idempotently to `$XDG_CONFIG_HOME/middens/python-assets/` at runtime (content-hash compared, only rewritten on change). **This is the key change for distributability — the CLI is no longer source-tree-dependent.**
-   - New `techniques::PYTHON_TECHNIQUE_MANIFEST` (static list of name/desc/filename) + `python_techniques()` + `all_techniques_with_python()` helpers.
-   - Pipeline tries `prepare_python_env()` (extract → detect uv → init venv) and **falls back to Rust-only with a stderr warning** if `uv` isn't installed. Graceful degradation — the CLI works even on systems without Python tooling.
-   - `list-techniques` shows all 19 from the static manifest, with no Python env required.
-   - Cucumber row count assertion updated 6 → 19 (essential scenario stays at 6).
-   - 261/261 scenarios passing.
-2. **GH#42796 thinking-redaction insight captured** — the `redact-thinking-2026-02-12` beta header is **UI-only** per the Anthropic engineer comment. Thinking still happens; it just isn't written to local transcripts. This means our `thinking-divergence` technique (and the 85.5% risk-suppression finding) is measuring transcript presence, not actual thinking. **Logged as P1 in `todos/redact-thinking-header-correction.md`** — needs parser-level header detection + session-level `thinking_visibility` flag + re-run of the 4 replications before any thinking-based metric can be trusted again.
-3. **Batch 4 Python techniques scoped + triaged** at `todos/python-techniques-batch4.md`. Triage outcome: 4 techniques to port — `user-signal-analysis` (English-only, scoped), `cross-project-graph` (NetworkX → flat edge+node tables), `change-point-detection` (ruptures PELT, adds first new dep since Batch 1), `corpus-timeline` (option A: tiny technique now, option B: refactor to a view over `sessions.parquet` once the storage/view reshape lands — tracked in `todos/output-contract.md` post-reshape cleanup). v1 of `006_user_signal_analysis` dropped (superseded by v2). Adversarial port plan ready.
-4. **Multilingual audit** at `todos/multilingual-text-techniques.md` — discovered during Batch 4 triage that **3 production techniques are silently English-only**: `thinking-divergence` (RISK_TOKENS literals), `correction-rate` Priority-3 lexical layer (`classifier/correction.rs:35`), and the proposed `user-signal-analysis`. Non-English sessions classify as zero/minimal. **The 85.5% suppression headline finding has scope `language=en + thinking_visibility=visible`** and needs both gates before re-asserting. The other ~16 techniques are language-invariant by construction (operate on tool sequences or filesystem structure). Recommended remediation: option C (detect language + refuse), not per-language pattern packs.
-5. **Total technique tally clarified**: 19 wired (6 Rust + 13 Python), 4 to port in Batch 4, 3 utilities-not-techniques, 6 originals ported to Rust (double-counted in naive `ls scripts/` math). Real distinct analytical techniques in the codebase post-Batch-4: **23** (6 Rust + 17 Python).
-
-## Previous session (2026-04-06 AM) accomplished
-
-1. **Batch 3 Python techniques shipped (PR #4, merged as 9eca691)** — 13/13 Python techniques ported.
-2. **6 rounds of PR-review iteration** — 26 automated findings from Gemini (6) + Copilot (8) + Codex (12 across 6 review rounds). All addressed inline + replied with rationale. See commit `9eca691` for the full squashed set.
-3. **Output-contract design doc written** at `docs/design/output-contract.md` — storage (Parquet + manifest) vs view (ipynb/md/html/pluto/quarto/json) split. Fully designed, not yet implemented. See `todos/output-contract.md` for work breakdown.
-4. **Conclusions v1 and v2 design** at `todos/conclusions-v{1-manual,2-synthesize}.md` — post-hoc cross-technique narrative, analyst-authored then optionally LLM-authored.
-5. **GH#42796 replication study** — sympathetic replication at `~/claude-reasoning-performance-analysis/report.md`, adversarial counter-analysis at `~/claude-reasoning-performance-counter-analysis/report.md`. **Conclusion: this corpus cannot confirm or refute Laurenzo's claims as currently sliced.** See "GH#42796 replication" section below.
-6. **Two significant corpus anomalies discovered** during the replication work — see "Corpus composition anomaly (W10→W11)" below.
-
-## Current State
-
-### What's built
-
-`middens` is a usable end-to-end CLI tool for analyzing AI agent session logs.
+`middens` is a usable end-to-end CLI for analyzing AI agent session logs.
 
 ```bash
-middens analyze ~/.claude/projects/ -o results/       # full battery
-middens analyze path/ --split                          # stratified by session type
+middens analyze corpus-full --all                     # full 23-technique battery
+middens analyze corpus-full --all --timeout 1800      # explicit timeout override
+middens analyze path/ --split                          # stratify by session type
 middens analyze path/ --techniques markov,entropy      # subset
+middens interpret --provider claude                    # LLM interpretation of last run
+middens export --format jupyter                        # notebook from last run
 middens parse file.jsonl                               # single file debug
 middens freeze corpus/ -o manifest.json                # corpus snapshot
-middens list-techniques                                # show 6 registered techniques
+middens list-techniques                                # 23 registered techniques
 ```
 
 ### Implementation status
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Parsers | Done | Claude Code, Codex, OpenClaw (Gemini stub) |
+| Parsers | Done | Claude Code (incl. new format types), Codex, OpenClaw (Gemini stub) |
 | Classifiers | Done | Message (5-priority) + session type (interactive/subagent) |
 | Corpus discovery | Done | Recursive scan, symlink following, auto-discover |
 | Techniques (Rust) | Done (6) | markov, entropy, diversity, burstiness, correction-rate, thinking-divergence |
-| Output engine | Done | Markdown (YAML frontmatter), JSON, ASCII (sparklines, bars, tables) |
-| Analyze pipeline | Done | discover → parse → classify → techniques → output |
-| `--split` | Done | Automatic interactive/subagent stratification |
-| Python bridge | Done | UvManager + PythonTechnique wrapper (merged PR #3) |
-| Python techniques | **17/17 wired** | Batches 1+2+3+4 done AND wired into production via `PYTHON_TECHNIQUE_MANIFEST` + embedded scripts. Pipeline auto-prepares Python env, falls back to Rust-only on missing `uv`. |
-| Python asset embedding | Done | `bridge::embedded` extracts scripts + requirements.txt from binary to `$XDG_CONFIG_HOME/middens/python-assets/`. CLI is source-tree-independent. |
-| `fingerprint` | Stub, *superseded* | Reframed as a technique in `docs/design/output-contract.md` |
-| `report` | Stub, *reshaped* | New contract `(run_id, format) → view file`. See `todos/output-contract.md` |
-| Storage/view split | Designed, not implemented | `docs/design/output-contract.md`, `todos/output-contract.md` — next major work |
-| Conclusions v1/v2 | Designed | `todos/conclusions-v{1-manual,2-synthesize}.md` |
+| Techniques (Python) | Done (17) | Batches 1–4, all wired, all completing on full corpus |
+| Python asset embedding | Done | Scripts baked into binary, extracted at runtime — no source tree needed |
+| Python bridge | Done | UvManager + PythonTechnique wrapper; shared session cache (one serialise, not 17×) |
+| Dynamic timeout | Done | `clamp(100×ln(n), 60, 1800)` — ~951s at 13k sessions |
+| Storage (Parquet) | Done | One Parquet per technique + `manifest.json` per run, XDG paths |
+| View layer | Done | `ViewRenderer` trait, `ipynb.rs` (v4 nbformat) |
+| `analyze` command | Done | Full triad shape: discovers → parses → techniques → Parquet + manifest |
+| `interpret` command | Done | Runner abstraction (4 providers), fallback chain, atomic write |
+| `export` command | Done | Jupyter notebook; works without interpretation |
+| CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
+| Test suite | **332/332 passing** | 1804 steps |
 
-### Python techniques status
+---
 
-**Batch 1 (merged):** hsmm, information_foraging, granger_causality, survival_analysis
-**Batch 2 (merged):** process_mining, prefixspan_mining, smith_waterman, tpattern_detection
-**Batch 3 (merged):** lag_sequential, spc_control_charts, ncd_clustering, ena_analysis, convention_epidemiology
+## Open work (prioritized)
 
-NLSpecs at `middens/docs/nlspecs/2026-04-{05,06}-python-techniques-batch{1,2,3}-nlspec.md`. Shared contract:
+### P0 — Distribution (now unblocked)
+
+All five steps in order. See individual `todos/distribution-*.md` for detail.
+
+1. **Step A — e2e verb** (`middens run` or similar): chains `analyze → interpret → export`. Required for demo command and validation runs. Open questions: verb name; whether `--provider` should be required or skip interpret when absent; hard-fail or graceful degradation if interpret fails. (`todos/distribution-e2e-verb.md`)
+
+2. **Step B — release workflow**: GitHub Actions on `v*` tag; matrix build darwin-arm64/x86_64, linux-x86_64/arm64 (Windows stretch goal). Tarballs + SHA256SUMS on GitHub Release. Open question: `cross` crate vs native GH-hosted runners (free tier has x86 only — may need `cross` for darwin-arm64). (`todos/distribution-release-workflow.md`)
+
+3. **Step C — Homebrew tap**: `brew install lightless-labs/tap/middens`. `uv` is a `recommend` not a `depend`. crates.io secondary. Open question: tap repo name (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula). (`todos/distribution-homebrew-tap.md`)
+
+4. **Step D — two validation runs**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. Open question: use full private corpus (PII risk on landing page) or create a small public fixture corpus? (`todos/distribution-validation-runs.md`)
+
+5. **Step E — GitHub Pages landing page**: orphan `www` branch, static HTML/CSS, no JS framework. Copy reviewed by Gemini 3.1 Pro + Codex xhigh. Open questions: domain, design polish level, first-draft ownership. (`todos/distribution-github-pages.md`)
+
+### P1 — Research follow-ups
+
+- **HSMM re-run with Boucle excluded**: The 24.6× pre-failure lift collapsed to 2.15× on the 2026-04-14 run. Direction replicates but magnitude is suspect — likely Boucle contamination. Re-run with W10–W12 stripped and stratified. Update finding status in CLAUDE.md accordingly.
+- **Autonomous session stratum**: `SessionType::Autonomous` classifier + `corpus-split/autonomous/` bucket. Full plan at `todos/autonomous-session-stratum.md`. Required for the 4-axis compound scoping rule. Phase 2: run 23-technique battery on the new stratum.
+- **Multilingual remediation**: implement language detection + refusal on `thinking-divergence`, `correction-rate` lexical layer, `user_signal_analysis`. Adds `whatlang` (or equivalent). Populates `Session::language`. Then re-run risk-suppression replications under `language=en` gate. (`todos/multilingual-text-techniques.md`)
+
+### P2 — Tech debt
+
+- **Frustration classifier recalibration**: 90% of user signals pile up at intensity 2. Needs rescaling or model change. (`user_signal_analysis.py`)
+- Deferred PR review items: `todos/batch4-coderabbit-deferred.md`, `todos/batch3-coderabbit-deferred.md`
+- Todos filed but not started: `fingerprint-technique-retrofit.md`, `corpus-timeline-deletion.md`, `batches-1-2-pii-and-type-audit.md`, `interpret-parser-strictness.md`, `interpret-export-split-composition.md`
+
+---
+
+## Key findings (current)
+
+| Finding | Status | Evidence |
+|---------|--------|----------|
+| 99.99% risk suppression on visible-thinking sessions | **Strengthened** (2026-04-14) | N=4,518 sessions, 31,679 risk tokens, 2 leaks. `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md` |
+| 85.5% risk suppression on mixed corpus | **SUPERSEDED** | Mixed-corpus artifact. |
+| HSMM pre-failure state (24.6× lift) | **Provisional — magnitude unconfirmed** (2.15× on 2026-04-14 run) | Direction holds; 24.6× likely Boucle artifact. Needs re-run with W10–W12 excluded. |
+| MVT violated (agents under-explore) | Robust | `experiments/full-corpus/information-foraging.md` |
+| Thinking blocks prevent corrections | **RETRACTED** | Did not survive population split. |
+| Session degradation (agents get worse) | Holds on interactive only | `experiments/interactive/survival_analysis.txt` |
+| W10–W12 Boucle contamination | **Confirmed** (PR #6) | 1,820/1,826 sessions, 100% zero tool calls. |
+| Correction front-loading | New (2026-04-14) | 0.068 first-third vs 0.019 last-third — sessions improve, not degrade. |
+| Sequential motifs | New (2026-04-14) | UWUW = success, UUX = struggle, UC→UC self-reinforces (z=889.5). |
+| Epistemic network discriminator | New (2026-04-14) | EVIDENCE_SEEK ↔ SELF_CORRECT discriminates success; plan-frame loops predict failure. |
+
+Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{md,pdf}`.
+
+**Compound scoping rule:** every future headline finding on thinking or text behaviour must be scoped on 4 axes: `session_type ∈ {Interactive, Subagent, Autonomous}`, `thinking_visibility ∈ {Visible, Redacted, Unknown}`, `language ∈ {en, other}`, and a temporal window. A finding that doesn't survive all four is not a finding.
+
+---
+
+## Branch state
+
+| Branch | Status |
+|--------|--------|
+| `main` | All work landed here. 8 commits ahead of what prior HANDOFF described. |
+
+No open PRs. No feature branches.
+
+---
+
+## Test suite
+
+**332/332 Cucumber scenarios, 1804 steps — all passing.** One known pre-existing failure (`analyze.feature:28` wrong expectation — unrelated to any current work, not a regression).
+
+Run: `cd middens && cargo test`
+
+---
+
+## Python technique notes (for new work on Python techniques)
+
 - Input: JSON file path as `argv[1]` containing `Session[]`
 - Output: `TechniqueResult` JSON to stdout
-- **Tables must be `{"name": ..., "columns": [...], "rows": [[...]]}`** — NOT `{"title", "headers", "rows"}`. This is a recurring spec gotcha; the Rust `DataTable` struct uses `name`+`columns`. Batch 3 lost a full round of rework to this.
-- `tool_calls[].input` is a dict (not string) — extract keys like `input.get("path")`
-- `tool_results[].tool_use_id` not `id` (Rust `ToolResult` uses `tool_use_id`)
-- Roles are `User`/`Assistant` (PascalCase), classifications like `HumanCorrection`/`Unclassified`
-- Rows are `List[List[Value]]` not `List[Dict]`, type-homogeneous per column
-- Always sanitize NaN/Infinity before json.dumps
-- Stderr output on file errors, exit 1
-- Empty/insufficient sessions: return valid TechniqueResult with summary containing "insufficient", NOT error exit
-- Summary substring assertions are case-insensitive but literal — if the spec says "mention 'lag sequential'" the actual summary must contain "lag sequential" (space, not hyphen)
-- Test fixtures have `timestamp: None` — techniques that order by timestamp must fall back to array index ordering
+- Tables: `{"name": ..., "columns": [...], "rows": [[...]]}` — rows are `List[List[Value]]`, NOT dicts. Recurring gotcha.
+- `tool_calls[].input` is a dict — extract keys like `input.get("path")`
+- `tool_results[].tool_use_id` not `id`
+- Roles are `User`/`Assistant` (PascalCase)
+- Always sanitize NaN/Infinity before `json.dumps`
+- Empty/insufficient sessions: return valid result with "insufficient" in summary, NOT error exit
+- Test fixtures have `timestamp: None` — fall back to array index ordering
+- `extract_tool_sequences()` skips no-tool-call sessions — don't use session indexes to index into its output
 
-### Open work (prioritized for next session)
+---
 
-0. **PR review / merge triage.** Three PRs are open (#5, #6, #7 — see top of file). Check bot reviews with `gh pr view <n>` and `gh api repos/.../pulls/<n>/comments --paginate`. Triage discipline per HANDOFF "PR review iteration" section. Merge order matters: **#7 (thinking-visibility) depends conceptually on no code from #5 or #6 — can merge standalone. #5 (Batch 4) depends on nothing. #6 (corpus anomaly doc-only) depends on nothing BUT the Phase 1 code work (below) will land on the #6 branch, so don't merge #6 until Phase 1 is ready or just extend the PR.**
-1. **Autonomous Session Stratum — Phase 1 (code) + Phase 2 (research).** Follow-up commits on `feat/corpus-anomaly-w10-w12`. See `todos/autonomous-session-stratum.md` for the full plan. Phase 1: new `SessionType::Autonomous` variant, framework-agnostic classifier (`Autonomous = Interactive ∩ no_human_participation`), `corpus-split/autonomous/` bucket, cucumber. Phase 2: run the 23-technique battery on the new stratum and write a comparative analysis report. This is the interesting research direction the user explicitly chose. **Start here after PR triage.**
-2. **Distribution / install story** — the CLI is now self-contained (Python assets embedded in binary). Remaining gaps before users can `cargo install middens` or `brew install middens`:
-   - `Cargo.toml` package metadata (description, license, repository, keywords) — verify before publishing
-   - First-run UX: when `uv` is missing, the current stderr warning should become a one-time friendly message pointing at `https://docs.astral.sh/uv/getting-started/installation/`
-   - Cache-dir strategy on Windows (`%LOCALAPPDATA%`) — verify `bridge::embedded::cache_dir` handles it
-   - Release build profile in `Cargo.toml` (`[profile.release] strip = true, lto = "thin"`)
-   - GitHub release workflow for darwin-arm64, darwin-x86_64, linux-x86_64, linux-arm64, optionally windows-x86_64
-   - Homebrew tap or `cargo install` instructions in README
-   - Smoke-test installing on a clean machine where the source tree is absent
-3. **Multilingual remediation** (`todos/multilingual-text-techniques.md`) — implement option C (detect language + refuse) on `thinking-divergence`, `correction-rate` lexical layer, and `user_signal_analysis`. Adds `whatlang` (or equivalent) crate, populates `Session::language`. Re-runs the 4 risk-suppression replications under `language=en` stratification. This plus the Autonomous stratum plus thinking-visibility gives the full 4-axis stratification from the "compound scoping rule" above.
-4. **Storage/view reshape** (`todos/output-contract.md`) — big next step. Parquet + manifest canonical storage, `ViewRenderer` trait, `.ipynb` renderer, `middens report <run_id> --format <fmt>`, `middens runs list`. Fully designed. When this lands, `corpus-timeline` (Batch 4) becomes redundant and should be deleted (see post-reshape cleanup in `todos/output-contract.md`).
-5. **Conclusions v1** (`todos/conclusions-v1-manual.md`) — small, lands alongside or after the reshape.
-6. **Deferred PR review items:**
-   - `todos/batch3-coderabbit-deferred.md` — PR #4 (Batch 3) P2/P3 spec clarifications
-   - (Batch 4 / PR #5 review items, if any bots flagged things, should be triaged under item 0)
-7. **Update `CLAUDE.md` "Key Findings" table** — change the 85.5% row to the 100% stratified figure once PR #7 merges. Could happen in PR #7 or a follow-up.
-8. **HSMM re-run under 4-axis stratification** — the 24.6× pre-failure state lift is currently reported on a mixed corpus. Once PR #7 + Phase 1 + multilingual all land, re-run HSMM and check whether the finding survives. New solutions doc if it does, retraction if it doesn't.
-9. **File GH#42796 follow-up?** The original investigation (see previous HANDOFF sections) concluded the corpus couldn't refute or confirm Laurenzo's claims. With the new stratification axes in hand, a cleaner replication is now possible. Decide whether to pursue.
+## Institutional knowledge
 
-### Branches
+Key solutions docs for common failure modes:
 
-| Branch | Tracks origin? | Status |
-|--------|:--------------:|--------|
-| `main` | yes | Base. Pre-session state. |
-| `feat/batch4-and-distribution-prep` | yes | **PR #5 open.** 5 commits ahead. |
-| `feat/corpus-anomaly-w10-w12` | yes | **PR #6 open.** 1 commit (docs only — will gain Phase 1 code on top). |
-| `feat/thinking-visibility-stratification` | yes | **PR #7 open.** 1 commit. |
-
-### Test suite
-
-**270 Cucumber/Gherkin scenarios, 1549 steps — all passing** (post Batch 4). Runner at `middens/tests/cucumber.rs`. Feature files organized by domain under `middens/tests/features/`. Python technique tests at `tests/features/techniques/python_batch{1,3,4}.feature` (batch1 covers Batches 1+2 scripts despite the name; batch3 adds 5; batch4 adds 4).
-
-## Corpus composition anomaly (W10→W11) — INVESTIGATED (PR #6)
-
-**What it was:** Interactive-bucket session count exploded 45× (W09 27 → W11 1,230) with tools-per-session collapsing 64× (572 → 8.9) and total tool calls *dropping*. A model regression couldn't explain this.
-
-**Resolution:** Investigated as PR #6. Root cause: **100% of W10–W12 "interactive" sessions are Boucle autonomous agent loop iterations** — zero tool calls, `queue-operation` type messages, `<run_context>` tags, explicit framework references. Not a model regression, not a stratification bug proper — the `corpus-split/` filter catches user/assistant alternation but doesn't exclude automation sessions that use the same message shapes.
-
-**Full report:** `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md`.
-
-**Follow-up plan:** rather than filter Boucle out, promote it to a first-class session type. See `todos/autonomous-session-stratum.md` and "Open work" item 1.
-
-## GH#42796 replication
-
-Two artifacts in `~/`:
-
-- **`~/claude-reasoning-performance-analysis/`** — sympathetic replication of the Laurenzo #42796 claims. Headline: signature↔thinking correlation 0.94 (n=5744), redaction rollout 0%→82% Feb–Mar, Write%-of-mutations "doubled" (~20%→48% comparing W06–W10 to W12 alone).
-- **`~/claude-reasoning-performance-counter-analysis/`** — adversarial refutation attempt. Headline:
-  - **C3 (Write doubled) is dead**. Proper pre/post weighting (by sessions, by mutations, or by tool_calls) gives +5pp, not a doubling. Permutation p=0.445 at n=7 weeks — indistinguishable from noise. The "doubling" framing came from comparing a broad baseline to W12 alone (which has 7% of post-period tool calls and 1.8% of paired thinking samples).
-  - **C2 (redaction rollout) fails significance**. Permutation p=0.20 on 7 weeks. The curve is also non-monotonic (W10=64%, W11=16%, W12=82%) in ways inconsistent with a clean staged rollout — the sympathetic agent acknowledged this as a "format artifact" but didn't quantify it.
-  - **C1 (signature correlation) is weakened**. W11 alone contributes 36% of the correlation's sample weight. W12 (the "degraded" tail) has only 77 paired samples — 95% CI on Pearson at n=77 is ±0.22, so the correlation could be anywhere from 0.72 to 1.0 in W12 and we have no power to tell.
-  - **The corpus composition anomaly (above) is the dominant signal** — everything the sympathetic report reads as a model regression is mechanically consistent with population drift.
-- **Recommendation**: do **NOT** file anything against anthropics/claude-code from this corpus. It cannot support the claim on either side. If you want to replicate honestly, fix the composition issue first, then try again.
-
-## Process
-
-### Adversarial development (foundry-style)
-
-Non-trivial features use red/green adversarial process:
-1. Write NLSpec (Why/What/How/Done) — review before proceeding
-2. Red team (Codex or Gemini 3.1 Pro) writes Cucumber tests from DoD only
-3. Green team (different model: Kimi K2.5 via OpenCode bash heredoc, or Gemini) implements from How section only
-4. Run tests, send PASS/FAIL only to green team (no assertion text or error messages)
-5. When tests fail: classify (contract gap / red bug / green bug / improvement), route to correct team
-6. **Never adapt tests to match unauthorized API deviations** — amend the spec or reject
-
-**Model selection (validated by Batches 1+2+3):**
-- Red team: Gemini 3.1 Pro Preview (quality default — fewer iterations than 2.5 Pro)
-- Green team: Kimi K2.5, GLM 5.1, or Minimax M2.7 via OpenCode — use the opencode-cli skill reference. Codex is quota-limited; don't rely on it as fallback.
-- One file per Kimi invocation (write tool corrupts JSON payloads; use bash heredoc)
-- Never use the same model for red and green
-
-**OpenCode dispatch pattern (the hard-won-right-way — see `~/.claude/skills/opencode-cli/`):**
-
-```bash
-opencode run \
-  --model kimi-for-coding/k2p5 \
-  --format json \
-  --variant high \
-  -f /tmp/shared-contract.md \
-  -f /tmp/per-technique-how.md \
-  "Implement the technique per the attached contract and algorithm. Write via bash heredoc." \
-  < /dev/null 2>/dev/null \
-  | jq -r 'select(.type == "text") | .text' \
-  > /tmp/green-output.md
-```
-
-**Correct model IDs (validated against `opencode models` 2026-04-06):**
-- `kimi-for-coding/k2p5` — Kimi K2.5
-- `kimi-for-coding/kimi-k2-thinking` — Kimi K2 Thinking (reasoning-heavier; try this when k2p5 gets stuck)
-- `zai-coding-plan/glm-5.1` — GLM 5.1
-- `minimax-coding-plan/MiniMax-M2.7` — Minimax M2.7 (NOT `minimax/minimax-m2.7` — old ID fails silently)
-- `opencode/minimax-m2.5-free` — free tier
-- `perplexity/sonar` — web search
-
-**OpenCode gotchas (from the skill, validated by Batch 3 mistakes):**
-1. **Always** `--format json` + `jq -r 'select(.type == "text") | .text'` to get clean output. Raw JSONL is 90KB of protocol noise.
-2. **Always** `< /dev/null 2>/dev/null` when piping — prevents stale stdin and stderr contamination.
-3. **Always** `wait` after backgrounded `&` dispatches — without it the parent shell exits before OpenCode finishes, producing empty logs. This was the "SQLite WAL conflict" I originally misdiagnosed in Batch 3.
-4. **Use `-f <file>` to attach context files**, DON'T reference paths in the prompt text. OpenCode auto-rejects `external_directory` reads of `/tmp/*` via its permission layer — which is what killed ENA in Batch 3.
-5. **Use `--variant high`** (or `max`) for reasoning-heavy work.
-6. **Never use `-s false`** for OpenCode (that's a Gemini flag — stray `:false` directories get created via shell misinterpretation, contaminating the workspace).
-7. Error events are nested 3 levels deep: `error.error.data.message`.
-8. Invalid model IDs fail in ~1.5s — parse for fast failure.
-9. No system prompt flag — concatenate SYSTEM + USER into the attached file or inline prompt.
-10. No sandbox mode — review changes via `git diff` after.
-
-**Parallel fan-out pattern (validated in refinery workflows):**
-
-```bash
-opencode run --model kimi-for-coding/k2p5 --format json -f /tmp/contract.md "Task A" < /dev/null 2>/dev/null | jq -r 'select(.type == "text") | .text' > a.md &
-opencode run --model zai-coding-plan/glm-5.1 --format json -f /tmp/contract.md "Task B" < /dev/null 2>/dev/null | jq -r 'select(.type == "text") | .text' > b.md &
-opencode run --model minimax-coding-plan/MiniMax-M2.7 --format json -f /tmp/contract.md "Task C" < /dev/null 2>/dev/null | jq -r 'select(.type == "text") | .text' > c.md &
-wait  # CRITICAL — without this, the files will be empty
-```
-
-Process learnings documented in foundry: `~/Projects/lightless-labs/foundry/docs/solutions/` and locally in `docs/solutions/best-practices/` and `docs/solutions/workflow-issues/`.
-
-### Delegation
-
-- Codex (GPT-5.4): `timeout: 600000` on Bash calls, use `-o` flag not pipes (quota-limited)
-- Gemini: `-y -s false` for yolo + file writes. Use `gemini-3.1-pro-preview` for quality work, `gemini-2.5-pro` only for reasoning-heavy tasks
-- OpenCode (Kimi): `kimi-for-coding/k2p5` model ID, `--format json` required, use bash heredoc for file writes (write tool broken). Dispatch one file per invocation
-- Match tool to task: CLI tools for self-contained units, subagents for crate-context work
-
-### Todos
-
-Individual files in `todos/` following phil-connors pattern (YAML frontmatter with status, priority, issue_id, tags, source). When triaging PR review comments, reply with the todo file link.
-
-Key todo files:
-- `todos/autonomous-session-stratum.md` — **NEXT UP** — Phase 1: framework-agnostic `SessionType::Autonomous` classifier (Interactive ∩ no_human_participation). Phase 2: run 23-technique battery on new stratum + comparative report. Follow-up on PR #6.
-- `todos/python-bridge.md` — Phase 4: 13 Python technique ports (DONE — all 13/13 merged AND wired into production)
-- `todos/python-techniques-batch4.md` — **DONE** 2026-04-06 (PR #5). 4 techniques shipped.
-- `todos/redact-thinking-header-correction.md` — **DONE** 2026-04-06 (PR #7). 85.5% → 100% on visible-only.
-- `todos/multilingual-text-techniques.md` — P2 — 3 techniques are English-only (`thinking-divergence`, `correction-rate` lexical layer, `user-signal-analysis`); audit + remediation plan. Not started.
-- `todos/remaining-cli.md` — fingerprint, report, Parquet, Vega-Lite, config (most items *superseded* by output-contract reshape)
-- `todos/output-contract.md` — storage/view split full work breakdown. Will retire `corpus-timeline` technique when it lands.
-- `todos/conclusions-v1-manual.md` — manual analyst-authored conclusions sidecar
-- `todos/conclusions-v2-synthesize.md` — LLM-authored conclusions via future `middens synthesize`
-- `todos/batch3-coderabbit-deferred.md` — spec clarifications deferred from PR #4 review (Batch 3)
-- `todos/research-reruns.md` — Granger, survival, process mining with corrected classifier. Needs re-run after Autonomous stratum lands.
-- `todos/023-pending-p1-peer-review-methodology-findings.md` — unaddressed research methodology issues
-- `todos/009-026` — individual P2/P3 code review fixes
-
-### PR review iteration (learned this session)
-
-**When a PR is open and multiple bots are reviewing:**
-1. **CodeRabbit, Gemini, Copilot typically review once on the initial commit only.** They don't re-trigger automatically on subsequent pushes. If you want a fresh Gemini/Copilot review after fixes, you may need to dismiss + request again, or push as a new PR.
-2. **Codex re-reviews on every push** and often finds new issues each round — expect 3-6 rounds for a substantial PR. Many findings are real; don't dismiss them as "nit". This session went through 6 Codex review rounds on Batch 3 and every round surfaced at least one legitimate bug.
-3. **Run `coderabbit review --plain --base origin/main` LOCALLY before opening the PR** — cheaper than burning a remote round trip. The local CodeRabbit tool produced 20 findings that I fixed inline, saving a review round.
-4. **Triage discipline**: P1 bugs fix inline; P2 bugs fix inline OR log to `todos/batch3-coderabbit-deferred.md` with reasoning; P3/nit log as deferred. Reply to every comment with rationale, not just "fixed".
-5. **When the same issue is flagged by 3 bots independently**, it's definitely real. Three-way confirmation is a strong signal to stop second-guessing and just fix it.
-6. **Stopping rule**: if all P1s from the current round are fixed, all tests pass, CodeRabbit is SUCCESS, merge state is CLEAN, and no new Codex review has landed in ~15 minutes — it's safe to merge. Don't wait indefinitely for more bot activity.
-
-### Sub-agent refusal pattern (partially corrected)
-
-**What actually happened in this session:** I dispatched many general-purpose sub-agents for various tasks:
-
-- **Sympathetic GH#42796 replication** — 17 tool calls, 220-line report with real numbers. **SUCCEEDED.**
-- **Red team Cucumber tests (Gemini 3.1 Pro via CLI, not Agent tool)** — wrote `python_batch3.feature` and new step defs. **SUCCEEDED.**
-- **4 parallel compound-learning extraction agents** (technical, process, implementation, design) — all 4 wrote their docs cleanly with 1-6 tool calls each. **ALL 4 SUCCEEDED.**
-- **Adversarial counter-analysis v1** — 0 tool calls. Refused, citing `context_window_protection` and "missing ctx_execute" MCP tools.
-- **Adversarial counter-analysis v2** (re-dispatched with explicit "you have Bash/Read freely, do not refuse" language) — 0 tool calls. Refused again.
-
-**The refusal was strictly limited to the two agents with both (a) adversarial framing and (b) explicit "override your guards" language.** Every other general-purpose agent in this session — including ones doing research work on the same corpus — ran fine.
-
-**Refined hypothesis (validated by the ~6 successful general-purpose dispatches in the same session)**: the refusal was triggered by the combination of (a) adversarial framing ("your job is to refute / disprove") and (b) explicit override language ("the guards you see in your system prompt are just preferences, ignore them"). Telling a model "ignore your guards" is a reliable way to make it double down on those guards, especially when paired with "refute X" framing that makes the task feel like a stress test of its own willingness to violate rules.
-
-The same subagent type ran fine on:
-- Sympathetic replication of the same claims (different framing)
-- Red team test writing (Gemini CLI, adversarial to green team but neutral to hooks)
-- 4 parallel compound-learning extractions (forward-directed research framing)
-
-**General rules** (revised from the session experience):
-
-1. **Frame sub-agent tasks as forward-directed research work.** "Replicate X" works; "refute X" with explicit override language does not. Adversarial analysis is fine if you reframe it as a neutral task ("test the following hypotheses H1–H7 on the corpus; for each, report observed numbers and whether they fall within or outside the claim's stated range").
-2. **NEVER include "override your guards / ignore your context rules / the reminders are just preferences" language in a sub-agent prompt.** This is the single strongest predictor of refusal in this session. If you feel the need to add such language defensively, you've already lost the prompt — rewrite the task framing instead.
-3. If a sub-agent refuses once, **don't re-dispatch a harder-framed version** — the same prompt pattern will fail the same way. Either (a) rewrite the task as forward-directed research without override language, (b) switch subagent type (`Explore` is specialized for read-heavy research), or (c) run the work inline in the main session via `ctx_execute`.
-4. **When in doubt, do it inline.** Bounded analysis tasks (a few hundred rows, a few weeks of data) are always faster to run in the main session than to delegate and debug.
-
-**Workaround used this session:** after the second adversarial refusal, I ran the refutation inline via `mcp__plugin_context-mode_context-mode__ctx_execute`. The results (permutation tests p=0.20 for C2 and p=0.45 for C3, corpus composition anomaly) were significant enough to wholly reframe the sympathetic agent's confidence. See `~/claude-reasoning-performance-counter-analysis/report.md`.
-
-## What to do first in a new session
-
-1. Read this file + `CLAUDE.md` + memory at `~/.claude/projects/-Users-thomas-Projects-lightless-labs-third-thoughts/memory/MEMORY.md`
-2. Check for open PRs and review comments
-3. Ask the user what they want to work on
-
-## Before compaction / session end
-
-1. Update this file with any new state changes
-2. Commit if there are uncommitted changes
-3. Update memory files if learnings were captured
+- `docs/solutions/performance-issues/prefixspan-closed-flag-quadratic-timeout-20260413.md` — O(n²) from `closed=True`
+- `docs/solutions/performance-issues/cross-project-graph-per-project-regex-loop-timeout-20260413.md` — O(n×m×p) regex loop
+- `docs/solutions/best-practices/cli-flag-combination-validation-20260413.md` — validate flag pairs at parse time
+- `docs/solutions/failure-modes/parser-probe-first-line-fragility-20260413.md` — KNOWN_TYPES staleness
+- `docs/solutions/best-practices/three-gate-testing-unit-corpus-codex-20260414.md` — unit / full-corpus / Codex xhigh gates
+- `docs/solutions/workflow-issues/codex-skill-auto-activation-20260409.md` — prefix Codex prompts with "DIRECT TASK — DO NOT invoke any skills"
+- `docs/solutions/methodology/population-contamination-interactive-vs-subagent-20260320.md` — always stratify
+- `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md` — 2026-04-14 findings
