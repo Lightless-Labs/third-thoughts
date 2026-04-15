@@ -16,15 +16,23 @@ source: session-2026-04-15
 
 ## Solution
 
-Move version tracking to the **message level**:
+Two complementary changes:
 
+**Message level** — for cross-session corpus slices:
 - Add `version: Option<String>` to `Message` in `src/session.rs`
 - In the Claude Code parser (`src/parser/claude_code.rs`), populate `message.version` from `entry.version` for each parsed turn
-- `SessionMetadata::version` can be kept as a convenience hint (first version seen) or removed — it should not be used for stratification
+
+**Session level** — for cheap session-level queries:
+- Replace `SessionMetadata::version: Option<String>` with `SessionMetadata::versions: Vec<String>` (insertion-ordered, deduped — i.e. append each new version seen as it first appears)
+- Lets you answer "did this session span a release?" without scanning every message
+- A session with `versions.len() > 1` crossed at least one CLI update boundary
 
 ## Impact on techniques
 
-Techniques that want to stratify by version should filter on `message.version`, not `session.metadata.version`. The compound scoping rule gains a fifth axis: `cli_version ∈ {range or exact}`.
+- Per-turn version filtering: use `message.version`
+- Session-level version filtering: use `session.metadata.versions`
+- The compound scoping rule gains a fifth axis: `cli_version ∈ {range or exact}`
+- Do not use `session.metadata.versions[0]` as a proxy for "the session's version" — that's the old mistake restated
 
 ## Notes
 
