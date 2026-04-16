@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-14 (23/23 techniques clean; distribution workstream unblocked)
+**Last updated:** 2026-04-16 (`middens run` done; distribution Step B is next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -22,7 +22,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Distribution workstream is now unblocked.** All three prior blocking conditions are met: repo hygiene done, CLI triad (analyze/interpret/export) done, 23/23 techniques working on a full corpus.
 
-**Next concrete move:** Start distribution — Step A (`middens run` e2e verb), or if you want to validate the interpretation pipeline first, run `middens analyze corpus-full --all` then `middens interpret`.
+**Next concrete move:** Distribution Step B — GitHub Actions release workflow (`todos/distribution-release-workflow.md`). Step A (`middens run`) is done (commit `7aea3c6`).
 
 ---
 
@@ -31,11 +31,12 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 `middens` is a usable end-to-end CLI for analyzing AI agent session logs.
 
 ```bash
+middens run corpus-full --all --model claude-code/claude-opus-4-6 -o report.ipynb  # full pipeline
 middens analyze corpus-full --all                     # full 23-technique battery
 middens analyze corpus-full --all --timeout 1800      # explicit timeout override
 middens analyze path/ --split                          # stratify by session type
 middens analyze path/ --techniques markov,entropy      # subset
-middens interpret --provider claude                    # LLM interpretation of last run
+middens interpret --model claude-code/claude-opus-4-6 # LLM interpretation of last run
 middens export --format jupyter                        # notebook from last run
 middens parse file.jsonl                               # single file debug
 middens freeze corpus/ -o manifest.json                # corpus snapshot
@@ -59,8 +60,9 @@ middens list-techniques                                # 23 registered technique
 | `analyze` command | Done | Full triad shape: discovers → parses → techniques → Parquet + manifest |
 | `interpret` command | Done | Runner abstraction (4 providers), fallback chain, atomic write |
 | `export` command | Done | Jupyter notebook; works without interpretation |
+| `run` command | Done | Chains analyze → interpret → export; hard-fails on any stage error |
 | CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
-| Test suite | **332/332 passing** | 1804 steps |
+| Test suite | **333/333 passing** | 1810 steps |
 
 ---
 
@@ -70,9 +72,9 @@ middens list-techniques                                # 23 registered technique
 
 All five steps in order. See individual `todos/distribution-*.md` for detail.
 
-1. **Step A — e2e verb** (`middens run` or similar): chains `analyze → interpret → export`. Required for demo command and validation runs. Open questions: verb name; whether `--provider` should be required or skip interpret when absent; hard-fail or graceful degradation if interpret fails. (`todos/distribution-e2e-verb.md`)
+1. ~~**Step A — e2e verb**~~ **DONE** (`middens run`, commit `7aea3c6`). Chains analyze → interpret → export. `--model` optional; omit to skip interpret. Hard-fails on interpret error.
 
-2. **Step B — release workflow**: GitHub Actions on `v*` tag; matrix build darwin-arm64/x86_64, linux-x86_64/arm64 (Windows stretch goal). Tarballs + SHA256SUMS on GitHub Release. Open question: `cross` crate vs native GH-hosted runners (free tier has x86 only — may need `cross` for darwin-arm64). (`todos/distribution-release-workflow.md`)
+2. **Step B — release workflow** ← **next**: GitHub Actions on `v*` tag; matrix build darwin-arm64/x86_64, linux-x86_64/arm64 (Windows stretch goal). Tarballs + SHA256SUMS on GitHub Release. Open question: `cross` crate vs native GH-hosted runners (free tier has x86 only — may need `cross` for darwin-arm64). (`todos/distribution-release-workflow.md`)
 
 3. **Step C — Homebrew tap**: `brew install lightless-labs/tap/middens`. `uv` is a `recommend` not a `depend`. crates.io secondary. Open question: tap repo name (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula). (`todos/distribution-homebrew-tap.md`)
 
@@ -88,9 +90,17 @@ All five steps in order. See individual `todos/distribution-*.md` for detail.
 
 ### P2 — Tech debt
 
+- **CLI version at message level**: `Message::version` + `SessionMetadata::versions: Vec<String>` — enables corpus stratification by Claude Code CLI version. (`todos/message-level-version-field.md`)
 - **Frustration classifier recalibration**: 90% of user signals pile up at intensity 2. Needs rescaling or model change. (`user_signal_analysis.py`)
 - Deferred PR review items: `todos/batch4-coderabbit-deferred.md`, `todos/batch3-coderabbit-deferred.md`
 - Todos filed but not started: `fingerprint-technique-retrofit.md`, `corpus-timeline-deletion.md`, `batches-1-2-pii-and-type-audit.md`, `interpret-parser-strictness.md`, `interpret-export-split-composition.md`
+
+### P3 — NLSpec / run verb follow-ups (filed 2026-04-16)
+
+- `todos/run-verb-nlspec-dry-run-semantics.md` — clarify `--dry-run` + export behavior contradiction
+- `todos/run-verb-nlspec-acceptance-criteria.md` — expand Done section with 6 missing test cases
+- `todos/run-verb-output-path-validation.md` — preflight check on `-o` before analyze runs
+- `todos/dynamic-timeout-formula-symbols.md` — stale formula in timeout todo (implemented as `clamp(100×ln(n), 60, 1800)`; doc needs updating)
 
 ---
 
@@ -113,13 +123,15 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 **Compound scoping rule:** every future headline finding on thinking or text behaviour must be scoped on 4 axes: `session_type ∈ {Interactive, Subagent, Autonomous}`, `thinking_visibility ∈ {Visible, Redacted, Unknown}`, `language ∈ {en, other}`, and a temporal window. A finding that doesn't survive all four is not a finding.
 
+**CLI version axis (pending):** `cli_version` is a candidate 5th axis — the `version` field is present on every JSONL line and spans 2.1.36–2.1.92 in the current corpus. Requires P2 todo `message-level-version-field.md` before it can be used for stratification.
+
 ---
 
 ## Branch state
 
 | Branch | Status |
 |--------|--------|
-| `main` | All work landed here. 8 commits ahead of what prior HANDOFF described. |
+| `main` | All work landed here. 11 commits since last push to origin/main. |
 
 No open PRs. No feature branches.
 
