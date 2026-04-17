@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-16 (`middens run` done; distribution Step B is next)
+**Last updated:** 2026-04-17 (distribution Step B done; Step C Homebrew tap is next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -22,7 +22,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Distribution workstream is now unblocked.** All three prior blocking conditions are met: repo hygiene done, CLI triad (analyze/interpret/export) done, 23/23 techniques working on a full corpus.
 
-**Next concrete move:** Distribution Step B — GitHub Actions release workflow (`todos/distribution-release-workflow.md`). Step A (`middens run`) is done (commit `7aea3c6`).
+**Next concrete move:** Distribution Step C — Homebrew tap (`todos/distribution-homebrew-tap.md`). Steps A (`middens run`, `7aea3c6`) and B (release workflow, `49d896f`) are done. Tap repo name is the open question (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula).
 
 ---
 
@@ -74,9 +74,9 @@ All five steps in order. See individual `todos/distribution-*.md` for detail.
 
 1. ~~**Step A — e2e verb**~~ **DONE** (`middens run`, commit `7aea3c6`). Chains analyze → interpret → export. `--model` optional; omit to skip interpret. Hard-fails on interpret error.
 
-2. **Step B — release workflow** ← **next**: GitHub Actions on `v*` tag; matrix build darwin-arm64/x86_64, linux-x86_64/arm64 (Windows stretch goal). Tarballs + SHA256SUMS on GitHub Release. Open question: `cross` crate vs native GH-hosted runners (free tier has x86 only — may need `cross` for darwin-arm64). (`todos/distribution-release-workflow.md`)
+2. ~~**Step B — release workflow**~~ **DONE** (commit `49d896f`). `.github/workflows/release.yml` triggers on `v*` tag. Native GH-hosted runners (no `cross`): `macos-14` (darwin-arm64), `macos-13` (darwin-x86_64), `ubuntu-latest` (linux-x86_64), `ubuntu-24.04-arm` (linux-arm64, free for public repos). Tarballs + per-artifact SHA256 + combined SHA256SUMS via `softprops/action-gh-release@v2`. Windows left as future stretch. Rationale documented at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md`.
 
-3. **Step C — Homebrew tap**: `brew install lightless-labs/tap/middens`. `uv` is a `recommend` not a `depend`. crates.io secondary. Open question: tap repo name (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula). (`todos/distribution-homebrew-tap.md`)
+3. **Step C — Homebrew tap** ← **next**: `brew install lightless-labs/tap/middens`. `uv` is a `recommend` not a `depend`. crates.io secondary. Open question: tap repo name (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula). (`todos/distribution-homebrew-tap.md`)
 
 4. **Step D — two validation runs**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. Open question: use full private corpus (PII risk on landing page) or create a small public fixture corpus? (`todos/distribution-validation-runs.md`)
 
@@ -131,7 +131,7 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | All work landed here. 11 commits since last push to origin/main. |
+| `main` | All work landed here. 13 commits since last push to origin/main (release workflow + compound learning). |
 
 No open PRs. No feature branches.
 
@@ -164,6 +164,7 @@ Run: `cd middens && cargo test`
 
 Key solutions docs for common failure modes:
 
+- `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` — native GH-hosted runner matrix for cross-platform Rust CLI releases (no `cross`)
 - `docs/solutions/performance-issues/prefixspan-closed-flag-quadratic-timeout-20260413.md` — O(n²) from `closed=True`
 - `docs/solutions/performance-issues/cross-project-graph-per-project-regex-loop-timeout-20260413.md` — O(n×m×p) regex loop
 - `docs/solutions/best-practices/cli-flag-combination-validation-20260413.md` — validate flag pairs at parse time
