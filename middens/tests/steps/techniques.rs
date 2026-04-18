@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use cucumber::{given, then, when};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 
 use middens::session::{
     EnvironmentFingerprint, Message, MessageClassification, MessageRole, Session, SessionMetadata,
@@ -54,6 +55,22 @@ fn session_with_tools(id: &str, tool_names: &[&str]) -> Session {
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+    }
+}
+
+fn expected_project_label(project: &str) -> String {
+    if project == "unknown"
+        || matches!(
+            std::env::var("MIDDENS_INCLUDE_PROJECT_NAMES").as_deref(),
+            Ok("1")
+        )
+    {
+        project.to_string()
+    } else {
+        let mut hasher = Sha256::new();
+        hasher.update(project.as_bytes());
+        let hash = format!("{:x}", hasher.finalize());
+        format!("project_{}", &hash[..8])
     }
 }
 
@@ -1252,10 +1269,12 @@ fn then_per_project_row_for(world: &mut MiddensWorld, expected_rows: usize, proj
         .iter()
         .find(|t| t.name == "per_project")
         .expect("per_project table missing");
+    let project = expected_project_label(&project);
+    let expected_project = json!(project.clone());
     let matching: Vec<_> = table
         .rows
         .iter()
-        .filter(|r| r[0] == json!(project.as_str()))
+        .filter(|r| r[0] == expected_project)
         .collect();
     assert_eq!(
         matching.len(),
@@ -1278,10 +1297,12 @@ fn then_per_project_correction_rate(world: &mut MiddensWorld, project: String, e
         .iter()
         .find(|t| t.name == "per_project")
         .expect("per_project table missing");
+    let project = expected_project_label(&project);
+    let expected_project = json!(project.clone());
     let row = table
         .rows
         .iter()
-        .find(|r| r[0] == json!(project.as_str()))
+        .find(|r| r[0] == expected_project)
         .unwrap_or_else(|| panic!("project '{}' not found", project));
     let rate: f64 = serde_json::from_value(row[1].clone()).unwrap();
     assert!(
@@ -1304,10 +1325,12 @@ fn then_per_project_total_corrections(world: &mut MiddensWorld, project: String,
         .iter()
         .find(|t| t.name == "per_project")
         .expect("per_project table missing");
+    let project = expected_project_label(&project);
+    let expected_project = json!(project.clone());
     let row = table
         .rows
         .iter()
-        .find(|r| r[0] == json!(project.as_str()))
+        .find(|r| r[0] == expected_project)
         .unwrap();
     let corrections: usize = serde_json::from_value(row[2].clone()).unwrap();
     assert_eq!(corrections, expected);
@@ -1328,10 +1351,12 @@ fn then_per_project_total_user_messages(
         .iter()
         .find(|t| t.name == "per_project")
         .expect("per_project table missing");
+    let project = expected_project_label(&project);
+    let expected_project = json!(project.clone());
     let row = table
         .rows
         .iter()
-        .find(|r| r[0] == json!(project.as_str()))
+        .find(|r| r[0] == expected_project)
         .unwrap();
     let user_messages: usize = serde_json::from_value(row[3].clone()).unwrap();
     assert_eq!(user_messages, expected);
@@ -1348,10 +1373,12 @@ fn then_per_project_session_count(world: &mut MiddensWorld, project: String, exp
         .iter()
         .find(|t| t.name == "per_project")
         .expect("per_project table missing");
+    let project = expected_project_label(&project);
+    let expected_project = json!(project.clone());
     let row = table
         .rows
         .iter()
-        .find(|r| r[0] == json!(project.as_str()))
+        .find(|r| r[0] == expected_project)
         .unwrap();
     let session_count: usize = serde_json::from_value(row[4].clone()).unwrap();
     assert_eq!(session_count, expected);

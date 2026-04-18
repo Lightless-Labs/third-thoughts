@@ -59,6 +59,10 @@ fn run_analyze(world: &mut MiddensWorld, input_dir: &Path, all: bool, techniques
 
     if all {
         command.arg("--all");
+        // Keep the test deterministic regardless of whether `uv` happens to be
+        // on the tester's PATH. The scenario's assertion is the Rust-technique
+        // set; Python enablement is covered by dedicated bridge scenarios.
+        command.arg("--no-python");
     }
 
     if let Some(techniques) = techniques {

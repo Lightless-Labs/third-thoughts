@@ -1,12 +1,14 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::ValueEnum;
 
-use crate::storage::discovery::{discover_latest_analysis, discover_latest_interpretation, xdg_app_root};
-use crate::storage::AnalysisRun;
-use crate::view::ipynb::IpynbRenderer;
+use crate::storage::discovery::{
+    discover_latest_analysis, discover_latest_interpretation, xdg_app_root,
+};
+use crate::storage::{AnalysisRun, RedactionConfig};
 use crate::view::ViewRenderer;
+use crate::view::ipynb::IpynbRenderer;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum ExportFormat {
@@ -20,6 +22,7 @@ pub struct ExportConfig {
     pub format: ExportFormat,
     pub output: Option<PathBuf>,
     pub force: bool,
+    pub redaction: RedactionConfig,
 }
 
 pub fn run_export(config: ExportConfig) -> Result<()> {
@@ -47,8 +50,8 @@ pub fn run_export(config: ExportConfig) -> Result<()> {
     };
 
     let renderer = match &interp_dir {
-        Some(dir) => IpynbRenderer::with_interpretation(dir.clone()),
-        None => IpynbRenderer::new(),
+        Some(dir) => IpynbRenderer::with_interpretation(dir.clone(), config.redaction),
+        None => IpynbRenderer::new(config.redaction),
     };
 
     let notebook = renderer.render_run(&run)?;

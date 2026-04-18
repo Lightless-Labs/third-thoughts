@@ -80,6 +80,16 @@ pub const TECHNIQUE_SCRIPTS: &[(&str, &str)] = &[
 
 pub const REQUIREMENTS_TXT: &str = include_str!("../../python/requirements.txt");
 
+/// Lowercase hex SHA-256 of the embedded `requirements.txt`. Used to
+/// fingerprint the Python bridge in analysis manifests so two runs can be
+/// compared for reproducibility.
+pub fn requirements_hash() -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(REQUIREMENTS_TXT.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
 /// Compute the directory where embedded Python assets are extracted.
 ///
 /// On Unix-like systems, honours `$XDG_CONFIG_HOME`, then `$HOME/.config`,

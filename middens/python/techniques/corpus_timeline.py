@@ -7,8 +7,10 @@
 # post-reshape-cleanup section.
 """Corpus timeline technique - generates activity timelines from session data."""
 
+import hashlib
 import json
 import math
+import os
 import sys
 from datetime import datetime
 from collections import defaultdict
@@ -36,6 +38,12 @@ def get_session_date(session):
             except (ValueError, AttributeError):
                 continue
     return None
+
+
+def emitted_project_name(name):
+    if name == "(unknown)" or os.environ.get("MIDDENS_INCLUDE_PROJECT_NAMES") == "1":
+        return name
+    return f"project_{hashlib.sha256(name.encode()).hexdigest()[:8]}"
 
 def main():
     if len(sys.argv) < 2:
@@ -131,7 +139,7 @@ def main():
     
     daily_activity_rows = []
     for (date, project), count in sorted(date_project_count.items()):
-        daily_activity_rows.append([date, project, count])
+        daily_activity_rows.append([date, emitted_project_name(project), count])
     
     daily_totals_rows = []
     for date in sorted_dates:
@@ -148,7 +156,7 @@ def main():
     )
     for project, count in sorted_projects:
         project_totals_rows.append([
-            project,
+            emitted_project_name(project),
             count,
             first_seen[project],
             last_seen[project]

@@ -1378,8 +1378,7 @@ fn then_json_figure_has_spec(world: &mut MiddensWorld, title: String, key: Strin
     assert!(
         found,
         "figure '{}' should have '{}' object (checked top-level and kind)",
-        title,
-        key
+        title, key
     );
 }
 

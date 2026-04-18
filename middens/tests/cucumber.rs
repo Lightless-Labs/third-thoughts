@@ -9,6 +9,8 @@ use steps::classifier;
 #[allow(unused_imports)]
 use steps::cli;
 #[allow(unused_imports)]
+use steps::cli_triad;
+#[allow(unused_imports)]
 use steps::corpus;
 #[allow(unused_imports)]
 use steps::output;
@@ -17,17 +19,15 @@ use steps::parser;
 #[allow(unused_imports)]
 use steps::pipeline;
 #[allow(unused_imports)]
+use steps::python_batch1;
+#[allow(unused_imports)]
+use steps::python_bridge;
+#[allow(unused_imports)]
 use steps::split;
 #[allow(unused_imports)]
 use steps::techniques;
 #[allow(unused_imports)]
 use steps::thinking_divergence;
-#[allow(unused_imports)]
-use steps::python_bridge;
-#[allow(unused_imports)]
-use steps::python_batch1;
-#[allow(unused_imports)]
-use steps::cli_triad;
 
 // Smoke test steps
 #[given("the test harness is initialized")]

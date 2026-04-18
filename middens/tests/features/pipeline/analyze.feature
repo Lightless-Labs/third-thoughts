@@ -13,7 +13,8 @@ Feature: Analyze pipeline
     And a temporary analyze output directory
     When I run middens analyze on the temporary input directory
     Then the exit code should be 1
-    And every analyze output file should report corpus_size 0
+    And the analyze output directory should contain 0 markdown files
+    And the analyze output directory should contain 0 JSON files
 
   Scenario: Essential techniques are the default analyze output set
     Given a temporary analyze output directory

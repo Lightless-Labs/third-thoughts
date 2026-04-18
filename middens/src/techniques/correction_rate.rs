@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use serde_json::json;
+use sha2::{Digest, Sha256};
 
 use crate::session::{MessageClassification, MessageRole, Session};
 
@@ -9,6 +10,32 @@ use super::{DataTable, Finding, Technique, TechniqueResult};
 
 /// Correction rate metrics technique.
 pub struct CorrectionRate;
+
+fn include_project_names() -> bool {
+    matches!(
+        std::env::var("MIDDENS_INCLUDE_PROJECT_NAMES").as_deref(),
+        Ok("1")
+    )
+}
+
+fn sha256_hex(value: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(value.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+fn emitted_project_name(project: Option<&str>, include_project_names: bool) -> String {
+    match project {
+        Some(name) if !name.is_empty() => {
+            if include_project_names {
+                name.to_string()
+            } else {
+                format!("project_{}", &sha256_hex(name)[..8])
+            }
+        }
+        _ => "unknown".to_string(),
+    }
+}
 
 impl Technique for CorrectionRate {
     fn name(&self) -> &str {
@@ -28,6 +55,8 @@ impl Technique for CorrectionRate {
     }
 
     fn run(&self, sessions: &[Session]) -> Result<TechniqueResult> {
+        let include_project_names = include_project_names();
+
         // --- Per-session metrics ---
         struct SessionMetrics {
             session_id: String,
@@ -125,11 +154,8 @@ impl Technique for CorrectionRate {
                 last_third_rate / first_third_rate
             };
 
-            let project = session
-                .metadata
-                .project
-                .clone()
-                .unwrap_or_else(|| "unknown".to_string());
+            let project =
+                emitted_project_name(session.metadata.project.as_deref(), include_project_names);
 
             per_session.push(SessionMetrics {
                 session_id: session.id.clone(),

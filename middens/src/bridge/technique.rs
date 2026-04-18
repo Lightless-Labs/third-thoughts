@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use tempfile::NamedTempFile;
 
 use crate::session::Session;
@@ -75,11 +75,16 @@ impl Technique for PythonTechnique {
             _temp_owner.as_ref()
         };
 
-        let mut child = Command::new(&self.python_path)
+        let mut command = Command::new(&self.python_path);
+        command
             .arg(&self.script_path)
             .arg(input_path)
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stderr(Stdio::piped());
+        forward_env(&mut command, "MIDDENS_INCLUDE_SOURCE_PATHS");
+        forward_env(&mut command, "MIDDENS_INCLUDE_PROJECT_NAMES");
+
+        let mut child = command
             .spawn()
             .context("Failed to spawn Python subprocess")?;
 
@@ -156,5 +161,11 @@ impl Technique for PythonTechnique {
             .context("Invalid JSON output from Python subprocess")?;
 
         Ok(result)
+    }
+}
+
+fn forward_env(command: &mut Command, key: &str) {
+    if let Some(value) = std::env::var_os(key) {
+        command.env(key, value);
     }
 }

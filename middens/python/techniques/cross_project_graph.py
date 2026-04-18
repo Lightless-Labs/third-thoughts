@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """cross_project_graph technique for middens analytical CLI."""
 
+import hashlib
 import json
 import math
+import os
 import re
 import sys
 from collections import defaultdict
@@ -52,6 +54,12 @@ def classify_reference(context):
             return "cross_project_action"
     
     return "other"
+
+
+def emitted_project_name(name):
+    if os.environ.get("MIDDENS_INCLUDE_PROJECT_NAMES") == "1":
+        return name
+    return f"project_{hashlib.sha256(name.encode()).hexdigest()[:8]}"
 
 
 def main():
@@ -192,7 +200,10 @@ def main():
         dominant = min(types_dict.keys(), key=lambda t: (-types_dict[t], t))
         edges_rows.append((weight, src, dst, dominant))
     edges_rows.sort(key=lambda x: (-x[0], x[1], x[2]))
-    edges_table = [[src, dst, weight, dom_type] for weight, src, dst, dom_type in edges_rows]
+    edges_table = [
+        [emitted_project_name(src), emitted_project_name(dst), weight, dom_type]
+        for weight, src, dst, dom_type in edges_rows
+    ]
 
     # Nodes table — sorted by out_weight desc, then in_weight desc.
     nodes_rows = []
@@ -208,7 +219,10 @@ def main():
     # across runs (known_projects is a set, so insertion order is
     # hash-seed dependent without an explicit final key).
     nodes_rows.sort(key=lambda x: (-x[0], -x[1], x[2]))
-    nodes_table = [[proj, od, ind, ow, iw] for ow, iw, proj, od, ind in nodes_rows]
+    nodes_table = [
+        [emitted_project_name(proj), od, ind, ow, iw]
+        for ow, iw, proj, od, ind in nodes_rows
+    ]
 
     # Clusters table — sort clusters deterministically before assigning IDs
     # so that cluster_id is stable across runs for identical input (graph
@@ -216,7 +230,7 @@ def main():
     clusters_sorted = sorted(clusters, key=lambda c: (-len(c), sorted(c)))
     clusters_table = []
     for i, cluster in enumerate(clusters_sorted):
-        members = ','.join(sorted(cluster))
+        members = ','.join(emitted_project_name(member) for member in sorted(cluster))
         clusters_table.append([i, len(cluster), members])
     
     # Build result
@@ -235,8 +249,16 @@ def main():
             {"label": "total_references", "value": total_references, "description": None},
             {"label": "mutual_pair_count", "value": mutual_pair_count, "description": None},
             {"label": "cluster_count", "value": cluster_count, "description": None},
-            {"label": "largest_hub", "value": largest_hub, "description": None},
-            {"label": "largest_authority", "value": largest_authority, "description": None}
+            {
+                "label": "largest_hub",
+                "value": emitted_project_name(largest_hub) if largest_hub else "",
+                "description": None,
+            },
+            {
+                "label": "largest_authority",
+                "value": emitted_project_name(largest_authority) if largest_authority else "",
+                "description": None,
+            }
         ],
         "tables": [
             {"name": "Edges", "columns": ["source", "target", "weight", "dominant_type"], "rows": edges_table},

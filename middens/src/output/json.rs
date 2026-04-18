@@ -1,6 +1,6 @@
 //! JSON renderer for technique results.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::techniques::TechniqueResult;
 

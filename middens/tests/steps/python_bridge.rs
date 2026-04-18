@@ -1,10 +1,11 @@
-use cucumber::{given, when, then};
 use crate::steps::world::MiddensWorld;
-use middens::session::{Session, SourceTool, SessionType, SessionMetadata, EnvironmentFingerprint};
-use middens::techniques::Technique;
+use cucumber::{given, then, when};
 use middens::bridge::technique::PythonTechnique;
 use middens::bridge::uv::UvManager;
 use middens::pipeline::{PipelineConfig, TechniqueFilter, run};
+use middens::session::{EnvironmentFingerprint, Session, SessionMetadata, SessionType, SourceTool};
+use middens::storage::RedactionConfig;
+use middens::techniques::Technique;
 use std::path::PathBuf;
 
 fn resolve_python_path() -> PathBuf {
@@ -27,7 +28,11 @@ fn resolve_python_path() -> PathBuf {
 fn system_python_fallback() -> PathBuf {
     // Try python3 first (Unix convention), then python (Windows convention)
     for name in &["python3", "python"] {
-        if std::process::Command::new(name).arg("--version").output().is_ok() {
+        if std::process::Command::new(name)
+            .arg("--version")
+            .output()
+            .is_ok()
+        {
             return PathBuf::from(name);
         }
     }
@@ -37,7 +42,11 @@ fn system_python_fallback() -> PathBuf {
 
 #[given("uv is available in the environment")]
 fn uv_available(world: &mut MiddensWorld) {
-    if std::process::Command::new("uv").arg("--version").output().is_err() {
+    if std::process::Command::new("uv")
+        .arg("--version")
+        .output()
+        .is_err()
+    {
         world.skipped = true;
     }
 }
@@ -90,13 +99,7 @@ fn run_echo_technique(world: &mut MiddensWorld) {
     let script_path = manifest_dir.join("python/techniques/echo.py");
     let python_path = resolve_python_path();
 
-    let tech = PythonTechnique::new(
-        "echo",
-        "Echo summary",
-        script_path,
-        python_path,
-        30
-    );
+    let tech = PythonTechnique::new("echo", "Echo summary", script_path, python_path, 30);
 
     match tech.run(&world.sessions) {
         Ok(res) => world.technique_result = Some(res),
@@ -106,7 +109,11 @@ fn run_echo_technique(world: &mut MiddensWorld) {
 
 #[then("it should successfully serialize sessions to a temporary file")]
 fn check_serialization(world: &mut MiddensWorld) {
-    assert!(world.error.is_none(), "serialization failed: {:?}", world.error);
+    assert!(
+        world.error.is_none(),
+        "serialization failed: {:?}",
+        world.error
+    );
 }
 
 #[then("the subprocess should execute successfully")]
@@ -124,13 +131,18 @@ fn check_subprocess_spawn(world: &mut MiddensWorld) {
 
 #[then("it should parse the stdout into a TechniqueResult")]
 fn check_parse_stdout(world: &mut MiddensWorld) {
-    assert!(world.technique_result.is_some(), "no TechniqueResult parsed");
+    assert!(
+        world.technique_result.is_some(),
+        "no TechniqueResult parsed"
+    );
 }
 
 #[then(expr = "the finding {string} should be equal to the number of test sessions")]
 fn check_finding_value(world: &mut MiddensWorld, label: String) {
     let result = world.technique_result.as_ref().expect("No TechniqueResult");
-    let finding = result.findings.iter()
+    let finding = result
+        .findings
+        .iter()
         .find(|f| f.label == label)
         .expect("Finding not found");
 
@@ -158,7 +170,7 @@ fn run_generic_technique(world: &mut MiddensWorld) {
         "Generic test",
         script_path,
         python_path,
-        2 // Short timeout for timeout tests
+        2, // Short timeout for timeout tests
     );
 
     match tech.run(&world.sessions) {
@@ -196,16 +208,18 @@ fn python_tech_hangs(world: &mut MiddensWorld) {
 #[then("it should return a timeout error")]
 fn check_timeout_error(world: &mut MiddensWorld) {
     let err = world.error.as_ref().expect("No error found");
-    assert!(err.to_lowercase().contains("timed out"), "Error message '{}' does not contain 'timed out'", err);
+    assert!(
+        err.to_lowercase().contains("timed out"),
+        "Error message '{}' does not contain 'timed out'",
+        err
+    );
 }
 
 #[given(expr = "a Python technique named {string}")]
-fn python_tech_named(_world: &mut MiddensWorld, _name: String) {
-}
+fn python_tech_named(_world: &mut MiddensWorld, _name: String) {}
 
 #[given(expr = "a Rust technique named {string}")]
-fn rust_tech_named(_world: &mut MiddensWorld, _name: String) {
-}
+fn rust_tech_named(_world: &mut MiddensWorld, _name: String) {}
 
 #[when("the pipeline is run with --no-python")]
 fn run_pipeline_no_python(world: &mut MiddensWorld) {
@@ -214,11 +228,15 @@ fn run_pipeline_no_python(world: &mut MiddensWorld) {
     let output_dir = temp_dir.path().join("output");
     let xdg_data_home = temp_dir.path().join("xdg");
     std::fs::create_dir_all(&xdg_data_home).unwrap();
+    let fixture =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/claude_code_sample.jsonl");
+    std::fs::copy(&fixture, temp_dir.path().join("session.jsonl")).unwrap();
 
     let config = PipelineConfig {
         corpus_path: Some(temp_dir.path().to_path_buf()),
         output_dir,
         technique_filter: TechniqueFilter::All,
+        redaction: RedactionConfig::default(),
         no_python: true,
         split: false,
         explicit_timeout: None,
@@ -286,13 +304,26 @@ fn python_tech_stderr_fail(world: &mut MiddensWorld) {
     if world.temp_dir.is_none() {
         world.temp_dir = Some(tempfile::tempdir().unwrap());
     }
-    let script_path = world.temp_dir.as_ref().unwrap().path().join("stderr_fail.py");
-    std::fs::write(&script_path, "import sys\nprint('diagnostic message', file=sys.stderr)\nsys.exit(1)").unwrap();
+    let script_path = world
+        .temp_dir
+        .as_ref()
+        .unwrap()
+        .path()
+        .join("stderr_fail.py");
+    std::fs::write(
+        &script_path,
+        "import sys\nprint('diagnostic message', file=sys.stderr)\nsys.exit(1)",
+    )
+    .unwrap();
     world.file_path = Some(script_path);
 }
 
 #[then(expr = "the captured stderr should contain the diagnostic message")]
 fn check_captured_stderr(world: &mut MiddensWorld) {
     let err = world.error.as_ref().expect("No error found");
-    assert!(err.contains("diagnostic message"), "Error message '{}' does not contain 'diagnostic message'", err);
+    assert!(
+        err.contains("diagnostic message"),
+        "Error message '{}' does not contain 'diagnostic message'",
+        err
+    );
 }

@@ -13,7 +13,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -72,6 +72,38 @@ pub struct CorpusFingerprint {
     pub short: String,
     pub session_count: i64,
     pub source_paths: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct RedactionConfig {
+    pub include_source_paths: bool,
+    pub include_project_names: bool,
+}
+
+impl RedactionConfig {
+    pub fn display_source_path(&self, path: &Path) -> String {
+        if self.include_source_paths {
+            path.to_string_lossy().to_string()
+        } else {
+            path.file_name()
+                .or_else(|| {
+                    path.components()
+                        .next_back()
+                        .map(|component| component.as_os_str())
+                })
+                .unwrap_or(path.as_os_str())
+                .to_string_lossy()
+                .to_string()
+        }
+    }
+
+    pub fn analysis_run_path(&self, run_id: &str, path: &Path) -> String {
+        if self.include_source_paths {
+            path.to_string_lossy().to_string()
+        } else {
+            format!("analysis/{}", run_id)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

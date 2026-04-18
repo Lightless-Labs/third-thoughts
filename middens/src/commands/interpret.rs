@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::storage::discovery::{discover_latest_analysis, xdg_app_root};
-use crate::storage::{AnalysisManifest, AnalysisRun};
+use crate::storage::{AnalysisManifest, AnalysisRun, RedactionConfig};
 
 pub const TEMPLATE_VERSION: &str = "1";
 
@@ -87,8 +87,7 @@ impl Runner for CodexRunner {
             .arg(work_dir.join("response.md"))
             .arg("-") // read prompt from stdin
             .stdin(std::process::Stdio::from(
-                std::fs::File::open(prompt_path)
-                    .context("opening prompt file for codex stdin")?,
+                std::fs::File::open(prompt_path).context("opening prompt file for codex stdin")?,
             ));
         if let Some(mid) = model_id {
             cmd.arg("--model").arg(mid);
@@ -114,13 +113,17 @@ impl Runner for GeminiRunner {
         model_id: Option<&str>,
         _work_dir: &Path,
     ) -> Result<Command> {
-        let prompt = std::fs::read_to_string(prompt_path).context("reading prompt for gemini")?;
+        // gemini accepts -p "" as the headless-mode trigger and appends stdin.
+        // Piping via stdin avoids E2BIG on large prompts.
         let mut cmd = Command::new(self.binary());
         cmd.arg("-y")
             .arg("-s")
             .arg("false")
-            .arg("--prompt")
-            .arg(&prompt);
+            .arg("-p")
+            .arg("")
+            .stdin(std::process::Stdio::from(
+                std::fs::File::open(prompt_path).context("opening prompt file for gemini stdin")?,
+            ));
         if let Some(mid) = model_id {
             cmd.arg("-m").arg(mid);
         }
@@ -151,14 +154,18 @@ impl Runner for OpencodeRunner {
                  opencode's CLI has no native default model."
             )
         })?;
-        let prompt = std::fs::read_to_string(prompt_path).context("reading prompt for opencode")?;
+        // opencode run reads the message from stdin when no positional is given.
+        // Piping via stdin avoids E2BIG on large prompts.
         let mut cmd = Command::new(self.binary());
         cmd.arg("run")
             .arg("--format")
             .arg("json")
             .arg("--model")
             .arg(mid)
-            .arg(&prompt);
+            .stdin(std::process::Stdio::from(
+                std::fs::File::open(prompt_path)
+                    .context("opening prompt file for opencode stdin")?,
+            ));
         Ok(cmd)
     }
 }
@@ -392,6 +399,7 @@ pub struct InterpretConfig {
     pub model: Option<String>,
     pub output_dir: Option<PathBuf>,
     pub dry_run: bool,
+    pub redaction: RedactionConfig,
 }
 
 pub fn run_interpret(config: InterpretConfig) -> Result<()> {
@@ -405,7 +413,10 @@ pub fn run_interpret(config: InterpretConfig) -> Result<()> {
         (r, Some(mid.to_string()))
     } else {
         let r = detect_runner(None)?;
-        eprintln!("middens: selected runner '{}' (auto-detected from PATH)", r.slug());
+        eprintln!(
+            "middens: selected runner '{}' (auto-detected from PATH)",
+            r.slug()
+        );
         if r.slug() == "opencode" {
             bail!(
                 "opencode requires an explicit --model (<runner>/<model-id>). \
@@ -599,7 +610,9 @@ pub fn run_interpret(config: InterpretConfig) -> Result<()> {
         interpretation_id: interp_slug.clone(),
         created_at: now,
         analysis_run_id: manifest.run_id.clone(),
-        analysis_run_path: analysis_path.to_string_lossy().to_string(),
+        analysis_run_path: config
+            .redaction
+            .analysis_run_path(&manifest.run_id, &analysis_path),
         runner: runner.slug().to_string(),
         model_id,
         prompt_hash,

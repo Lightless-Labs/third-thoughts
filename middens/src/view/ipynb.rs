@@ -1,24 +1,27 @@
 use anyhow::Result;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
-use crate::storage::AnalysisRun;
+use crate::storage::{AnalysisRun, RedactionConfig};
 
-use super::{markdown, ViewRenderer};
+use super::{ViewRenderer, markdown};
 
 pub struct IpynbRenderer {
     pub interpretation_dir: Option<std::path::PathBuf>,
+    pub redaction: RedactionConfig,
 }
 
 impl IpynbRenderer {
-    pub fn new() -> Self {
+    pub fn new(redaction: RedactionConfig) -> Self {
         Self {
             interpretation_dir: None,
+            redaction,
         }
     }
 
-    pub fn with_interpretation(dir: std::path::PathBuf) -> Self {
+    pub fn with_interpretation(dir: std::path::PathBuf, redaction: RedactionConfig) -> Self {
         Self {
             interpretation_dir: Some(dir),
+            redaction,
         }
     }
 }
@@ -60,6 +63,13 @@ impl ViewRenderer for IpynbRenderer {
             }
         }
 
+        execution_count += 1;
+        cells.push(code_cell(
+            "import os\nRUN_DIR = os.environ.get(\"MIDDENS_RUN_DIR\", os.getcwd())",
+            execution_count,
+            &[],
+        ));
+
         for entry in &manifest.techniques {
             let mut technique_md = format!("## Technique: {}\n\n", entry.name);
             if !entry.summary.is_empty() {
@@ -94,10 +104,10 @@ impl ViewRenderer for IpynbRenderer {
                 execution_count += 1;
                 let code = format!(
                     "import pandas as pd\n\
-                     df_{slug} = pd.read_parquet({path:?})\n\
+                     df_{slug} = pd.read_parquet(os.path.join(RUN_DIR, {path:?}))\n\
                      df_{slug}.head(10)",
                     slug = entry.name.replace('-', "_"),
-                    path = run.dir().join(&table_ref.parquet).display(),
+                    path = table_ref.parquet,
                 );
                 let mut outputs = Vec::new();
                 let table = run.load_table(table_ref)?;
@@ -186,7 +196,9 @@ impl ViewRenderer for IpynbRenderer {
 
         let mut middens_meta = json!({
             "analysis_run_id": manifest.run_id,
-            "analysis_run_path": run.dir().display().to_string(),
+            "analysis_run_path": self
+                .redaction
+                .analysis_run_path(&manifest.run_id, run.dir()),
             "middens_version": manifest.analyzer_fingerprint.middens_version,
         });
 
@@ -271,4 +283,131 @@ fn html_escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IpynbRenderer;
+    use crate::storage::{
+        AnalysisManifest, AnalysisRun, AnalyzerFingerprint, CorpusFingerprint, ManifestWriter,
+        ParquetWriter, RedactionConfig, TableRef, TechniqueEntry,
+    };
+    use crate::techniques::{ColumnType, DataTable};
+    use crate::view::ViewRenderer;
+    use chrono::{DateTime, Utc};
+    use serde_json::{Value, json};
+    use std::collections::BTreeMap;
+
+    fn write_test_run() -> AnalysisRun {
+        let dir = tempfile::tempdir().unwrap();
+        let run_dir = dir.path().join("run-test");
+        std::fs::create_dir_all(run_dir.join("data")).unwrap();
+
+        let table = DataTable {
+            name: "per_session".into(),
+            columns: vec!["session_id".into()],
+            rows: vec![vec![json!("session-1")]],
+            column_types: Some(vec![ColumnType::String]),
+        };
+        ParquetWriter::write_table(
+            &table,
+            "test-technique",
+            &run_dir.join("data/test-technique.parquet"),
+        )
+        .unwrap();
+
+        let manifest = AnalysisManifest {
+            run_id: "run-test".into(),
+            created_at: DateTime::parse_from_rfc3339("2026-04-18T00:00:00Z")
+                .unwrap()
+                .with_timezone(&Utc),
+            analyzer_fingerprint: AnalyzerFingerprint {
+                middens_version: "0.1.0".into(),
+                git_sha: None,
+                technique_versions: BTreeMap::from([(
+                    "test-technique".to_string(),
+                    "0.1.0".to_string(),
+                )]),
+                python_bridge: None,
+            },
+            corpus_fingerprint: CorpusFingerprint {
+                manifest_hash: "abc".into(),
+                short: "abc".into(),
+                session_count: 1,
+                source_paths: vec!["session-a.jsonl".into()],
+            },
+            strata: None,
+            stratum: None,
+            techniques: vec![TechniqueEntry {
+                name: "test-technique".into(),
+                version: "0.1.0".into(),
+                summary: "summary".into(),
+                findings: vec![],
+                table: Some(TableRef {
+                    name: "per_session".into(),
+                    parquet: "data/test-technique.parquet".into(),
+                    row_count: 1,
+                    column_types: Some(vec![ColumnType::String]),
+                }),
+                figures: vec![],
+                errors: vec![],
+            }],
+        };
+        ManifestWriter::write(&manifest, &run_dir.join("manifest.json")).unwrap();
+
+        let run = AnalysisRun::load(&run_dir).unwrap();
+        std::mem::forget(dir);
+        run
+    }
+
+    #[test]
+    fn render_run_includes_setup_cell_when_scrubbing_paths() {
+        let run = write_test_run();
+        let notebook = IpynbRenderer::new(RedactionConfig::default())
+            .render_run(&run)
+            .unwrap();
+        let notebook: Value = serde_json::from_str(&notebook).unwrap();
+
+        let first_code_cell = notebook["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|cell| cell["cell_type"] == "code")
+            .unwrap();
+        let first_code_source = first_code_cell["source"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|line| line.as_str())
+            .collect::<String>();
+        assert!(first_code_source.contains("MIDDENS_RUN_DIR"));
+
+        let table_code_source = notebook["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|cell| {
+                cell["cell_type"] == "code"
+                    && cell["source"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .filter_map(|line| line.as_str())
+                        .collect::<String>()
+                        .contains("pd.read_parquet")
+            })
+            .unwrap()["source"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|line| line.as_str())
+            .collect::<String>();
+        assert!(
+            table_code_source.contains("os.path.join(RUN_DIR, \"data/test-technique.parquet\")")
+        );
+        assert_eq!(
+            notebook["metadata"]["middens"]["analysis_run_path"],
+            json!("analysis/run-test")
+        );
+    }
 }

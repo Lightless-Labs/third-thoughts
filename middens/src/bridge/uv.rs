@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 pub struct UvManager {
     uv_path: PathBuf,
@@ -85,5 +85,17 @@ impl UvManager {
 
     pub fn uv_path(&self) -> &PathBuf {
         &self.uv_path
+    }
+
+    /// Invoke `uv --version` and return the trimmed stdout (e.g. `"uv 0.11.6"`).
+    /// Returns a synthetic sentinel if the invocation fails, so fingerprint
+    /// recording never aborts analysis.
+    pub fn uv_version(&self) -> String {
+        match Command::new(&self.uv_path).arg("--version").output() {
+            Ok(out) if out.status.success() => {
+                String::from_utf8_lossy(&out.stdout).trim().to_string()
+            }
+            _ => "unknown".to_string(),
+        }
     }
 }

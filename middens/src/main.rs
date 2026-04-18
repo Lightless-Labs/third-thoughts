@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{ArgAction, Parser, Subcommand, ValueEnum};
 use middens::pipeline::{PipelineResult, TechniqueFilter};
+use middens::storage::RedactionConfig;
 
 /// Middens — AI agent session log analyzer.
 ///
@@ -40,6 +41,14 @@ enum Commands {
         /// Skip Python-dependent techniques.
         #[arg(long)]
         no_python: bool,
+
+        /// Include full source paths in manifests instead of basename-only redaction.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_source_paths: bool,
+
+        /// Include raw project names in outputs instead of hashed redaction.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_project_names: bool,
 
         /// Override the auto-computed Python technique timeout (seconds).
         /// Must be within [60, 1800] unless --force is also passed.
@@ -115,6 +124,14 @@ enum Commands {
         /// Write prompt without calling a runner.
         #[arg(long)]
         dry_run: bool,
+
+        /// Include full source paths in interpretation metadata.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_source_paths: bool,
+
+        /// Include raw project names when downstream techniques emitted them.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_project_names: bool,
     },
 
     /// Export an analysis run as a Jupyter notebook.
@@ -142,6 +159,14 @@ enum Commands {
         /// Overwrite output file if it already exists.
         #[arg(long)]
         force: bool,
+
+        /// Include full source paths in notebook metadata and code cells.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_source_paths: bool,
+
+        /// Include raw project names when exported tables contain them.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_project_names: bool,
     },
 
     /// Run the full pipeline: analyze -> interpret -> export.
@@ -173,6 +198,14 @@ enum Commands {
         /// Skip Python-dependent techniques.
         #[arg(long)]
         no_python: bool,
+
+        /// Include full source paths in manifests and downstream artifacts.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_source_paths: bool,
+
+        /// Include raw project names in technique outputs and downstream artifacts.
+        #[arg(long, action = ArgAction::SetTrue)]
+        include_project_names: bool,
 
         /// Override the auto-computed Python technique timeout (seconds).
         #[arg(long)]
@@ -213,6 +246,16 @@ fn select_technique_filter(all: bool, techniques: Option<Vec<String>>) -> Techni
     }
 }
 
+fn build_redaction_config(
+    include_source_paths: bool,
+    include_project_names: bool,
+) -> RedactionConfig {
+    RedactionConfig {
+        include_source_paths,
+        include_project_names,
+    }
+}
+
 fn print_analysis_summary(result: &PipelineResult, split: bool) {
     eprintln!("\nAnalysis complete:");
     eprintln!("  sessions discovered: {}", result.sessions_discovered);
@@ -248,6 +291,8 @@ fn main() -> anyhow::Result<()> {
             all,
             split,
             no_python,
+            include_source_paths,
+            include_project_names,
             timeout,
             force,
             output,
@@ -262,6 +307,7 @@ fn main() -> anyhow::Result<()> {
                 corpus_path: path,
                 output_dir: output,
                 technique_filter,
+                redaction: build_redaction_config(include_source_paths, include_project_names),
                 no_python,
                 split,
                 explicit_timeout: timeout,
@@ -271,10 +317,6 @@ fn main() -> anyhow::Result<()> {
             let result = pipeline::run(config)?;
 
             print_analysis_summary(&result, split);
-
-            if result.sessions_parsed == 0 {
-                std::process::exit(1);
-            }
 
             Ok(())
         }
@@ -346,6 +388,8 @@ fn main() -> anyhow::Result<()> {
             model,
             output_dir,
             dry_run,
+            include_source_paths,
+            include_project_names,
         } => {
             use middens::commands::interpret::{self, InterpretConfig};
 
@@ -354,6 +398,7 @@ fn main() -> anyhow::Result<()> {
                 model,
                 output_dir,
                 dry_run,
+                redaction: build_redaction_config(include_source_paths, include_project_names),
             };
 
             interpret::run_interpret(config)
@@ -365,6 +410,8 @@ fn main() -> anyhow::Result<()> {
             format,
             output,
             force,
+            include_source_paths,
+            include_project_names,
         } => {
             use middens::commands::export::{self, ExportConfig, ExportFormat};
 
@@ -379,6 +426,7 @@ fn main() -> anyhow::Result<()> {
                 format: export_format,
                 output,
                 force,
+                redaction: build_redaction_config(include_source_paths, include_project_names),
             };
 
             export::run_export(config)
@@ -391,6 +439,8 @@ fn main() -> anyhow::Result<()> {
             all,
             techniques,
             no_python,
+            include_source_paths,
+            include_project_names,
             timeout,
             force,
             no_interpretation,
@@ -409,21 +459,19 @@ fn main() -> anyhow::Result<()> {
                 .map(|path| path.display().to_string())
                 .unwrap_or_else(|| "auto".to_string());
             let technique_filter = select_technique_filter(all, techniques);
+            let redaction = build_redaction_config(include_source_paths, include_project_names);
 
             eprintln!("→ analyzing {}...", analyze_target);
             let result = pipeline::run(PipelineConfig {
                 corpus_path: path,
                 output_dir: PathBuf::from("middens-results"),
                 technique_filter,
+                redaction,
                 no_python,
                 split: false,
                 explicit_timeout: timeout,
                 force,
             })?;
-
-            if result.sessions_parsed == 0 {
-                anyhow::bail!("analyze step: no sessions parsed");
-            }
 
             let analysis_dir = result.output_dir.clone();
             let do_interpret = model.is_some() && !no_interpretation;
@@ -436,6 +484,7 @@ fn main() -> anyhow::Result<()> {
                     model: model.clone(),
                     output_dir: None,
                     dry_run,
+                    redaction,
                 })
                 .map_err(|err| anyhow::anyhow!("interpret step failed: {err}"))?;
             }
@@ -454,6 +503,7 @@ fn main() -> anyhow::Result<()> {
                 format: export_format,
                 output: Some(output_path.clone()),
                 force: true,
+                redaction,
             })
             .map_err(|err| anyhow::anyhow!("export step failed: {err}"))?;
 

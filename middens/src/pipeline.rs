@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::ffi::OsString;
 use std::fs;
 use std::io::Write as _;
 use std::path::PathBuf;
@@ -7,21 +8,22 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use sha2::{Digest, Sha256};
 
-use crate::bridge::{embedded, UvManager};
+use crate::bridge::{UvManager, embedded};
 use crate::corpus::discovery::discover_sessions;
-use crate::output::{render_json, render_markdown, OutputMetadata};
+use crate::output::{OutputMetadata, render_json, render_markdown};
 use crate::parser::auto_detect::parse_auto;
 use crate::storage::discovery::xdg_app_root;
 use crate::storage::{
     AnalysisManifest, AnalyzerFingerprint, CorpusFingerprint, ManifestWriter, ParquetWriter,
-    StratumRef, TechniqueEntry, TableRef,
+    PythonBridgeInfo, RedactionConfig, StratumRef, TableRef, TechniqueEntry,
 };
-use crate::techniques::{all_techniques, all_techniques_with_python, Technique, TechniqueResult};
+use crate::techniques::{Technique, TechniqueResult, all_techniques, all_techniques_with_python};
 
 pub struct PipelineConfig {
     pub corpus_path: Option<PathBuf>,
     pub output_dir: PathBuf,
     pub technique_filter: TechniqueFilter,
+    pub redaction: RedactionConfig,
     pub no_python: bool,
     pub split: bool,
     /// Override the auto-computed Python technique timeout (seconds).
@@ -51,6 +53,8 @@ pub struct PipelineResult {
 }
 
 pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
+    let _redaction_env = RedactionEnvGuard::set(&config.redaction);
+
     // Step 1: Discover sessions
     let files = discover_sessions(config.corpus_path.as_deref())?;
     let sessions_discovered = files.len();
@@ -71,6 +75,25 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
                 parse_errors += 1;
             }
         }
+    }
+
+    // Fail early on an empty corpus — do NOT write any storage or update the
+    // run registry. Otherwise an empty run would sort to the top and be picked
+    // up as "latest" by export/interpret. See docs/solutions/.../pre-release-review.
+    if all_sessions.is_empty() {
+        let target = config
+            .corpus_path
+            .as_deref()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|| "<auto-discovered corpus>".to_string());
+        anyhow::bail!(
+            "no sessions parsed from {}. Discovered {} file(s), {} parse error(s). \
+             Nothing written. Verify the corpus path and that it contains Claude Code, \
+             Codex, or OpenClaw session logs (.jsonl).",
+            target,
+            sessions_discovered,
+            parse_errors
+        );
     }
 
     // Step 3: Select techniques — include Python-bridged ones only when the
@@ -103,11 +126,13 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     };
 
     let mut python_env_failed: Option<String> = None;
+    let mut python_bridge: Option<PythonBridgeInfo> = None;
     let mut all_possible: Vec<Box<dyn Technique>> = if !needs_python {
         all_techniques()
     } else {
         match prepare_python_env() {
-            Ok((scripts_dir, python_path)) => {
+            Ok((scripts_dir, python_path, bridge_info)) => {
+                python_bridge = Some(bridge_info);
                 all_techniques_with_python(&scripts_dir, &python_path, timeout_seconds)
             }
             Err(e) => {
@@ -142,7 +167,8 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
                             "middens: technique '{}' requires Python but the Python \
                              environment failed to prepare ({}). Install `uv` (https://docs.astral.sh/uv/) \
                              or pass --no-python to skip Python techniques entirely.",
-                            trimmed_name, reason
+                            trimmed_name,
+                            reason
                         );
                     } else {
                         eprintln!("middens: warning: unknown technique '{}'", trimmed_name);
@@ -187,7 +213,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     let mut interactive_sessions = 0;
     let mut subagent_sessions = 0;
 
-    let corpus_fp = compute_corpus_fingerprint(&files, sessions_parsed);
+    let corpus_fp = compute_corpus_fingerprint(&files, sessions_parsed, config.redaction);
     let storage_dir;
 
     if config.split {
@@ -238,6 +264,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
                 Some(pop_name),
                 None,
                 &stratum_dir,
+                python_bridge.as_ref(),
             )?;
 
             strata_refs.push(StratumRef {
@@ -255,7 +282,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
                 middens_version: env!("CARGO_PKG_VERSION").to_string(),
                 git_sha: None,
                 technique_versions: BTreeMap::new(),
-                python_bridge: None,
+                python_bridge: python_bridge.clone(),
             },
             corpus_fingerprint: corpus_fp.clone(),
             strata: Some(strata_refs),
@@ -286,6 +313,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
             None,
             None,
             &run_dir,
+            python_bridge.as_ref(),
         )?;
 
         storage_dir = Some(run_dir);
@@ -363,26 +391,90 @@ fn run_technique(
     }
 }
 
-fn compute_corpus_fingerprint(files: &[PathBuf], session_count: usize) -> CorpusFingerprint {
-    let mut path_strings: Vec<String> = files
+fn compute_corpus_fingerprint(
+    files: &[PathBuf],
+    session_count: usize,
+    redaction: RedactionConfig,
+) -> CorpusFingerprint {
+    let mut full_path_strings: Vec<String> = files
         .iter()
         .map(|p| p.to_string_lossy().to_string())
         .collect();
-    path_strings.sort();
+    full_path_strings.sort();
 
     let mut hasher = Sha256::new();
-    for p in &path_strings {
+    for p in &full_path_strings {
         hasher.update(p.as_bytes());
         hasher.update(b"\n");
     }
     let manifest_hash = format!("{:x}", hasher.finalize());
     let short = manifest_hash[..8].to_string();
 
+    let mut source_paths: Vec<String> = files
+        .iter()
+        .map(|path| redaction.display_source_path(path))
+        .collect();
+    source_paths.sort();
+
     CorpusFingerprint {
         manifest_hash,
         short,
         session_count: session_count as i64,
-        source_paths: path_strings,
+        source_paths,
+    }
+}
+
+struct EnvVarGuard {
+    key: &'static str,
+    previous: Option<OsString>,
+}
+
+impl EnvVarGuard {
+    fn set(key: &'static str, value: &str) -> Self {
+        let previous = std::env::var_os(key);
+        unsafe {
+            std::env::set_var(key, value);
+        }
+        Self { key, previous }
+    }
+}
+
+impl Drop for EnvVarGuard {
+    fn drop(&mut self) {
+        unsafe {
+            match &self.previous {
+                Some(value) => std::env::set_var(self.key, value),
+                None => std::env::remove_var(self.key),
+            }
+        }
+    }
+}
+
+struct RedactionEnvGuard {
+    _source_paths: EnvVarGuard,
+    _project_names: EnvVarGuard,
+}
+
+impl RedactionEnvGuard {
+    fn set(redaction: &RedactionConfig) -> Self {
+        Self {
+            _source_paths: EnvVarGuard::set(
+                "MIDDENS_INCLUDE_SOURCE_PATHS",
+                if redaction.include_source_paths {
+                    "1"
+                } else {
+                    "0"
+                },
+            ),
+            _project_names: EnvVarGuard::set(
+                "MIDDENS_INCLUDE_PROJECT_NAMES",
+                if redaction.include_project_names {
+                    "1"
+                } else {
+                    "0"
+                },
+            ),
+        }
     }
 }
 
@@ -400,18 +492,24 @@ fn compute_timeout_secs(session_count: usize) -> u64 {
 /// Resolves the final timeout to use.
 /// - Auto (no explicit value): clamp silently within [floor, ceiling].
 /// - Explicit value: reject outside [floor, ceiling] unless force=true.
-fn resolve_timeout(session_count: usize, explicit: Option<u64>, force: bool) -> anyhow::Result<u64> {
+fn resolve_timeout(
+    session_count: usize,
+    explicit: Option<u64>,
+    force: bool,
+) -> anyhow::Result<u64> {
     match explicit {
         None => Ok(compute_timeout_secs(session_count)),
         Some(t) if force => Ok(t),
         Some(t) if t < TIMEOUT_FLOOR => anyhow::bail!(
             "explicit --timeout {}s is below the {}s floor to guard against accidental \
              short-circuits; pass --force to override",
-            t, TIMEOUT_FLOOR
+            t,
+            TIMEOUT_FLOOR
         ),
         Some(t) if t > TIMEOUT_CEILING => anyhow::bail!(
             "explicit --timeout {}s exceeds the {}s ceiling; pass --force to run anyway",
-            t, TIMEOUT_CEILING
+            t,
+            TIMEOUT_CEILING
         ),
         Some(t) => Ok(t),
     }
@@ -424,6 +522,7 @@ fn write_storage_layer(
     stratum: Option<&str>,
     strata: Option<Vec<StratumRef>>,
     run_dir: &std::path::Path,
+    python_bridge: Option<&PythonBridgeInfo>,
 ) -> Result<()> {
     fs::create_dir_all(run_dir)?;
     let data_dir = run_dir.join("data");
@@ -477,7 +576,7 @@ fn write_storage_layer(
             middens_version: env!("CARGO_PKG_VERSION").to_string(),
             git_sha: None,
             technique_versions,
-            python_bridge: None,
+            python_bridge: python_bridge.cloned(),
         },
         corpus_fingerprint: corpus_fp.clone(),
         strata,
@@ -489,12 +588,69 @@ fn write_storage_layer(
 }
 
 /// Extract embedded Python assets, detect `uv`, and initialise the shared
-/// middens venv. Returns `(scripts_dir, python_path)` on success.
-fn prepare_python_env() -> Result<(PathBuf, PathBuf)> {
+/// middens venv. Returns `(scripts_dir, python_path, bridge_info)` on
+/// success — the bridge info is recorded in analysis manifests so two runs
+/// can be compared for Python-stack reproducibility.
+fn prepare_python_env() -> Result<(PathBuf, PathBuf, PythonBridgeInfo)> {
     let cache = embedded::cache_dir();
     std::fs::create_dir_all(&cache)?;
     let (scripts_dir, requirements_path) = embedded::extract_to(&cache)?;
     let uv = UvManager::detect(requirements_path)?;
     uv.init()?;
-    Ok((scripts_dir, uv.python_path().clone()))
+    let bridge_info = PythonBridgeInfo {
+        uv_version: uv.uv_version(),
+        requirements_hash: embedded::requirements_hash(),
+    };
+    Ok((scripts_dir, uv.python_path().clone(), bridge_info))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::compute_corpus_fingerprint;
+    use crate::storage::RedactionConfig;
+    use sha2::{Digest, Sha256};
+    use std::path::PathBuf;
+
+    #[test]
+    fn corpus_fingerprint_scrubs_paths_by_default() {
+        let files = vec![
+            PathBuf::from("/Users/alice/projects/alpha/session-a.jsonl"),
+            PathBuf::from("/Users/alice/projects/beta/session-b.jsonl"),
+        ];
+
+        let scrubbed = compute_corpus_fingerprint(&files, 2, RedactionConfig::default());
+        assert_eq!(
+            scrubbed.source_paths,
+            vec!["session-a.jsonl".to_string(), "session-b.jsonl".to_string()]
+        );
+
+        let raw = compute_corpus_fingerprint(
+            &files,
+            2,
+            RedactionConfig {
+                include_source_paths: true,
+                include_project_names: false,
+            },
+        );
+        assert_eq!(
+            raw.source_paths,
+            vec![
+                "/Users/alice/projects/alpha/session-a.jsonl".to_string(),
+                "/Users/alice/projects/beta/session-b.jsonl".to_string(),
+            ]
+        );
+
+        let mut hasher = Sha256::new();
+        for path in [
+            "/Users/alice/projects/alpha/session-a.jsonl",
+            "/Users/alice/projects/beta/session-b.jsonl",
+        ] {
+            hasher.update(path.as_bytes());
+            hasher.update(b"\n");
+        }
+        let expected_hash = format!("{:x}", hasher.finalize());
+
+        assert_eq!(scrubbed.manifest_hash, expected_hash);
+        assert_eq!(raw.manifest_hash, expected_hash);
+    }
 }

@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use cucumber::{given, then, when};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tempfile::TempDir;
 
 use middens::storage::{
@@ -18,8 +18,8 @@ use middens::storage::{
     ParquetWriter, StratumRef, TableRef, TechniqueEntry,
 };
 use middens::techniques::{ColumnType, DataTable, Finding};
-use middens::view::markdown::MarkdownRenderer;
 use middens::view::ViewRenderer;
+use middens::view::markdown::MarkdownRenderer;
 
 use super::world::MiddensWorld;
 
@@ -64,7 +64,10 @@ fn set_triad_state(world: &mut MiddensWorld, state: Value) {
 
 fn update_triad_state(world: &mut MiddensWorld, key: &str, value: Value) {
     let mut state = triad_state(world);
-    state.as_object_mut().unwrap().insert(key.to_string(), value);
+    state
+        .as_object_mut()
+        .unwrap()
+        .insert(key.to_string(), value);
     set_triad_state(world, state);
 }
 
@@ -288,12 +291,7 @@ fn then_at_least_one_parquet_exists(world: &mut MiddensWorld) {
         let parquet_count = fs::read_dir(&data_dir)
             .unwrap()
             .filter_map(Result::ok)
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .and_then(|ext| ext.to_str())
-                    == Some("parquet")
-            })
+            .filter(|e| e.path().extension().and_then(|ext| ext.to_str()) == Some("parquet"))
             .count();
         assert!(
             parquet_count > 0,
@@ -323,7 +321,9 @@ fn then_manifest_validates_schema(world: &mut MiddensWorld) {
     );
 }
 
-#[then("AnalysisRun::load reads them back with matching technique count, row counts, and scalar findings")]
+#[then(
+    "AnalysisRun::load reads them back with matching technique count, row counts, and scalar findings"
+)]
 fn then_analysis_run_load_roundtrip(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let run_dir = state
@@ -453,11 +453,7 @@ fn given_single_table_technique(world: &mut MiddensWorld) {
 
     update_triad_state(world, "run_dir", json!(run_dir.to_string_lossy()));
     update_triad_state(world, "run_id", json!(run_id));
-    update_triad_state(
-        world,
-        "technique_slug",
-        json!("single-table-tech"),
-    );
+    update_triad_state(world, "technique_slug", json!("single-table-tech"));
 }
 
 #[when("I run middens analyze")]
@@ -483,7 +479,9 @@ fn then_technique_parquet_exists(world: &mut MiddensWorld) {
     );
 }
 
-#[then("AnalysisRun::load reads it back with matching row count, column count, column types, and first-row values")]
+#[then(
+    "AnalysisRun::load reads it back with matching row count, column count, column types, and first-row values"
+)]
 fn then_load_matches_row_col_types(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap();
@@ -542,7 +540,10 @@ fn then_parquet_schema_matches(world: &mut MiddensWorld) {
         .find(|t| t.table.is_some())
         .unwrap();
     let table_ref = entry.table.as_ref().unwrap();
-    assert!(table_ref.column_types.is_some(), "column_types should be present in manifest");
+    assert!(
+        table_ref.column_types.is_some(),
+        "column_types should be present in manifest"
+    );
 }
 
 #[then("loading it back preserves the types")]
@@ -558,7 +559,10 @@ fn then_loading_preserves_types(world: &mut MiddensWorld) {
     // Verify values round-trip correctly
     assert!(table.rows[0][0].is_i64(), "first column should be int");
     assert!(table.rows[0][1].is_f64(), "second column should be float");
-    assert!(table.rows[0][2].is_string(), "third column should be string");
+    assert!(
+        table.rows[0][2].is_string(),
+        "third column should be string"
+    );
 }
 
 // ── column_types mismatch ───────────────────────────────────────────────────
@@ -638,9 +642,7 @@ fn given_technique_blocked_column(world: &mut MiddensWorld, col_name: String) {
 #[then("it fails loudly naming the offending technique, column, and matched blocklist token")]
 fn then_pii_blocked(world: &mut MiddensWorld) {
     let state = triad_state(world);
-    let err = state["pii_error"]
-        .as_str()
-        .expect("should have PII error");
+    let err = state["pii_error"].as_str().expect("should have PII error");
     assert!(
         err.contains("blocklist") || err.contains("PII"),
         "error should mention PII blocklist: {}",
@@ -651,9 +653,7 @@ fn then_pii_blocked(world: &mut MiddensWorld) {
 #[then("it suggests a rename")]
 fn then_suggests_rename(world: &mut MiddensWorld) {
     let state = triad_state(world);
-    let err = state["pii_error"]
-        .as_str()
-        .expect("should have PII error");
+    let err = state["pii_error"].as_str().expect("should have PII error");
     assert!(
         err.contains("Rename") || err.contains("rename"),
         "error should suggest rename: {}",
@@ -696,21 +696,13 @@ fn given_technique_permitted_columns(
 #[then("the PII check passes")]
 fn then_pii_check_passes(world: &mut MiddensWorld) {
     let state = triad_state(world);
-    assert_eq!(
-        state["pii_passed"],
-        json!(true),
-        "PII check should pass"
-    );
+    assert_eq!(state["pii_passed"], json!(true), "PII check should pass");
 }
 
 #[then("the run succeeds")]
 fn then_run_succeeds(world: &mut MiddensWorld) {
     let state = triad_state(world);
-    assert_eq!(
-        state["pii_passed"],
-        json!(true),
-        "run should succeed"
-    );
+    assert_eq!(state["pii_passed"], json!(true), "run should succeed");
 }
 
 // ── PII value-length cap ────────────────────────────────────────────────────
@@ -736,7 +728,9 @@ fn given_long_string_values(world: &mut MiddensWorld) {
     }
 }
 
-#[then("it fails with an error naming the technique, column, and row index of the first offending cell")]
+#[then(
+    "it fails with an error naming the technique, column, and row index of the first offending cell"
+)]
 fn then_length_error(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let err = state["length_error"]
@@ -790,11 +784,7 @@ fn then_produces_default_view(world: &mut MiddensWorld) {
 fn then_run_dir_matches_pattern(world: &mut MiddensWorld, pattern: String) {
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap();
-    let dir_name = Path::new(run_dir)
-        .file_name()
-        .unwrap()
-        .to_str()
-        .unwrap();
+    let dir_name = Path::new(run_dir).file_name().unwrap().to_str().unwrap();
     let re = regex::Regex::new(&pattern).expect("invalid regex pattern");
     assert!(
         re.is_match(dir_name),
@@ -804,7 +794,9 @@ fn then_run_dir_matches_pattern(world: &mut MiddensWorld, pattern: String) {
     );
 }
 
-#[then("the Unix millisecond timestamp embedded in the UUIDv7 run_id equals the timestamp of manifest.json created_at field")]
+#[then(
+    "the Unix millisecond timestamp embedded in the UUIDv7 run_id equals the timestamp of manifest.json created_at field"
+)]
 fn then_uuidv7_timestamp_matches(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap();
@@ -933,7 +925,10 @@ fn then_default_view_byte_equal(world: &mut MiddensWorld) {
     let expected = renderer.render_run(&run).expect("render should succeed");
     let actual = fs::read_to_string(Path::new(run_dir).join("default-view.md"))
         .expect("read default-view.md");
-    assert_eq!(actual, expected, "default-view.md should be byte-equal to MarkdownRenderer output");
+    assert_eq!(
+        actual, expected,
+        "default-view.md should be byte-equal to MarkdownRenderer output"
+    );
 }
 
 #[when(expr = "I run middens analyze with --default-view json")]
@@ -1050,8 +1045,12 @@ fn given_corpus_causing_technique_failure(world: &mut MiddensWorld) {
         vec![ColumnType::String, ColumnType::String],
         vec![vec![json!("s1"), json!("interactive")]],
     );
-    ParquetWriter::write_table(&sessions_table, "sessions", &run_dir.join("sessions.parquet"))
-        .unwrap();
+    ParquetWriter::write_table(
+        &sessions_table,
+        "sessions",
+        &run_dir.join("sessions.parquet"),
+    )
+    .unwrap();
 
     update_triad_state(world, "run_dir", json!(run_dir.to_string_lossy()));
 }
@@ -1079,7 +1078,10 @@ fn then_other_technique_present(world: &mut MiddensWorld) {
         .techniques
         .iter()
         .find(|t| t.errors.is_empty() && t.table.is_some());
-    assert!(good.is_some(), "should have at least one good technique with table");
+    assert!(
+        good.is_some(),
+        "should have at least one good technique with table"
+    );
 }
 
 #[when("I run middens analyze with no --output-dir")]
@@ -1239,11 +1241,7 @@ fn given_mixed_corpus(world: &mut MiddensWorld) {
     update_triad_state(world, "run_dir", json!(run_dir.to_string_lossy()));
     update_triad_state(world, "run_id", json!(run_id));
     update_triad_state(world, "xdg_data_home", json!(xdg.to_string_lossy()));
-    update_triad_state(
-        world,
-        "analysis_dir",
-        json!(analysis_dir.to_string_lossy()),
-    );
+    update_triad_state(world, "analysis_dir", json!(analysis_dir.to_string_lossy()));
 }
 
 #[when("I run middens analyze with --split")]
@@ -1265,7 +1263,9 @@ fn then_top_level_has_manifest(world: &mut MiddensWorld) {
     assert!(Path::new(run_dir).join("manifest.json").exists());
 }
 
-#[then("the interactive subdirectory contains manifest.json, data/, sessions.parquet, and default-view.md")]
+#[then(
+    "the interactive subdirectory contains manifest.json, data/, sessions.parquet, and default-view.md"
+)]
 fn then_interactive_subdir(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap();
@@ -1276,7 +1276,9 @@ fn then_interactive_subdir(world: &mut MiddensWorld) {
     assert!(idir.join("default-view.md").exists());
 }
 
-#[then("the subagent subdirectory contains manifest.json, data/, sessions.parquet, and default-view.md")]
+#[then(
+    "the subagent subdirectory contains manifest.json, data/, sessions.parquet, and default-view.md"
+)]
 fn then_subagent_subdir(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap();
@@ -1374,7 +1376,8 @@ fn then_inherits_run_id(world: &mut MiddensWorld) {
     for name in &["interactive", "subagent"] {
         let stratum = AnalysisRun::load(&Path::new(run_dir).join(name)).unwrap();
         assert_eq!(
-            &stratum.manifest().run_id, top_id,
+            &stratum.manifest().run_id,
+            top_id,
             "stratum {} should inherit top-level run_id",
             name
         );
@@ -1462,11 +1465,7 @@ fn given_two_valid_runs(world: &mut MiddensWorld) {
     update_triad_state(world, "run_dir_2", json!(run_dir2.to_string_lossy()));
     update_triad_state(world, "run_id_1", json!(run_id1));
     update_triad_state(world, "run_id_2", json!(run_id2));
-    update_triad_state(
-        world,
-        "analysis_dir",
-        json!(analysis_dir.to_string_lossy()),
-    );
+    update_triad_state(world, "analysis_dir", json!(analysis_dir.to_string_lossy()));
 }
 
 #[when("I run middens interpret with no --analysis-dir")]
@@ -1598,11 +1597,7 @@ fn given_mocked_which_claude_code(world: &mut MiddensWorld) {
 
     // Create a fake "claude" binary
     let mock_claude = mock_bin_dir.join("claude");
-    fs::write(
-        &mock_claude,
-        "#!/bin/sh\necho 'mock claude'\n",
-    )
-    .unwrap();
+    fs::write(&mock_claude, "#!/bin/sh\necho 'mock claude'\n").unwrap();
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -1652,7 +1647,17 @@ fn when_interpret_with_codex_model(world: &mut MiddensWorld) {
     }
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap().to_string();
-    run_middens_cmd(world, &["interpret", "--analysis-dir", &run_dir, "--model", "codex/gpt-5.4-codex", "--dry-run"]);
+    run_middens_cmd(
+        world,
+        &[
+            "interpret",
+            "--analysis-dir",
+            &run_dir,
+            "--model",
+            "codex/gpt-5.4-codex",
+            "--dry-run",
+        ],
+    );
 }
 
 #[then("it fails cleanly with a message naming codex")]
@@ -1677,7 +1682,12 @@ fn given_valid_analysis_run(world: &mut MiddensWorld) {
 fn when_interpret_opencode_model(world: &mut MiddensWorld) {
     run_middens_cmd(
         world,
-        &["interpret", "--model", "opencode/kimi-for-coding/k2p5", "--dry-run"],
+        &[
+            "interpret",
+            "--model",
+            "opencode/kimi-for-coding/k2p5",
+            "--dry-run",
+        ],
     );
 }
 
@@ -1697,8 +1707,7 @@ fn then_manifest_captures_runner_model(
     model_id: String,
 ) {
     let combined = format!("{}/{}", runner, model_id);
-    let (r, m) = middens::commands::interpret::parse_model_flag(&combined)
-        .unwrap();
+    let (r, m) = middens::commands::interpret::parse_model_flag(&combined).unwrap();
     assert_eq!(r, runner);
     assert_eq!(m, model_id);
 }
@@ -1712,7 +1721,16 @@ fn when_interpret_no_slash_model(world: &mut MiddensWorld) {
     }
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap().to_string();
-    run_middens_cmd(world, &["interpret", "--analysis-dir", &run_dir, "--model", "claude-code"]);
+    run_middens_cmd(
+        world,
+        &[
+            "interpret",
+            "--analysis-dir",
+            &run_dir,
+            "--model",
+            "claude-code",
+        ],
+    );
 }
 
 #[then("it exits non-zero with a message showing the expected form and concrete examples")]
@@ -1721,7 +1739,9 @@ fn then_exits_with_model_form_help(world: &mut MiddensWorld) {
     assert_ne!(code, 0, "should exit non-zero");
     let combined = format!("{}{}", world.cli_output, world.cli_stderr);
     assert!(
-        combined.contains("Expected form") || combined.contains("/") || combined.contains("example"),
+        combined.contains("Expected form")
+            || combined.contains("/")
+            || combined.contains("example"),
         "should show expected form with examples: {}",
         combined
     );
@@ -1741,7 +1761,16 @@ fn when_interpret_unknown_runner(world: &mut MiddensWorld) {
     }
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap().to_string();
-    run_middens_cmd(world, &["interpret", "--analysis-dir", &run_dir, "--model", "foo/bar"]);
+    run_middens_cmd(
+        world,
+        &[
+            "interpret",
+            "--analysis-dir",
+            &run_dir,
+            "--model",
+            "foo/bar",
+        ],
+    );
 }
 
 #[then("it exits non-zero with a message listing the four supported runner slugs")]
@@ -1767,10 +1796,15 @@ fn when_interpret_dry_run(world: &mut MiddensWorld) {
     }
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap().to_string();
-    run_middens_cmd(world, &["interpret", "--analysis-dir", &run_dir, "--dry-run"]);
+    run_middens_cmd(
+        world,
+        &["interpret", "--analysis-dir", &run_dir, "--dry-run"],
+    );
 }
 
-#[then("it produces a prompt.md under interpretation-dryruns/<analysis-run-slug>/<interpretation-slug>/")]
+#[then(
+    "it produces a prompt.md under interpretation-dryruns/<analysis-run-slug>/<interpretation-slug>/"
+)]
 fn then_dryrun_produces_prompt(world: &mut MiddensWorld) {
     let output = world.cli_output.trim();
     if !output.is_empty() {
@@ -1827,7 +1861,10 @@ fn then_dryrun_not_in_interpretation(world: &mut MiddensWorld) {
                 .unwrap()
                 .filter_map(Result::ok)
                 .count();
-            assert_eq!(count, 0, "interpretation-failures/ should be empty after dry-run");
+            assert_eq!(
+                count, 0,
+                "interpretation-failures/ should be empty after dry-run"
+            );
         }
     }
 }
@@ -1844,11 +1881,7 @@ fn given_successful_interpretation(world: &mut MiddensWorld) {
     let xdg = root.join("xdg-interp");
 
     // Create interpretation directory
-    let run_slug = Path::new(&run_dir)
-        .file_name()
-        .unwrap()
-        .to_str()
-        .unwrap();
+    let run_slug = Path::new(&run_dir).file_name().unwrap().to_str().unwrap();
     let interp_id = uuid7::uuid7().to_string();
     let interp_slug = format!("{}-claude-code", interp_id);
     let interp_dir = xdg
@@ -1859,11 +1892,7 @@ fn given_successful_interpretation(world: &mut MiddensWorld) {
     fs::create_dir_all(&interp_dir).unwrap();
 
     // Write interpretation files
-    fs::write(
-        interp_dir.join("prompt.md"),
-        "# Prompt\n\nAnalyze this.",
-    )
-    .unwrap();
+    fs::write(interp_dir.join("prompt.md"), "# Prompt\n\nAnalyze this.").unwrap();
     fs::write(
         interp_dir.join("conclusions.md"),
         "Overall conclusions here.",
@@ -1937,7 +1966,9 @@ fn then_empty_conclusions(_world: &mut MiddensWorld) {
     // This is verified by the parse_response logic
 }
 
-#[then("the interpretation manifest.json carries analysis_run_id and analysis_run_path matching the analysis")]
+#[then(
+    "the interpretation manifest.json carries analysis_run_id and analysis_run_path matching the analysis"
+)]
 fn then_interp_manifest_matches(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let interp_dir = state["interp_dir"].as_str().unwrap();
@@ -2045,7 +2076,9 @@ fn then_unknown_slug_written(_world: &mut MiddensWorld) {
     // parse_response does not filter by known slugs
 }
 
-#[then("no directory exists at the final destination path until after the temp dir is fully written and manifest.json is serialised")]
+#[then(
+    "no directory exists at the final destination path until after the temp dir is fully written and manifest.json is serialised"
+)]
 fn then_atomic_write(_world: &mut MiddensWorld) {
     // Atomic write is verified by the temp-dir-then-rename design
 }
@@ -2054,11 +2087,7 @@ fn then_atomic_write(_world: &mut MiddensWorld) {
 fn then_interp_slug_format(world: &mut MiddensWorld) {
     let state = triad_state(world);
     if let Some(interp_dir) = state.get("interp_dir").and_then(|v| v.as_str()) {
-        let slug = Path::new(interp_dir)
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap();
+        let slug = Path::new(interp_dir).file_name().unwrap().to_str().unwrap();
         // Format: <uuidv7>-<runner-slug>
         assert!(
             slug.contains('-'),
@@ -2161,10 +2190,7 @@ fn then_has_conclusions_cell(world: &mut MiddensWorld) {
     let has_conclusions = cells.iter().any(|c| {
         if let Some(source) = c.get("source") {
             let text = match source {
-                Value::Array(arr) => arr
-                    .iter()
-                    .filter_map(|v| v.as_str())
-                    .collect::<String>(),
+                Value::Array(arr) => arr.iter().filter_map(|v| v.as_str()).collect::<String>(),
                 Value::String(s) => s.clone(),
                 _ => String::new(),
             };
@@ -2176,7 +2202,9 @@ fn then_has_conclusions_cell(world: &mut MiddensWorld) {
     assert!(has_conclusions, "should have a conclusions cell");
 }
 
-#[then("it contains per-technique cells each including the corresponding <slug>-conclusions.md text")]
+#[then(
+    "it contains per-technique cells each including the corresponding <slug>-conclusions.md text"
+)]
 fn then_per_technique_cells(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let output = state["export_output"].as_str().unwrap();
@@ -2264,12 +2292,16 @@ fn when_export_no_flags(world: &mut MiddensWorld) {
     update_triad_state(world, "export_output", json!(output.to_string_lossy()));
 }
 
-#[then("it resolves to the latest valid analysis and latest valid matching interpretation via name-sort descending")]
+#[then(
+    "it resolves to the latest valid analysis and latest valid matching interpretation via name-sort descending"
+)]
 fn then_resolves_latest(_world: &mut MiddensWorld) {
     // Verified by discovery logic
 }
 
-#[then("the produced notebook's metadata.middens object contains matching analysis_run_id and analysis_run_path")]
+#[then(
+    "the produced notebook's metadata.middens object contains matching analysis_run_id and analysis_run_path"
+)]
 fn then_notebook_has_analysis_metadata(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let output = state["export_output"].as_str().unwrap();
@@ -2338,14 +2370,7 @@ fn when_run_export(world: &mut MiddensWorld) {
         );
     } else {
         // No analysis dir — let middens discover (and fail if empty XDG)
-        run_middens_cmd(
-            world,
-            &[
-                "export",
-                "-o",
-                output.to_str().unwrap(),
-            ],
-        );
+        run_middens_cmd(world, &["export", "-o", output.to_str().unwrap()]);
     }
 
     update_triad_state(world, "export_output", json!(output.to_string_lossy()));
@@ -2545,7 +2570,9 @@ fn when_export_top_level_split(world: &mut MiddensWorld) {
     );
 }
 
-#[then("it exits non-zero with a message directing the user to pass <run>/interactive or <run>/subagent")]
+#[then(
+    "it exits non-zero with a message directing the user to pass <run>/interactive or <run>/subagent"
+)]
 fn then_split_run_error_message(world: &mut MiddensWorld) {
     let code = world.cli_exit_code.unwrap_or(-1);
     assert_ne!(code, 0, "should exit non-zero for split run");
@@ -2600,7 +2627,9 @@ fn given_per_stratum_interpretation(_world: &mut MiddensWorld) {
     // Setup in the given_split_analysis_run step
 }
 
-#[when("I run middens export with --analysis-dir <run>/interactive and --interpretation-dir <matching-interpretation>")]
+#[when(
+    "I run middens export with --analysis-dir <run>/interactive and --interpretation-dir <matching-interpretation>"
+)]
 fn when_export_interactive_stratum(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let run_dir = state["run_dir"].as_str().unwrap().to_string();
@@ -2637,7 +2666,9 @@ fn given_cross_stratum(world: &mut MiddensWorld) {
     given_mixed_corpus(world);
 }
 
-#[when("I run middens export with --analysis-dir <run>/interactive and --interpretation-dir <subagent-interpretation>")]
+#[when(
+    "I run middens export with --analysis-dir <run>/interactive and --interpretation-dir <subagent-interpretation>"
+)]
 fn when_export_cross_stratum(world: &mut MiddensWorld) {
     // This is the same as export with explicit dirs — cross-stratum is not validated
     let state = triad_state(world);
@@ -2723,7 +2754,10 @@ fn then_middle_cells(world: &mut MiddensWorld) {
         let raw = fs::read_to_string(output).unwrap();
         let nb: Value = serde_json::from_str(&raw).unwrap();
         let cells = nb["cells"].as_array().unwrap();
-        assert!(cells.len() >= 3, "should have multiple cells for techniques");
+        assert!(
+            cells.len() >= 3,
+            "should have multiple cells for techniques"
+        );
     }
 }
 
@@ -2881,7 +2915,9 @@ fn given_valid_exported_notebook(world: &mut MiddensWorld) {
     update_triad_state(world, "export_output", json!(output.to_string_lossy()));
 }
 
-#[then("the notebook's top-level metadata.middens object contains analysis_run_id, analysis_run_path, and middens_version")]
+#[then(
+    "the notebook's top-level metadata.middens object contains analysis_run_id, analysis_run_path, and middens_version"
+)]
 fn then_metadata_has_required_fields(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let output = state["export_output"].as_str().unwrap();
@@ -2889,9 +2925,18 @@ fn then_metadata_has_required_fields(world: &mut MiddensWorld) {
         let raw = fs::read_to_string(output).unwrap();
         let nb: Value = serde_json::from_str(&raw).unwrap();
         let mid = &nb["metadata"]["middens"];
-        assert!(mid.get("analysis_run_id").is_some(), "missing analysis_run_id");
-        assert!(mid.get("analysis_run_path").is_some(), "missing analysis_run_path");
-        assert!(mid.get("middens_version").is_some(), "missing middens_version");
+        assert!(
+            mid.get("analysis_run_id").is_some(),
+            "missing analysis_run_id"
+        );
+        assert!(
+            mid.get("analysis_run_path").is_some(),
+            "missing analysis_run_path"
+        );
+        assert!(
+            mid.get("middens_version").is_some(),
+            "missing middens_version"
+        );
     }
 }
 
@@ -2900,7 +2945,9 @@ fn then_interp_metadata_if_loaded(world: &mut MiddensWorld) {
     then_has_interpretation_metadata(world);
 }
 
-#[then("per-technique code cells loading the technique's single table have non-empty outputs arrays")]
+#[then(
+    "per-technique code cells loading the technique's single table have non-empty outputs arrays"
+)]
 fn then_code_cells_have_outputs(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let output = state["export_output"].as_str().unwrap();
@@ -2912,9 +2959,11 @@ fn then_code_cells_have_outputs(world: &mut MiddensWorld) {
             .iter()
             .filter(|c| c.get("cell_type").and_then(|v| v.as_str()) == Some("code"))
             .collect();
-        let has_outputs = code_cells
-            .iter()
-            .any(|c| c.get("outputs").and_then(|v| v.as_array()).map_or(false, |a| !a.is_empty()));
+        let has_outputs = code_cells.iter().any(|c| {
+            c.get("outputs")
+                .and_then(|v| v.as_array())
+                .map_or(false, |a| !a.is_empty())
+        });
         assert!(
             has_outputs,
             "at least one code cell should have non-empty outputs"
@@ -2922,7 +2971,9 @@ fn then_code_cells_have_outputs(world: &mut MiddensWorld) {
     }
 }
 
-#[then("the outputs contain at least one display_data entry with both text/html and text/plain mime bundles")]
+#[then(
+    "the outputs contain at least one display_data entry with both text/html and text/plain mime bundles"
+)]
 fn then_display_data_entry(world: &mut MiddensWorld) {
     let state = triad_state(world);
     let output = state["export_output"].as_str().unwrap();
@@ -2934,18 +2985,17 @@ fn then_display_data_entry(world: &mut MiddensWorld) {
             if let Some(outputs) = c.get("outputs").and_then(|v| v.as_array()) {
                 outputs.iter().any(|o| {
                     o.get("output_type").and_then(|v| v.as_str()) == Some("display_data")
-                        && o.get("data")
-                            .and_then(|d| d.get("text/html"))
-                            .is_some()
-                        && o.get("data")
-                            .and_then(|d| d.get("text/plain"))
-                            .is_some()
+                        && o.get("data").and_then(|d| d.get("text/html")).is_some()
+                        && o.get("data").and_then(|d| d.get("text/plain")).is_some()
                 })
             } else {
                 false
             }
         });
-        assert!(has_display_data, "should have display_data with html and plain");
+        assert!(
+            has_display_data,
+            "should have display_data with html and plain"
+        );
     }
 }
 
@@ -2963,7 +3013,9 @@ fn then_html_round_trip(world: &mut MiddensWorld) {
                     o.get("data")
                         .and_then(|d| d.get("text/html"))
                         .and_then(|v| v.as_str())
-                        .map_or(false, |html| html.contains("<table>") || html.contains("<tr>"))
+                        .map_or(false, |html| {
+                            html.contains("<table>") || html.contains("<tr>")
+                        })
                 })
             } else {
                 false
@@ -2978,7 +3030,9 @@ fn when_open_static_viewer(_world: &mut MiddensWorld) {
     // Static rendering is verified by the pre-executed outputs
 }
 
-#[then("it still renders all tables, findings, and conclusions from the embedded pre-executed outputs")]
+#[then(
+    "it still renders all tables, findings, and conclusions from the embedded pre-executed outputs"
+)]
 fn then_static_rendering(_world: &mut MiddensWorld) {
     // Verified by the display_data outputs being embedded
 }

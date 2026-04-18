@@ -184,13 +184,15 @@ impl Technique for ThinkingDivergence {
                     json!(session_text_chars),
                     {
                         // Deduplicate — the count is already in numeric columns
-                        let mut uniq: Vec<&str> = session_all_found_risk.iter().map(|s| s.as_str()).collect();
+                        let mut uniq: Vec<&str> =
+                            session_all_found_risk.iter().map(|s| s.as_str()).collect();
                         uniq.sort_unstable();
                         uniq.dedup();
                         json!(uniq.join(", "))
                     },
                     {
-                        let mut uniq: Vec<&str> = session_all_suppressed.iter().map(|s| s.as_str()).collect();
+                        let mut uniq: Vec<&str> =
+                            session_all_suppressed.iter().map(|s| s.as_str()).collect();
                         uniq.sort_unstable();
                         uniq.dedup();
                         json!(uniq.join(", "))

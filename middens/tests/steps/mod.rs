@@ -1,14 +1,14 @@
 pub mod classifier;
 pub mod cli;
+pub mod cli_triad;
 pub mod corpus;
 pub mod output;
 pub mod parser;
 pub mod pipeline;
+pub mod python_batch1;
+pub mod python_bridge;
 pub mod split;
 pub mod techniques;
 pub mod thinking_divergence;
 pub mod thinking_visibility;
 pub mod world;
-pub mod python_bridge;
-pub mod python_batch1;
-pub mod cli_triad;
