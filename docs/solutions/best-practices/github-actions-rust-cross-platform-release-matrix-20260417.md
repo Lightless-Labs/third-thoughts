@@ -30,14 +30,15 @@ Commit: `49d896f`. File: `.github/workflows/release.yml`. Driving todo: `todos/d
 
 ## Guidance
 
-**For public-repo Rust CLIs distributing cross-platform tarballs, prefer native GitHub-hosted runners over `cross`.** Use a 4-target matrix:
+**For public-repo Rust CLIs distributing cross-platform tarballs, prefer native GitHub-hosted runners over `cross`.** Use a 3-target matrix:
 
 | Runner | Target triple | Notes |
 |--------|---------------|-------|
 | `macos-14` | `aarch64-apple-darwin` | Apple Silicon |
-| `macos-13` | `x86_64-apple-darwin` | Intel Mac |
 | `ubuntu-latest` | `x86_64-unknown-linux-gnu` | Standard Linux |
 | `ubuntu-24.04-arm` | `aarch64-unknown-linux-gnu` | Free for public repos (Jan 2025+) |
+
+> **2026-04-18 update — `x86_64-apple-darwin` removed.** The original matrix included a fourth row (`macos-13` → `x86_64-apple-darwin`). On the first real tag cut for `middens v0.0.1-beta.0`, that job sat in queue for 9 hours waiting for a free Intel runner that never arrived, while the other three targets built in ~5 minutes each. Free `macos-13` capacity for public repos has effectively dried up post-retirement. If you need an Intel-Mac binary, cross-compile from `macos-14` (`cargo build --target x86_64-apple-darwin` with `dtolnay/rust-toolchain@stable targets:` configured) on the same arm64 runner, or pay for `macos-13-large`. The `middens` project chose to drop the target entirely — Apple Silicon is dominant; Intel-Mac users can build from source.
 
 ### Matrix block
 
@@ -48,8 +49,6 @@ strategy:
     include:
       - target: aarch64-apple-darwin
         runner: macos-14
-      - target: x86_64-apple-darwin
-        runner: macos-13
       - target: x86_64-unknown-linux-gnu
         runner: ubuntu-latest
       - target: aarch64-unknown-linux-gnu
@@ -122,7 +121,7 @@ release:
 
 ## Why This Matters
 
-The `cross` approach is seductive — one `ubuntu-latest` runner, Docker images for each target, no multi-OS matrix. On paper it's cheaper and simpler. The Achilles heel is **darwin**: Apple's SDK licensing makes cross-compiling `*-apple-darwin` from Linux a grey area reputable projects avoid. Every serious cross-platform Rust project that uses `cross` ends up hybrid anyway — `cross` for Linux/Windows legs, native `macos-*` runners for darwin. Once you're booting `macos-14` and `macos-13` regardless, the "one cheap runner" savings are gone and you're maintaining two build pathways instead of one.
+The `cross` approach is seductive — one `ubuntu-latest` runner, Docker images for each target, no multi-OS matrix. On paper it's cheaper and simpler. The Achilles heel is **darwin**: Apple's SDK licensing makes cross-compiling `*-apple-darwin` from Linux a grey area reputable projects avoid. Every serious cross-platform Rust project that uses `cross` ends up hybrid anyway — `cross` for Linux/Windows legs, native `macos-*` runners for darwin. Once you're booting `macos-14` regardless, the "one cheap runner" savings are gone and you're maintaining two build pathways instead of one.
 
 Native runners give you:
 
@@ -169,6 +168,8 @@ The committed workflow at `.github/workflows/release.yml` is the exemplar in ful
 4. **Forgetting `workspaces: middens` on rust-cache.** If the Cargo workspace isn't at the repo root, `Swatinem/rust-cache@v2` silently caches nothing useful. Set `workspaces:` to the directory containing `Cargo.toml`.
 
 5. **Missing `permissions: contents: write`.** `softprops/action-gh-release@v2` needs it to publish; default `GITHUB_TOKEN` permissions don't include release write on most repos.
+
+6. **Trusting the `macos-13` label on a free public repo.** The runner label still resolves, the job still queues — it just never gets picked up. Empirically observed on the `middens v0.0.1-beta.0` cut (2026-04-18): job sat 9 hours waiting for a free Intel runner that never arrived. There is no error, no warning, no "no capacity" signal — the only feedback is wall-clock time. If you absolutely need an Intel-Mac binary, cross-compile from `macos-14` (arm64 host, `--target x86_64-apple-darwin`); Apple's toolchain handles same-OS cross-arch builds without extra config.
 
 ## References
 

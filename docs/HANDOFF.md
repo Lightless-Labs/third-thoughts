@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-17 (distribution Step B done; Step C Homebrew tap is next)
+**Last updated:** 2026-04-18 (v0.0.1-beta.0 first tag stalled on macos-13 starvation; matrix dropped to 3 targets; re-tag pending)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -20,9 +20,11 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 | Failed | 0 | — |
 | Timed out | 0 | — |
 
-**Distribution workstream is now unblocked.** All three prior blocking conditions are met: repo hygiene done, CLI triad (analyze/interpret/export) done, 23/23 techniques working on a full corpus.
+**v0.0.1-beta.0 was tagged on 2026-04-18 but the release workflow stalled on `macos-13` runner starvation.** Three targets (darwin-arm64, linux-x86_64, linux-arm64) built in ~5 minutes; the `x86_64-apple-darwin` job sat in queue for 9 hours waiting for a free Intel runner that never arrived. Run `24604776369` cancelled. No release was published.
 
-**Next concrete move:** Distribution Step C — Homebrew tap (`todos/distribution-homebrew-tap.md`). Steps A (`middens run`, `7aea3c6`) and B (release workflow, `49d896f`) are done. Tap repo name is the open question (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula).
+**Decision:** drop `x86_64-apple-darwin` from the matrix — Apple Silicon is dominant, Intel-Mac users can build from source. Workflow now ships 3 targets. Rationale doc updated at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` (with the runner-starvation lesson recorded as failure mode #6).
+
+**Next concrete move:** Delete and re-push tag `v0.0.1-beta.0` (commits the workflow fix into the tagged commit), watch the new release run, then advance to Distribution Step C (Homebrew tap, `todos/distribution-homebrew-tap.md`). Pre-tag codex xhigh review already passed in two rounds; that work stands.
 
 ---
 
@@ -74,7 +76,7 @@ All five steps in order. See individual `todos/distribution-*.md` for detail.
 
 1. ~~**Step A — e2e verb**~~ **DONE** (`middens run`, commit `7aea3c6`). Chains analyze → interpret → export. `--model` optional; omit to skip interpret. Hard-fails on interpret error.
 
-2. ~~**Step B — release workflow**~~ **DONE** (commit `49d896f`). `.github/workflows/release.yml` triggers on `v*` tag. Native GH-hosted runners (no `cross`): `macos-14` (darwin-arm64), `macos-13` (darwin-x86_64), `ubuntu-latest` (linux-x86_64), `ubuntu-24.04-arm` (linux-arm64, free for public repos). Tarballs + per-artifact SHA256 + combined SHA256SUMS via `softprops/action-gh-release@v2`. Windows left as future stretch. Rationale documented at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md`.
+2. ~~**Step B — release workflow**~~ **DONE** (commit `49d896f`; matrix narrowed 2026-04-18 after Intel-Mac runner starvation on first tag cut). `.github/workflows/release.yml` triggers on `v*` tag. Native GH-hosted runners (no `cross`): `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), `ubuntu-24.04-arm` (linux-arm64, free for public repos). `x86_64-apple-darwin` dropped — `macos-13` is queue-starved on free public repos and the first tag cut sat 9h waiting for a runner. Tarballs + per-artifact SHA256 + combined SHA256SUMS via `softprops/action-gh-release@v2`. Windows left as future stretch. Rationale + failure-mode log at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md`. Follow-up todos from the pre-tag codex review: `todos/release-workflow-pin-actions-and-toolchain.md` (P2), `todos/release-workflow-orphan-sha256-sidecars.md` (P3).
 
 3. **Step C — Homebrew tap** ← **next**: `brew install lightless-labs/tap/middens`. `uv` is a `recommend` not a `depend`. crates.io secondary. Open question: tap repo name (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula). (`todos/distribution-homebrew-tap.md`)
 
@@ -94,6 +96,21 @@ All five steps in order. See individual `todos/distribution-*.md` for detail.
 - **Frustration classifier recalibration**: 90% of user signals pile up at intensity 2. Needs rescaling or model change. (`user_signal_analysis.py`)
 - Deferred PR review items: `todos/batch4-coderabbit-deferred.md`, `todos/batch3-coderabbit-deferred.md`
 - Todos filed but not started: `fingerprint-technique-retrofit.md`, `corpus-timeline-deletion.md`, `batches-1-2-pii-and-type-audit.md`, `interpret-parser-strictness.md`, `interpret-export-split-composition.md`
+
+### P2 — Pre-release review follow-ups (filed 2026-04-18, post v0.0.1-beta.0 tag)
+
+From the codex xhigh pre-tag review (two rounds). None were beta-tag blockers; the five round-1 blockers and two round-2 blockers were fixed in-session. Remaining should-fix items:
+
+- `todos/middens-hide-unimplemented-subcommands.md` — `report`/`fingerprint` print `[not yet implemented]`; hide or implement
+- `todos/middens-export-dir-mismatch-validation.md` — `export --analysis-dir A --interpretation-dir B` silently accepts mismatched dirs
+- `todos/repo-root-readme-stale-findings.md` — repo-root README quotes pre-stratification finding magnitudes
+- `todos/middens-privacy-flags-inconsistent-across-verbs.md` — `--include-project-names` is a partial no-op on `interpret`/`export` because parquet is frozen at analyze time
+- `todos/middens-scrub-test-coverage-weakness.md` — cucumber assertions check key presence, not value shape; regression that leaks raw path would still pass
+
+### P3 — Pre-release review nice-to-haves
+
+- `todos/middens-run-verb-force-flag-hardcoded.md` — `run` hardcodes `force: true` on export; standalone `export` defaults to `false`
+- `todos/release-workflow-orphan-sha256-sidecars.md` — workflow generates per-tarball `.sha256` sidecars but doesn't publish them
 
 ### P3 — NLSpec / run verb follow-ups (filed 2026-04-16)
 
@@ -131,9 +148,9 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | All work landed here. 13 commits since last push to origin/main (release workflow + compound learning). |
+| `main` | All work landed and pushed. Tag `v0.0.1-beta.0` at `de87c99` pushed 2026-04-18. |
 
-No open PRs. No feature branches.
+No open PRs. No feature branches. Release workflow run `24604776369` is in progress at time of last update.
 
 ---
 
