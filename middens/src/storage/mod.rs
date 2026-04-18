@@ -104,6 +104,14 @@ impl RedactionConfig {
             format!("analysis/{}", run_id)
         }
     }
+
+    pub fn interpretation_path(&self, interpretation_id: &str, path: &Path) -> String {
+        if self.include_source_paths {
+            path.to_string_lossy().to_string()
+        } else {
+            format!("interpretation/{}", interpretation_id)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

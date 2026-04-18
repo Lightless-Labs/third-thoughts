@@ -209,18 +209,22 @@ impl ViewRenderer for IpynbRenderer {
                 if let Ok(interp_manifest) =
                     serde_json::from_str::<serde_json::Value>(&interp_manifest_raw)
                 {
-                    if let Some(id) = interp_manifest
+                    let interpretation_id = interp_manifest
                         .get("interpretation_id")
-                        .and_then(|v| v.as_str())
-                    {
+                        .and_then(|v| v.as_str());
+                    if let Some(id) = interpretation_id {
                         middens_meta
                             .as_object_mut()
                             .unwrap()
                             .insert("interpretation_id".into(), json!(id));
                     }
+                    // Scrub to `interpretation/<id>` by default so shared
+                    // notebooks don't leak the absolute XDG data-home dir.
+                    // `--include-source-paths` opts back into the raw path.
+                    let id_for_path = interpretation_id.unwrap_or("unknown");
                     middens_meta.as_object_mut().unwrap().insert(
                         "interpretation_path".into(),
-                        json!(interp_dir.display().to_string()),
+                        json!(self.redaction.interpretation_path(id_for_path, interp_dir)),
                     );
                 }
             }

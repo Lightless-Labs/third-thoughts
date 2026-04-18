@@ -473,7 +473,18 @@ fn main() -> anyhow::Result<()> {
                 force,
             })?;
 
-            let analysis_dir = result.output_dir.clone();
+            // `interpret` and `export` consume the XDG analysis run directory
+            // (the one with manifest.json + data/*.parquet), NOT the flat
+            // markdown/JSON output dir. Using the wrong one breaks the
+            // advertised one-shot pipeline.
+            let analysis_dir = result
+                .storage_dir
+                .clone()
+                .ok_or_else(|| anyhow::anyhow!(
+                    "run verb: analyze step produced no XDG analysis run; \
+                     cannot chain interpret/export. This is a bug — please \
+                     file an issue with the corpus path you used."
+                ))?;
             let do_interpret = model.is_some() && !no_interpretation;
 
             if do_interpret {
