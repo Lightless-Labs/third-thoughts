@@ -44,40 +44,48 @@
             <span class="card-eyebrow">The premise</span>
             <h2>The transcripts are where the behavior lives.</h2>
             <p>
-              An agent run leaves a long, messy record: every message, every file it touched, every tool it invoked, every time it second-guessed itself in its internal reasoning. That's the evidence &mdash; ugly, repetitive, implementation-detail-heavy &mdash; and it's where you have to go if you want vague hunches about agent behavior to turn into numbers that can survive a second look.
+              An agent run leaves a long, messy record: every message, every file touched, every tool invoked, every time the model second-guesses itself in its internal reasoning. That's the evidence &mdash; ugly, repetitive, implementation-detail-heavy &mdash; and it's where you have to go if you want to figure out what these systems are actually doing, rather than what they or their vendors say they're doing.
             </p>
           </article>
           <article class="card panel">
-            <span class="card-eyebrow">Why it matters</span>
+            <span class="card-eyebrow">Why bother</span>
             <h2>Otherwise you get opinions with nicer typography.</h2>
             <p>
-              A corpus of logs can show you which working patterns correlate with sessions that went well, when a session is drifting toward trouble before it fully falls over, and whether a new tool version quietly made things worse. Half of this project is a command-line tool. The other half is writing up what the tool turned up.
+              Most claims about what AI coding agents do well or badly come from somebody's recollection of a handful of sessions they remember well. Those aren't nothing, but they're not much either. The boring version &mdash; measure the same things across thousands of sessions, see what survives, retract what doesn't &mdash; gives you a different kind of knowing. Half of this project is the tool that does the measuring. The other half is writing up what it turned up, including the bits that didn't hold.
             </p>
           </article>
         </div>
       </section>
 
-      <section class="section" aria-label="What middens does">
+      <section class="section" aria-label="Questions we're chasing">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Questions we've been chasing</h2>
+            <p>
+              Going in, we didn't know which of these would turn out to have clean answers. Most didn't, on the first pass. A few did. The rest are still being argued with.
+            </p>
+          </div>
+        </div>
         <div class="grid-3">
           <article class="card panel">
-            <span class="card-eyebrow">Catch behavior changes</span>
-            <h2>See when a rollout made things worse.</h2>
+            <span class="card-eyebrow">On internal reasoning</span>
+            <h2>Does the model's thinking show up in what users see?</h2>
             <p>
-              A new CLI version or a new model can shift agent behavior in ways nobody notices until the bug tracker catches fire a week later. Run the same analyses on a before-and-after corpus and see what moved &mdash; the logs are already versioned for you.
+              Reasoning models produce enormous amounts of internal thinking compared to what they actually reply &mdash; roughly 700 tokens of private reasoning for every token of user-facing text. We wanted to know whether hedges and worries inside the thinking ("this could fail," "I'm not sure") leak into the reply, or whether they mostly stay hidden. <a href="./findings.html">First pass says: mostly stay hidden.</a>
             </p>
           </article>
           <article class="card panel">
-            <span class="card-eyebrow">Good vs bad sessions</span>
-            <h2>Tell a productive run from a drifting one.</h2>
+            <span class="card-eyebrow">On good vs bad runs</span>
+            <h2>What distinguishes a session that worked from one that didn't?</h2>
             <p>
-              Sessions where users don't have to step in have a recognizable shape: the agent keeps checking its own work while it's looking things up. Sessions that need heavy intervention tend to have a lot of planning language and very little self-correction. Those two shapes are empirically different and we can count them.
+              First we had to pick a usable definition of "worked." The one we settled on: the user didn't feel the need to step in and correct the agent. Then we went looking for behaviors that show up disproportionately in one group and not the other. <a href="./findings.html">The clearest signal so far is self-correction tied to evidence-gathering.</a>
             </p>
           </article>
           <article class="card panel">
-            <span class="card-eyebrow">Flag trouble early</span>
-            <h2>Catch sessions drifting toward correction.</h2>
+            <span class="card-eyebrow">On drifting runs</span>
+            <h2>Can you tell a session is going sideways before the user steps in?</h2>
             <p>
-              Before a user jumps in to correct an agent, the agent tends to go quiet and stop producing &mdash; a recognizable "I'm stuck but still typing" state. We can pick it out of the logs. The direction looks robust; the size of the effect is still being pinned down.
+              Agents seem to fall into a recognizable "gone quiet, not producing much" state before users intervene. Whether that's a useful early-warning signal depends on how often it shows up without a correction following. <a href="./findings.html">First pass says: maybe, and the effect is smaller than we initially claimed.</a>
             </p>
           </article>
         </div>
