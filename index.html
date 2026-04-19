@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Third Thoughts — AI agent behavior at scale, counted from the logs up</title>
-    <meta name="description" content="Lightless Labs research project studying AI coding agents through session-log corpus analysis. Open-source Rust CLI (middens) plus a running write-up of what the numbers say.">
+    <title>Third Thoughts — what AI coding agents actually do, from the logs up</title>
+    <meta name="description" content="Lightless Labs research project. We collect transcripts from AI coding agents — Claude Code, Codex, that sort of thing — and count what's actually in them. Open-source Rust CLI (middens) plus a running write-up.">
     <meta property="og:title" content="Third Thoughts">
-    <meta property="og:description" content="Studying AI coding agents by reading the logs they leave behind and counting what actually happens.">
+    <meta property="og:description" content="We read AI coding-agent transcripts and count what's in them. Here's what we've found so far.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lightless-labs.github.io/third-thoughts/">
     <meta name="twitter:card" content="summary">
@@ -27,9 +27,9 @@
       <section class="hero" id="top">
         <div>
           <div class="eyebrow">A Lightless Labs research project</div>
-          <h1 class="tight">Agent behavior, counted from the logs up.</h1>
+          <h1 class="tight">What AI coding agents actually do, from the logs up.</h1>
           <p class="lede">
-            Third Thoughts studies AI coding agents by reading the transcripts they leave behind and counting what <strong>actually</strong> happens &mdash; not what agents say they did, and not the one heroic demo that worked on a Tuesday.
+            When you use a coding agent &mdash; Claude Code, Codex, that sort of thing &mdash; every turn gets written to a transcript: your messages, the model's replies, its internal thinking, the tool calls it makes. Most people skim past those transcripts. We read them, in bulk, and count what's in there. Not what the agent says it did. Not the one demo that worked on a Tuesday.
           </p>
           <div class="actions">
             <a class="button primary" href="./findings.html">Read the early findings</a>
@@ -42,16 +42,16 @@
         <div class="grid-2">
           <article class="card panel">
             <span class="card-eyebrow">The premise</span>
-            <h2>Session logs are where the behavioral truth lives.</h2>
+            <h2>The transcripts are where the behavior lives.</h2>
             <p>
-              Agent systems leave long, messy, implementation-detail-heavy transcripts. People mostly skip over them. We treat them as behavioral evidence &mdash; ugly, repetitive, and useful &mdash; and try to turn vague hunches into numbers that can survive contact with reality.
+              An agent run leaves a long, messy record: every message, every file it touched, every tool it invoked, every time it second-guessed itself in its internal reasoning. That's the evidence &mdash; ugly, repetitive, implementation-detail-heavy &mdash; and it's where you have to go if you want vague hunches about agent behavior to turn into numbers that can survive a second look.
             </p>
           </article>
           <article class="card panel">
             <span class="card-eyebrow">Why it matters</span>
-            <h2>Otherwise you just get opinions with nicer typography.</h2>
+            <h2>Otherwise you get opinions with nicer typography.</h2>
             <p>
-              The corpus can show which working patterns correlate with successful sessions, when a run is drifting toward failure before it fully falls over, and whether a new CLI or model rollout quietly made things worse. The project is deliberately half tool and half research write-up.
+              A corpus of logs can show you which working patterns correlate with sessions that went well, when a session is drifting toward trouble before it fully falls over, and whether a new tool version quietly made things worse. Half of this project is a command-line tool. The other half is writing up what the tool turned up.
             </p>
           </article>
         </div>
@@ -60,24 +60,24 @@
       <section class="section" aria-label="What middens does">
         <div class="grid-3">
           <article class="card panel">
-            <span class="card-eyebrow">Monitor over time</span>
-            <h2>Catch regressions across rollouts.</h2>
+            <span class="card-eyebrow">Catch behavior changes</span>
+            <h2>See when a rollout made things worse.</h2>
             <p>
-              Rollouts of a new CLI or model version can change agent behavior in ways nobody noticed until the bug tracker lit up a week later. Run the same battery of techniques before and after and compare &mdash; the corpus is already versioned.
+              A new CLI version or a new model can shift agent behavior in ways nobody notices until the bug tracker catches fire a week later. Run the same analyses on a before-and-after corpus and see what moved &mdash; the logs are already versioned for you.
             </p>
           </article>
           <article class="card panel">
-            <span class="card-eyebrow">Working patterns</span>
-            <h2>See what successful sessions actually do.</h2>
+            <span class="card-eyebrow">Good vs bad sessions</span>
+            <h2>Tell a productive run from a drifting one.</h2>
             <p>
-              Self-correction tied to evidence-seeking looks like success. Planning without self-correction looks like something headed straight for a user intervention. Those are empirically distinguishable in the transcript.
+              Sessions where users don't have to step in have a recognizable shape: the agent keeps checking its own work while it's looking things up. Sessions that need heavy intervention tend to have a lot of planning language and very little self-correction. Those two shapes are empirically different and we can count them.
             </p>
           </article>
           <article class="card panel">
-            <span class="card-eyebrow">Pre-failure signals</span>
-            <h2>Flag sessions drifting toward trouble.</h2>
+            <span class="card-eyebrow">Flag trouble early</span>
+            <h2>Catch sessions drifting toward correction.</h2>
             <p>
-              Hidden state models find a recognizable low-output behavioral basin that agents enter before users step in to correct. Magnitude is still provisional; the direction replicates across runs.
+              Before a user jumps in to correct an agent, the agent tends to go quiet and stop producing &mdash; a recognizable "I'm stuck but still typing" state. We can pick it out of the logs. The direction looks robust; the size of the effect is still being pinned down.
             </p>
           </article>
         </div>
@@ -88,7 +88,7 @@
           <div>
             <h2 class="section-title">Install <code>middens</code></h2>
             <p>
-              <code>middens</code> is the Rust CLI that does the digging. Point it at a directory of session transcripts and it parses, classifies, runs a 23-technique analytical battery, and exports results you can inspect without having to pretend raw JSONL is a user interface.
+              <code>middens</code> is the Rust command-line tool that does the digging. Point it at a folder of session transcripts, and it parses them, classifies the messages, runs a battery of analyses, and writes out results you can read without squinting at raw JSON.
             </p>
           </div>
         </div>
@@ -96,7 +96,7 @@
           <span class="card-eyebrow">From GitHub Releases</span>
           <h2>Download the tarball for your platform.</h2>
           <p>
-            Grab the latest tarball from <a href="https://github.com/Lightless-Labs/third-thoughts/releases">GitHub Releases</a>, unpack it, and run <code>./middens --help</code>. Homebrew is coming soon, once the release plumbing stops behaving like release plumbing.
+            Grab the latest tarball from <a href="https://github.com/Lightless-Labs/third-thoughts/releases">GitHub Releases</a>, unpack it, run <code>./middens --help</code>. Homebrew is coming &mdash; once the release plumbing stops behaving like release plumbing.
           </p>
           <pre><code># macOS (Apple Silicon) or Linux
 curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/latest/download/middens-&lt;version&gt;-&lt;target&gt;.tar.gz
