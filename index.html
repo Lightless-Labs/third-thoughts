@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Third Thoughts — AI agent behavior at scale, counted from the logs up</title>
+    <meta name="description" content="Lightless Labs research project studying AI coding agents through session-log corpus analysis. Open-source Rust CLI (middens) plus a running write-up of what the numbers say.">
+    <meta property="og:title" content="Third Thoughts">
+    <meta property="og:description" content="Studying AI coding agents by reading the logs they leave behind and counting what actually happens.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lightless-labs.github.io/third-thoughts/">
+    <meta name="twitter:card" content="summary">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="wordmark" href="./">Third Thoughts</a>
+        <nav class="nav" aria-label="Primary">
+          <a href="./" aria-current="page">Home</a>
+          <a href="./findings.html">Findings</a>
+          <a href="./report.html">Report</a>
+          <a href="https://github.com/Lightless-Labs/third-thoughts">GitHub</a>
+        </nav>
+      </header>
+
+      <section class="hero" id="top">
+        <div>
+          <div class="eyebrow">A Lightless Labs research project</div>
+          <h1 class="tight">Agent behavior, counted from the logs up.</h1>
+          <p class="lede">
+            Third Thoughts studies AI coding agents by reading the transcripts they leave behind and counting what <strong>actually</strong> happens &mdash; not what agents say they did, and not the one heroic demo that worked on a Tuesday.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="./findings.html">Read the early findings</a>
+            <a class="button secondary" href="https://github.com/Lightless-Labs/third-thoughts">Browse the repo</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Premise">
+        <div class="grid-2">
+          <article class="card panel">
+            <span class="card-eyebrow">The premise</span>
+            <h2>Session logs are where the behavioral truth lives.</h2>
+            <p>
+              Agent systems leave long, messy, implementation-detail-heavy transcripts. People mostly skip over them. We treat them as behavioral evidence &mdash; ugly, repetitive, and useful &mdash; and try to turn vague hunches into numbers that can survive contact with reality.
+            </p>
+          </article>
+          <article class="card panel">
+            <span class="card-eyebrow">Why it matters</span>
+            <h2>Otherwise you just get opinions with nicer typography.</h2>
+            <p>
+              The corpus can show which working patterns correlate with successful sessions, when a run is drifting toward failure before it fully falls over, and whether a new CLI or model rollout quietly made things worse. The project is deliberately half tool and half research write-up.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" aria-label="What middens does">
+        <div class="grid-3">
+          <article class="card panel">
+            <span class="card-eyebrow">Monitor over time</span>
+            <h2>Catch regressions across rollouts.</h2>
+            <p>
+              Rollouts of a new CLI or model version can change agent behavior in ways nobody noticed until the bug tracker lit up a week later. Run the same battery of techniques before and after and compare &mdash; the corpus is already versioned.
+            </p>
+          </article>
+          <article class="card panel">
+            <span class="card-eyebrow">Working patterns</span>
+            <h2>See what successful sessions actually do.</h2>
+            <p>
+              Self-correction tied to evidence-seeking looks like success. Planning without self-correction looks like something headed straight for a user intervention. Those are empirically distinguishable in the transcript.
+            </p>
+          </article>
+          <article class="card panel">
+            <span class="card-eyebrow">Pre-failure signals</span>
+            <h2>Flag sessions drifting toward trouble.</h2>
+            <p>
+              Hidden state models find a recognizable low-output behavioral basin that agents enter before users step in to correct. Magnitude is still provisional; the direction replicates across runs.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="install" aria-label="Install">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Install <code>middens</code></h2>
+            <p>
+              <code>middens</code> is the Rust CLI that does the digging. Point it at a directory of session transcripts and it parses, classifies, runs a 23-technique analytical battery, and exports results you can inspect without having to pretend raw JSONL is a user interface.
+            </p>
+          </div>
+        </div>
+        <article class="card panel">
+          <span class="card-eyebrow">From GitHub Releases</span>
+          <h2>Download the tarball for your platform.</h2>
+          <p>
+            Grab the latest tarball from <a href="https://github.com/Lightless-Labs/third-thoughts/releases">GitHub Releases</a>, unpack it, and run <code>./middens --help</code>. Homebrew is coming soon, once the release plumbing stops behaving like release plumbing.
+          </p>
+          <pre><code># macOS (Apple Silicon) or Linux
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/latest/download/middens-&lt;version&gt;-&lt;target&gt;.tar.gz
+tar -xzf middens-*.tar.gz
+cd middens-*/
+./middens run ./corpus/ --all</code></pre>
+        </article>
+      </section>
+
+      <footer class="page-footer">
+        <div>
+          <a href="./findings.html">Early findings</a> &middot;
+          <a href="./report.html">Full report</a> &middot;
+          <a href="https://github.com/Lightless-Labs/third-thoughts">Code on GitHub</a>
+        </div>
+        <div>
+          AGPL-3.0-or-later &middot; &copy; 2026 Lightless Labs
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>

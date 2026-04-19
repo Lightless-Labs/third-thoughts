@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Early findings — Third Thoughts</title>
+    <meta name="description" content="Six early findings from the Third Thoughts corpus: risk suppression, pre-failure signatures, under-exploration, correction front-loading, self-correction vs. planning, and tool monocultures.">
+    <meta property="og:title" content="Third Thoughts — Early findings">
+    <meta property="og:description" content="Six early findings. Cited, scoped, and with at least one honest retraction.">
+    <meta property="og:type" content="article">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="wordmark" href="./">Third Thoughts</a>
+        <nav class="nav" aria-label="Primary">
+          <a href="./">Home</a>
+          <a href="./findings.html" aria-current="page">Findings</a>
+          <a href="./report.html">Report</a>
+          <a href="https://github.com/Lightless-Labs/third-thoughts">GitHub</a>
+        </nav>
+      </header>
+
+      <section class="hero" id="top">
+        <div>
+          <div class="eyebrow">Early findings &middot; as of 2026-04-14</div>
+          <h1 class="tight">Six claims, scoped and cited.</h1>
+          <p class="lede">
+            A headline tour of what the first clean full-corpus run surfaced. Numbers are given as measured, not rounded into niceness. One finding has been retracted. More will be.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Findings">
+        <div class="findings-grid">
+
+          <article class="finding">
+            <span class="tag strengthened">Strengthened</span>
+            <h3>Risk mostly stays in thinking</h3>
+            <p>
+              On visible-thinking English sessions, risk-language suppression comes in at 99.99%, not 100%, and that is the right way to say it. Across N=4,518 sessions and 31,679 risk-token observations, only 2 tokens leaked from internal thinking into paired user-facing text.
+            </p>
+            <p>
+              The earlier 85.5% number turned out to be a mixed-corpus artifact &mdash; folding in redacted-thinking sessions, which trivially score zero on visible-text comparisons, dragged the per-session mean down. Same underlying behavior, cleaner denominator, much less misleading headline.
+            </p>
+          </article>
+
+          <article class="finding">
+            <span class="tag provisional">Provisional</span>
+            <h3>There probably is a pre-failure state &mdash; just not the dramatic one</h3>
+            <p>
+              The Hidden Semi-Markov Model still finds a detectable pre-correction signature, but the magnitude took a hard comedown. On the 2026-04-14 run, the &ldquo;minimal output&rdquo; state shows a 2.15&times; lift before correction, not the old 24.6&times; headline. The direction replicates, which matters. The magnitude probably does not.
+            </p>
+            <p>
+              The best current explanation is contamination from the W10&ndash;W12 Boucle sessions, which are weird enough to inflate a state model by sheer force of being weird. Re-running with that block excluded is the next obvious move.
+            </p>
+          </article>
+
+          <article class="finding">
+            <span class="tag">Robust</span>
+            <h3>Agents under-explore pretty much constantly</h3>
+            <p>
+              Marginal Value Theorem compliance landed at 0%. Not low. Zero. Across the corpus, agents leave patches sooner than the optimal-foraging model says they should, revisit a lot, and spend only 1.49 turns in a patch on average. Mean patches per session is 6.3, revisit rate is 37.5%, explore-to-exploit ratio is 2.58.
+            </p>
+            <p>
+              The polite way to phrase this is &ldquo;under-exploration.&rdquo; The less polite way is that agents seem unusually willing to wander off before they have actually extracted much value.
+            </p>
+          </article>
+
+          <article class="finding">
+            <span class="tag">New</span>
+            <h3>Corrections front-load instead of snowballing</h3>
+            <p>
+              Only 18.2% of sessions contain any user correction at all, but when corrections happen, they cluster early. The first-third correction rate is 0.068, compared with 0.014 in the middle third and 0.019 in the last.
+            </p>
+            <p>
+              That points away from a simple &ldquo;agents get worse over time&rdquo; story. What the data suggests instead is early course correction: users intervene near the front, the session stabilizes, or at least everyone stops arguing in the transcript. Those are not identical outcomes, but they look similar from far enough away.
+            </p>
+          </article>
+
+          <article class="finding">
+            <span class="tag">New</span>
+            <h3>Self-correction looks like success; planning without it does not</h3>
+            <p>
+              Two different techniques land in roughly the same place. In sequential motifs, <code>UWUW</code> patterns are enriched 13.7&times; in low-correction sessions, while <code>UUX</code> patterns are enriched 6.9&times; in high-correction sessions. In the epistemic network analysis, low-correction sessions show <code>EVIDENCE_SEEK</code> tied tightly to <code>SELF_CORRECT</code>, while high-correction sessions lean harder on planning and framing without the same self-repair behavior.
+            </p>
+            <p>
+              Rough translation: successful agents check themselves while gathering evidence. Struggling agents keep composing plans in a room that is already on fire.
+            </p>
+          </article>
+
+          <article class="finding">
+            <span class="tag retracted">Retracted</span>
+            <h3>Some findings did not survive, and that is fine</h3>
+            <p>
+              One of the cleaner-looking earlier claims &mdash; &ldquo;thinking blocks prevent corrections&rdquo; &mdash; is now retracted. Once the population split was done properly, the effect did not hold. The same honesty applies to the old 85.5% risk-suppression number, which has been superseded rather than defended into the ground.
+            </p>
+            <p>
+              This is part of the deal with a project like this: if a finding only works when the corpus is mixed in the wrong way, then the finding does not work. Better to say so plainly than to keep polishing a broken number.
+            </p>
+          </article>
+
+        </div>
+      </section>
+
+      <section class="section" aria-label="Read more">
+        <article class="card panel" style="max-width: 44rem; margin: 0 auto;">
+          <h2>Want the long version?</h2>
+          <p>
+            The <a href="./report.html">full report</a> walks through methodology, limitations, the 4-axis compound scoping rule, and what did not survive, in the order these things need to be read. Or browse the corpus tooling at <a href="https://github.com/Lightless-Labs/third-thoughts">the repo</a>.
+          </p>
+        </article>
+      </section>
+
+      <footer class="page-footer">
+        <div>
+          <a href="./">Home</a> &middot;
+          <a href="./report.html">Full report</a> &middot;
+          <a href="https://github.com/Lightless-Labs/third-thoughts">Code on GitHub</a>
+        </div>
+        <div>
+          AGPL-3.0-or-later &middot; &copy; 2026 Lightless Labs
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>

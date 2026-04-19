@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Full report — Third Thoughts, 2026-04-14 corpus run</title>
+    <meta name="description" content="Long-form distilled findings from the April 2026 full-corpus run: methodology, six findings, what did not hold, limitations, the 4-axis compound scoping rule, and next steps.">
+    <meta property="og:title" content="Third Thoughts — Full report">
+    <meta property="og:description" content="Distilled findings from the first clean full-corpus run across 13,423 sessions with all 23 techniques.">
+    <meta property="og:type" content="article">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="wordmark" href="./">Third Thoughts</a>
+        <nav class="nav" aria-label="Primary">
+          <a href="./">Home</a>
+          <a href="./findings.html">Findings</a>
+          <a href="./report.html" aria-current="page">Report</a>
+          <a href="https://github.com/Lightless-Labs/third-thoughts">GitHub</a>
+        </nav>
+      </header>
+
+      <section class="hero" id="top">
+        <div>
+          <div class="eyebrow">Full report &middot; 2026-04-14 corpus run</div>
+          <h1 class="tight">What the logs said, at length.</h1>
+          <p class="lede">
+            The first clean full-corpus run. 13,423 sessions, 23 techniques, zero errors, zero timeouts. Here is what survived counting, what did not, and what still needs another pass.
+          </p>
+        </div>
+      </section>
+
+      <article class="prose">
+
+        <h2 id="intro">Intro</h2>
+
+        <p>
+          Third Thoughts is a research project about AI coding agents, which sounds lofty until you describe it more honestly as &ldquo;reading a large pile of session logs and seeing what survives counting.&rdquo; The premise is simple. Agent systems leave transcript trails. Those trails are ugly, repetitive, and full of implementation detail people usually skip over. They are also where the behavioral truth lives.
+        </p>
+
+        <p>
+          The project&rsquo;s analysis tool is a Rust CLI called <a href="https://github.com/Lightless-Labs/third-thoughts/tree/main/middens"><code>middens</code></a>, named after the archaeological term for refuse heaps. That is not accidental. Middens are useful because people&rsquo;s discarded traces are often more revealing than their polished stories. Session logs work the same way. If you want to know whether agents actually self-correct, whether they under-explore, whether a rollout changed behavior, or whether certain failure modes can be spotted before users step in, the transcript is where that answer has to come from.
+        </p>
+
+        <p>
+          The current headline snapshot comes from the first clean full-corpus run completed on April 14, 2026. All 23 techniques in the analysis battery finished successfully on 13,423 sessions with zero errors and zero timeouts. That matters less as an engineering brag than as a methodological threshold. A toolchain that only works on toy subsets tends to produce findings with suspiciously good posture. This run is the first time the whole apparatus stayed upright on production data long enough to make the interesting problems visible.
+        </p>
+
+        <p>
+          The raw corpus is not public. The logs contain private data, so the tooling and methodology are open while the source sessions are not. That is annoying if you want a perfectly open replication package, but preferable to casually publishing people&rsquo;s working traces just because the numbers came out well. The right way to handle that tradeoff is to be unusually clear about scope, methods, and what did not hold.
+        </p>
+
+        <h2 id="methodology">Methodology</h2>
+
+        <p>
+          At a high level, <code>middens</code> takes a directory of agent transcripts, parses them, classifies both messages and sessions, and runs a battery of 23 techniques across the resulting corpus. Some of those techniques are structural and sequence-based: Markov chains, lag-sequential analysis, survival analysis, change-point detection, Hidden Semi-Markov Models, and related tools for asking how behavior unfolds over time. Others are descriptive or comparative: entropy, tool diversity, burstiness, convention analysis, epistemic network analysis, and several measures of divergence between internal thinking and user-facing text.
+        </p>
+
+        <p>
+          The important methodological caveat is that this corpus is not one neat population. It includes interactive sessions, subagent sessions, and a still-messy autonomous edge. It also includes visible-thinking sessions, redacted-thinking sessions, English and non-English text, and distinct temporal windows shaped by changing CLI behavior. If those populations are mixed carelessly, the numbers become impressively precise and quietly wrong. Third Thoughts learned that the hard way, which is why the project now treats stratification as foundational rather than optional cleanup.
+        </p>
+
+        <p>
+          That matters especially for correction analysis. A naive lexical classifier for corrections performs badly on subagent sessions, where structural artifacts can look like user dissatisfaction if you squint at the wrong substring. The current classifier is structural first, checking for <code>tool_result</code> content blocks before falling back to lexical patterns, and it was validated at 98% accuracy. That does not make every correction number perfect, but it does move the analysis out of the &ldquo;grep and vibes&rdquo; phase.
+        </p>
+
+        <p>
+          It also matters for anything involving internal reasoning. A session with redacted thinking is not a session with no thinking. It is a session where the model&rsquo;s internal trace is not written into the transcript. That sounds obvious, but ignoring it produces exactly the kind of denominator error that creates flashy, wrong headlines. The risk-suppression result below only makes sense when scoped to visible-thinking English sessions. Once that restriction is in place, the finding sharpens dramatically.
+        </p>
+
+        <h2 id="findings">Findings</h2>
+
+        <h3>1. Risk suppression holds, and the bigger sample makes it stronger</h3>
+
+        <p>
+          The strongest result in the current corpus is also the one with the cleanest scope. On visible-thinking English sessions, risk tokens that appear in internal thinking are almost entirely absent from paired user-facing text. The exact number is 99.99% suppression: 31,677 of 31,679 observed risk tokens stay out of the final response, with only 2 leaks across N=4,518 sessions.
+        </p>
+
+        <p>
+          That is not 100%, and it should not be rounded up to 100% just because the difference is cosmetically inconvenient. The whole point of this project is to be strict about the difference between &ldquo;basically complete&rdquo; and &ldquo;actually complete.&rdquo; Still, 2 leaks in 31,679 observations is functionally near-total suppression. If you care about whether internal reasoning visibly spills into user text, the broad answer from this corpus is no, or almost no.
+        </p>
+
+        <p>
+          The larger point is not just the headline percentage. Thinking blocks are huge compared with the text users actually see. The thinking-to-text divergence ratio is 703:1. Agents think a lot and say remarkably little. That by itself is not evidence of quality, but it does tell you that most of the system&rsquo;s apparent reasoning mass never crosses the boundary into user-facing prose.
+        </p>
+
+        <p>
+          There is a related negative result worth keeping attached to this one. Thinking appears to respond to complexity rather than predict downstream success. In the causality tests, message length and correction indicators help predict thinking ratio, but thinking ratio does not predict corrections or other downstream outcomes in a useful way. The tempting story that &ldquo;more visible thinking causes better sessions&rdquo; remains unsupported here.
+        </p>
+
+        <h3>2. A pre-failure signature probably exists, but the old magnitude was inflated</h3>
+
+        <p>
+          The Hidden Semi-Markov Model fit five states across 495,561 assistant turns. One of those states, loosely characterized by minimal output, still shows elevated prevalence before user correction. On the clean April run, the lift is 2.15&times;. That is meaningful. It suggests there may be a recognizable behavioral basin agents enter before users step in.
+        </p>
+
+        <p>
+          What it does not support is the old 24.6&times; headline. That earlier result now looks contaminated. The likely culprit is the W10&ndash;W12 Boucle block inside the corpus: 1,820 sessions that carry a queue-operation marker and have zero tool calls. Those sessions are behaviorally strange enough to distort several techniques at once, and they are exactly the kind of concentrated artifact that can make a state-model result look bigger than it really is.
+        </p>
+
+        <p>
+          So the right status for the HSMM finding is provisional. The direction replicates. The magnitude does not. That is still useful. In fact, it is more useful than pretending the larger number survived when it clearly did not. A 2.15&times; lift says &ldquo;there may be a weak-to-moderate pre-failure signal here.&rdquo; A contaminated 24.6&times; lift says &ldquo;we accidentally measured a corpus artifact and called it psychology.&rdquo;
+        </p>
+
+        <h3>3. Agents under-explore, consistently</h3>
+
+        <p>
+          The Marginal Value Theorem result is one of the more interpretable failures in the corpus. Compliance is 0%. No sessions match the optimal-foraging prediction. Agents move between patches too quickly, revisit often, and do not appear to squeeze enough value out of a location before jumping elsewhere.
+        </p>
+
+        <p>
+          The descriptive stats give that finding shape. Mean patches per session is 6.3. Mean residence time is 1.49 turns. Patch revisit rate is 37.5%. The explore-to-exploit ratio is 2.58, while overall foraging efficiency lands at 8.4%. However you phrase it, the pattern is the same: agents roam more than the theory says they should.
+        </p>
+
+        <p>
+          There is a wrinkle. High-correction sessions sometimes look more efficient on the narrow metric because users redirect the agent toward a concrete target, concentrating activity in ways that flatter the score. That does not rescue the overall result. It mostly shows that human intervention can make a local metric look better while the session as a whole is clearly struggling. The broad lesson still stands: left to themselves, agents tend to leave value on the table by departing too soon.
+        </p>
+
+        <h3>4. Corrections cluster early, which complicates the &ldquo;degradation&rdquo; story</h3>
+
+        <p>
+          Only 18.2% of sessions contain any user correction at all, which is lower than some people would guess after spending time on social media. But the interesting part is where those corrections land. The first-third correction rate is 0.068, compared with 0.014 in the middle third and 0.019 in the last third. Mean degradation ratio is 0.20&times;. Sessions do not, on average, get progressively worse within their own lifetime. If anything, they settle down.
+        </p>
+
+        <p>
+          That creates a useful distinction. A corpus can show worsening performance over calendar time while still showing improvement within individual sessions. Those are different questions. One is about drift across rollouts and environments. The other is about how an interaction unfolds once it begins. In this dataset, the latter looks more like early course correction than slow collapse.
+        </p>
+
+        <p>
+          The survival model points in a similar direction, though it needs careful interpretation. Subagent sessions have 3.28&times; the correction hazard, and sessions with thinking blocks show a 41% lower hazard. Both are interesting, neither is clean enough to overstate. Subagent corrections may partly reflect routing or orchestration artifacts rather than straightforward human dissatisfaction. The lower hazard on thinking sessions may reflect correlated difficulty and visibility conditions rather than a clean causal benefit. It is suggestive, not final.
+        </p>
+
+        <h3>5. Self-correction, not just planning, marks the better sessions</h3>
+
+        <p>
+          Two analyses converge on a behavioral distinction that feels intuitively right and survives quantification better than many intuitive things do. In the sequential motifs, <code>UWUW</code> patterns are enriched 13.7&times; in low-correction sessions, while <code>UUX</code> patterns are enriched 6.9&times; in high-correction sessions. The raw translation is that alternating user-agent progress looks healthier than user-user-error collapse.
+        </p>
+
+        <p>
+          The epistemic network analysis sharpens that picture. Across 10,563 coded sessions, <code>SELF_CORRECT</code> is the most central code, tied with <code>EVIDENCE_SEEK</code>. Low-correction sessions are dominated by strong links between evidence-seeking and self-correction, as well as planning tied to self-correction. High-correction sessions lean more on planning and problem framing without the same self-repair pattern.
+        </p>
+
+        <p>
+          That difference matters because it cuts against a common failure mode in agent evaluation. It is easy to reward elaborate planning language because it sounds organized. The corpus suggests that planning alone is not the signal to watch. The more useful marker is whether the agent corrects itself while gathering evidence. Planning without self-correction can be very articulate and still headed straight for a user intervention.
+        </p>
+
+        <h3>6. Tool use is repetitive enough to be a finding, but not yet a universal one</h3>
+
+        <p>
+          Aggregate tool behavior in the full corpus is bursty and monocultural. Burstiness lands at B=0.59. Self-loop rates are high across the usual suspects: Bash at 76.7%, WebSearch at 74.2%, TaskCreate at 79.9%. Median Shannon entropy is 0.000. About 58.8% of sessions qualify as tool monocultures by the current evenness threshold. The most common frequent patterns are what you would expect if you have ever watched an agent get stuck in a groove: <code>Read&rarr;Read&rarr;Read</code> at 69.2% and <code>Bash&rarr;Bash&rarr;Bash</code> at 55.2%.
+        </p>
+
+        <p>
+          That said, this is exactly the kind of result that becomes irresponsible if you universalize it too quickly. A large fraction of the corpus is made of subagent sessions with deliberately narrow mandates. A subagent that only reads files is not necessarily behaviorally pathological. It may just be doing the one boring job it was given. So the right reading for now is modest: repetitive tool behavior is abundant in the mixed corpus, and some of it is probably real agent behavior while some of it is population structure.
+        </p>
+
+        <h2 id="what-did-not-hold">What did not hold</h2>
+
+        <p>
+          The project&rsquo;s most useful habit may be retraction. One earlier claim, that thinking blocks prevent corrections, did not survive a proper population split. It has been retracted. That is not a side note. It is part of the main result, because a corpus this heterogeneous will happily reward overconfident interpretation if you let it.
+        </p>
+
+        <p>
+          The earlier 85.5% risk-suppression number belongs in the same category, though in a slightly different way. It was not exactly false, but it was framed badly enough to be misleading. Once visible-thinking sessions were isolated from redacted-thinking sessions, the finding resolved to 99.99% suppression on the relevant population. Same phenomenon, corrected framing. The project would rather supersede a good-sounding number than drag it around forever out of sentimentality.
+        </p>
+
+        <h2 id="limitations">Limitations</h2>
+
+        <p>
+          The first limitation is concentration. Roughly 93.6% of the sessions come from three projects. That means many corpus-wide statistics are really weighted summaries of a small handful of environments. If a finding does not survive project-level stratification, it should not be treated as a general property of AI coding agents.
+        </p>
+
+        <p>
+          The second limitation is contamination. The W10&ndash;W12 Boucle cluster remains in the corpus and is unusually disruptive because it contributes 1,820 zero-tool-call sessions. Those sessions likely inflate monoculture counts, distort diversity metrics, and explain at least part of the collapse in HSMM lift. Until they are isolated cleanly as their own stratum, any mixed-corpus claim has to carry that baggage.
+        </p>
+
+        <p>
+          The third limitation is that some components of the measurement stack are still obviously imperfect. The frustration classifier piles about 90% of messages into intensity 2, which is a calibration failure rather than a profound insight into human emotion. The corpus is also effectively single-user in some of its convention-level analyses, which means social diffusion claims should be read as workflow carryover rather than population sociology. None of this invalidates the whole project, but it does narrow what can be said cleanly.
+        </p>
+
+        <p>
+          Finally, the raw source data are private. That constrains open replication. The best available response is to keep the toolchain public, document methods precisely, and be strict about the boundaries of each claim. It is not perfect, but it is better than pretending privacy costs do not exist.
+        </p>
+
+        <h2 id="scoping-rule">Compound scoping rule</h2>
+
+        <p>
+          Every headline finding about thinking or text behavior in this project now has to survive four axes of scope: <code>session_type</code>, <code>thinking_visibility</code>, <code>language</code>, and a temporal window. In practice that means asking whether a result still holds when you separate interactive from subagent behavior, visible thinking from redacted thinking, English from non-English text, and one rollout period from another.
+        </p>
+
+        <p>
+          If a result does not survive all four, it is not a headline finding. It may still be a useful intermediate observation, but it does not get promoted into the tidy one-line version people repeat later. This rule exists because the project already watched mixed populations manufacture very impressive nonsense. Once is educational. Repeating it would just be laziness with statistics attached.
+        </p>
+
+        <h2 id="next-steps">Next steps</h2>
+
+        <p>
+          The immediate analytic priority is straightforward: rerun the state-based and sequence-heavy findings on cleaner strata. That means excluding the Boucle contamination where appropriate, stratifying by session type and project, and checking whether the weaker-but-real HSMM signal stays real once the worst composition artifact is removed. If it does, the project has a usable early-warning marker. If it does not, the honest answer becomes &ldquo;not yet.&rdquo;
+        </p>
+
+        <p>
+          The broader priority is to make regression analysis more operational. The corpus is already good at surfacing working patterns, overactive patch-switching, and shifts in correction behavior. The next useful step is to align those signals more tightly to versioned tool rollouts and evolving session populations, so the output is not just a retrospective curiosity but something you can actually use to catch changes before they harden into team folklore.
+        </p>
+
+        <p>
+          The project is still young enough to be a little scrappy, which is probably healthy. The best current results are strong because they survived a fair amount of unpleasant cleanup. The weaker ones are weak in ways the data now makes visible. That is mostly what you want from this kind of work: not a perfect theory of agent behavior, just a growing pile of claims that have already survived one round of being proven less clever than they looked at first.
+        </p>
+
+        <hr>
+
+        <p>
+          <strong>CLI:</strong> <a href="https://github.com/Lightless-Labs/third-thoughts/tree/main/middens">middens</a>. <strong>Repo:</strong> <a href="https://github.com/Lightless-Labs/third-thoughts">third-thoughts</a>. <strong>Early findings:</strong> <a href="./findings.html">the short version</a>.
+        </p>
+
+      </article>
+
+      <footer class="page-footer">
+        <div>
+          <a href="./">Home</a> &middot;
+          <a href="./findings.html">Early findings</a> &middot;
+          <a href="https://github.com/Lightless-Labs/third-thoughts">Code on GitHub</a>
+        </div>
+        <div>
+          AGPL-3.0-or-later &middot; &copy; 2026 Lightless Labs
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
