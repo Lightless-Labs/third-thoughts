@@ -1,37 +1,31 @@
 ---
 title: "GitHub Pages landing page on www branch"
-status: todo
-priority: P1
+status: in-progress
+priority: P2
 tags: [distribution, website, workstream-3]
 source: user-direction-2026-04-10
 ---
 
-## What
+## Status
 
-A GitHub Pages site at the root of a dedicated `www` branch (otherwise empty — no source code). The landing page for the project.
+**Initial cut shipped 2026-04-18.** Live at <https://lightless-labs.github.io/third-thoughts/>.
 
-## Content
+- `www` orphan branch created, Pages configured to serve from branch root.
+- Three pages: `index.html` (pitch), `findings.html` (six scoped findings with tags), `report.html` (long-form distilled report).
+- Copy drafted by codex 5.4 xhigh, revised by Claude. Gemini 3.1 Pro review **skipped** (Gemini retired from our review loop mid-project).
+- Numbers cited as measured: 99.99% risk suppression (N=4,518), HSMM 2.15x (down from provisional 24.6x), MVT 0% compliance. One finding (thinking-blocks-prevent-corrections) explicitly retracted.
 
-1. **What it is** — one-paragraph pitch, light register (not research-speak).
-2. **Install instructions** — `brew install lightless-labs/tap/middens` front and center.
-3. **Two embedded reports** — the exports from the source-built and homebrew-installed validation runs (distribution-validation-runs.md). Show that they match. Real findings from a real corpus.
-4. **Key findings** — the headline numbers (100% risk suppression on visible-thinking, HSMM 24.6x lift, MVT violation). Linked to methodology docs.
-5. **Current capabilities** — what middens can do today (23 techniques, 4 parsers, Parquet storage, Jupyter export, LLM interpretation).
-6. **Known limits** — English-only for text techniques, no Windows, no GUI, Python techniques need uv, thinking-visibility caveat.
-7. **Medium-term goals** — the v2/v3/v4 roadmap items (TUI, risk surfacer, federated learning). Frame as distributed effort.
-8. **Where third-party help is welcome** — specific areas: new parsers (Cursor, Windsurf), non-English language support, new analytical techniques, federated protocol design.
+## Follow-ups (not blocking)
 
-## Copy review process
+1. **Install story for homebrew** — `brew install lightless-labs/tap/middens` not yet live. The index currently points at the Releases tarball. Update once the tap ships.
+2. **Embedded validation reports** — the source-built vs homebrew-installed run comparison (distribution-validation-runs.md) is still deferred. Fold in when the tap lands.
+3. **Third-party contribution surface** — no "where help is welcome" section yet. Add once we're actually set up to absorb PRs from outside contributors (parsers, non-English support).
+4. **Second reviewer for copy** — with Gemini out of the loop, consider a Kimi K2.5 pass via OpenCode if we want independent copy review before the next big rewrite.
+5. **Roadmap teaser** — v2/v3/v4 roadmap items (TUI, risk surfacer, federated learning) are not yet on the site. Add when they're closer to real.
 
-Landing page copy MUST be reviewed by:
-- **Gemini 3.1 Pro** — grounding check, factual accuracy, superlative detection
-- **Codex 5.4 (reasoning: high)** — same pass, independent
+## Technical (as shipped)
 
-Both reviewers tasked with: strip em dashes, kill superlatives, flag ungrounded claims, enforce the light/self-deprecating register from CLAUDE.md conventions. The copy is done when both reviewers have zero P1/P2 findings.
-
-## Technical
-
-- `www` branch, no parent commit (orphan), contains only the site.
-- GitHub Pages configured to serve from `www` branch root.
-- Static HTML/CSS — no build step, no JS framework. Keep it simple.
-- Reports embedded as HTML (rendered from the Jupyter exports via nbconvert or equivalent).
+- `www` branch, orphan, contains only site files (no source code).
+- Lives in a sibling worktree at `../third-thoughts-www/`.
+- GitHub Pages serves from `www` branch root. `.nojekyll` present to disable Jekyll processing.
+- Static HTML/CSS, no build step, no JS framework. One `style.css` shared across pages.

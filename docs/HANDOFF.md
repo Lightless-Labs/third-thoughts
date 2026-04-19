@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-18 (v0.0.1-beta.0 first tag stalled on macos-13 starvation; matrix dropped to 3 targets; re-tag pending)
+**Last updated:** 2026-04-18 (v0.0.1-beta.0 tagged and released; GH Pages landing site live at lightless-labs.github.io/third-thoughts/)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
