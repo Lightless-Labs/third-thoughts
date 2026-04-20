@@ -175,7 +175,7 @@
         </p>
 
         <p>
-          A survival model on the same data points in the same direction but with caveats. Subagent sessions have a much higher hazard rate for corrections (3.3&times;), and sessions with visible thinking have a lower hazard (about 41% lower). Neither of those is clean enough to oversell. The subagent effect is partly an artifact of routing differences; the visible-thinking effect is tangled with session difficulty. Suggestive, not settled.
+          A survival model on the same data points the same direction but with caveats worth being explicit about. Subagent sessions show a 3.28&times; correction-hazard, which is itself suspicious &mdash; a subagent has no human in the loop to step in. What that number almost certainly captures is the parent agent sending a follow-up that lexically resembles a correction, plus residual classifier false positives on tool-result content that still sneak past the structural check. We flag it; we don't treat it as a behavioral finding about subagents being fragile. The visible-thinking hazard (0.59&times;) is cleaner as a measurement but tangled with session difficulty: easier tasks route to visible-thinking models more often <em>and</em> go smoothly more often, and we can't yet separate the two. Suggestive, not settled.
         </p>
 
         <figure class="chart" aria-label="Per-turn correction rate, by session third">
@@ -245,7 +245,11 @@
         </p>
 
         <p>
-          That's a real measurement, but it's exactly the kind of result that becomes irresponsible if you repeat it too confidently. A large fraction of the corpus is subagent sessions with deliberately narrow jobs &mdash; "read these files and tell me what you found" &mdash; and a subagent that only reads files isn't behaviorally pathological. It's doing the one boring job it was given. So the careful reading is: repetitive tool use is abundant, some of it probably reflects real agent behavior, some of it is population structure, and we need to finish pulling those apart before turning this into a headline.
+          That's a real measurement, but two things keep it from being the headline it looks like. The first is Bash. "Bash &rarr; Bash &rarr; Bash" treats shelling out as a single tool, but a Bash call can be <code>git status</code>, then <code>cargo test</code>, then <code>rg foo</code>, then <code>curl ...</code> &mdash; effectively the rest of the operating system squeezed through one port. A fair version of this metric would parse the first token of each command and compute diversity over <em>that</em>. We haven't done it yet. Until we do, the Bash self-loop figure overstates repetition exactly where the underlying "tool" is most expressive, and the more interesting question &mdash; what are agents actually doing inside Bash, and is it as monocultural as the outer label suggests? &mdash; is still open.
+        </p>
+
+        <p>
+          The second is population. A large fraction of the corpus is subagent sessions with deliberately narrow jobs &mdash; "read these files and tell me what you found" &mdash; and a subagent that only reads files isn't behaviorally pathological; it's doing the one job it was given. So the honest reading is: repetitive tool use is abundant, some of it probably reflects real agent behavior, some of it is Bash collapsing a diverse universe into one label, and some of it is population structure. We need to pull those apart before turning any of this into a claim.
         </p>
 
         <table class="data-table">
