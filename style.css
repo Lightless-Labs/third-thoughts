@@ -77,7 +77,7 @@ code, pre, .mono {
   padding: 4.5rem 0 2rem;
 }
 
-.hero > div { max-width: 46rem; }
+.hero > div { max-width: none; }
 
 .eyebrow {
   display: inline-flex;
