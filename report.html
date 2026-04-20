@@ -167,11 +167,11 @@
         </p>
 
         <p>
-          Two things follow. First, the tempting "agents get worse the longer you use them" story isn't supported here. On average, sessions don't decay within their own lifetime. If they were going to need correction, the user usually intervened early and then the session settled. If they weren't, they mostly didn't.
+          It's tempting to read that as "agents don't get worse the longer you use them." This measure doesn't actually support that, and this is exactly where the "user didn't correct" proxy for success starts leaking. A low correction rate in the middle and final thirds is consistent with "the session is fine by then," but it's equally consistent with the user having given up, stopped paying attention, or quietly moved the goalposts. A separate survival analysis restricted to interactive sessions does surface a within-session degradation signal. So the honest reading of this chart is narrower: corrections cluster near the start. Whether sessions stay healthy after that is a different question, and this metric doesn't answer it.
         </p>
 
         <p>
-          Second, this is a different question from whether agent behavior drifts over <em>calendar</em> time across rollouts &mdash; a model update can absolutely make things worse in ways this measure doesn't capture. Within-session degradation and across-version degradation are separate phenomena. The corpus speaks to the first one here; the second takes before-and-after comparisons of the kind <code>middens</code> is designed to make easy.
+          This is also a different question again from whether agent behavior drifts over <em>calendar</em> time across rollouts &mdash; a model update can absolutely make things worse in ways this measure doesn't capture. Within-session degradation and across-version degradation are separate phenomena. The corpus can speak to both, but not with the same number.
         </p>
 
         <p>
