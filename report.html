@@ -90,6 +90,20 @@
           The more tentative claim that <em>doesn't</em> survive this analysis is "more internal thinking leads to better outcomes." In the causality tests, message length and the presence of corrections help predict how much thinking the model will do; the amount of thinking does not, in turn, predict whether the session ends well. Thinking appears to be a response to complexity rather than a cause of success.
         </p>
 
+        <table class="data-table">
+          <caption>Risk-word leakage, visible-thinking English sessions (2026-04-14 run)</caption>
+          <thead>
+            <tr><th>Measure</th><th class="num">Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Sessions in scope</td><td class="num">4,518</td></tr>
+            <tr><td>Risk-signal words observed in thinking</td><td class="num">31,679</td></tr>
+            <tr><td>Same words appearing in user-facing text</td><td class="num">2</td></tr>
+            <tr><td>Suppression rate</td><td class="num">99.99%</td></tr>
+            <tr><td>Thinking:text token ratio</td><td class="num">703&thinsp;:&thinsp;1</td></tr>
+          </tbody>
+        </table>
+
         <h3>2. Probably a "drifting" state before users step in &mdash; but smaller than we said</h3>
 
         <p>
@@ -104,6 +118,19 @@
           The honest status for this one is provisional. The direction replicates across runs. The size of the effect doesn't, yet. A 2.15&times; lift is "there might be a useful early-warning signal here." A contaminated 24.6&times; lift is "we measured an artifact of the corpus and called it psychology." The first is worth keeping and checking again. The second was the kind of thing you retract.
         </p>
 
+        <table class="data-table">
+          <caption>Pre-correction state lift, before and after the zero-tool-call cluster is handled</caption>
+          <thead>
+            <tr><th>Measure</th><th class="num">Earlier (contaminated)</th><th class="num">2026-04-14 (clean)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Lift of "minimal-output" state before correction</td><td class="num">24.6&times;</td><td class="num">2.15&times;</td></tr>
+            <tr><td>Agent turns modeled</td><td class="num">&mdash;</td><td class="num">495,561</td></tr>
+            <tr><td>Recurring states learned</td><td class="num">5</td><td class="num">5</td></tr>
+            <tr><td>Near-empty sessions (queue-operation)</td><td class="num">~1,820 in</td><td class="num">~1,820 flagged</td></tr>
+          </tbody>
+        </table>
+
         <h3>3. Agents give up on promising leads</h3>
 
         <p>
@@ -117,6 +144,21 @@
         <p>
           There's a wrinkle worth naming. Sessions where users step in heavily can look better on the narrow patch metric, because the user's corrections effectively concentrate the agent on one spot. That doesn't rescue the overall result; it just shows that human intervention can make the local metric prettier while the session as a whole is still struggling. The big picture is: left alone, agents leave value on the table by leaving too soon.
         </p>
+
+        <table class="data-table">
+          <caption>Foraging behavior vs marginal-value-theorem expectation</caption>
+          <thead>
+            <tr><th>Measure</th><th class="num">Observed</th><th>What it means</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Mean turns per "patch"</td><td class="num">1.49</td><td class="note">Agents bail quickly</td></tr>
+            <tr><td>Mean patches per session</td><td class="num">6.3</td><td class="note">Bounce between many spots</td></tr>
+            <tr><td>Patch revisit rate</td><td class="num">37%</td><td class="note">Return to ones already abandoned</td></tr>
+            <tr><td>Explore-to-exploit ratio</td><td class="num">2.58</td><td class="note">Closer to parity would be efficient</td></tr>
+            <tr><td>Foraging efficiency</td><td class="num">8.4%</td><td class="note">MVT-compliant share of decisions</td></tr>
+            <tr><td>Sessions passing the MVT test</td><td class="num">0%</td><td class="note">Every session fails</td></tr>
+          </tbody>
+        </table>
 
         <h3>4. Corrections happen near the start, or not at all</h3>
 
@@ -136,6 +178,37 @@
           A survival model on the same data points in the same direction but with caveats. Subagent sessions have a much higher hazard rate for corrections (3.3&times;), and sessions with visible thinking have a lower hazard (about 41% lower). Neither of those is clean enough to oversell. The subagent effect is partly an artifact of routing differences; the visible-thinking effect is tangled with session difficulty. Suggestive, not settled.
         </p>
 
+        <figure class="chart" aria-label="Per-turn correction rate, by session third">
+          <p class="chart-title">Per-turn correction rate, by session third</p>
+          <p class="chart-sub">The per-turn rate at which the user steps in to correct the agent. The opening third dominates; the rest of the session is comparatively quiet.</p>
+          <svg viewBox="0 0 480 220" role="img" aria-labelledby="chart-4-title">
+            <title id="chart-4-title">Correction rate by session third: 0.068, 0.014, 0.019</title>
+            <line class="axis" x1="40" y1="170" x2="460" y2="170" />
+            <rect class="bar" x="70" y="50" width="80" height="120" rx="4" />
+            <rect class="bar bar-muted" x="200" y="145" width="80" height="25" rx="4" />
+            <rect class="bar bar-muted" x="330" y="136" width="80" height="34" rx="4" />
+            <text class="value" x="110" y="42" text-anchor="middle">0.068</text>
+            <text class="value" x="240" y="137" text-anchor="middle">0.014</text>
+            <text class="value" x="370" y="128" text-anchor="middle">0.019</text>
+            <text class="label" x="110" y="190" text-anchor="middle">first third</text>
+            <text class="label" x="240" y="190" text-anchor="middle">middle third</text>
+            <text class="label" x="370" y="190" text-anchor="middle">final third</text>
+            <text class="label" x="40" y="210">share of sessions with any correction: 18.2%</text>
+          </svg>
+        </figure>
+
+        <table class="data-table">
+          <caption>Correction-hazard multipliers from the survival model (directional, not settled)</caption>
+          <thead>
+            <tr><th>Condition</th><th class="num">Hazard vs baseline</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Subagent session</td><td class="num">3.28&times;</td></tr>
+            <tr><td>Visible thinking</td><td class="num">0.59&times;</td></tr>
+            <tr><td>Within-session degradation (late vs early)</td><td class="num">0.20&times;</td></tr>
+          </tbody>
+        </table>
+
         <h3>5. Self-checking agents do well; planning-only ones don't</h3>
 
         <p>
@@ -150,6 +223,21 @@
           The practical upshot is that it's easy to reward elaborate planning prose because it <em>sounds</em> organized. The corpus suggests that planning language on its own is not the useful signal. The useful signal is whether the agent interrogates its own work while it's gathering evidence. Planning without self-correction can be very articulate and still on a trajectory straight toward a user intervention.
         </p>
 
+        <table class="data-table">
+          <caption>Turn-sequence shapes that distinguish smooth from rough sessions</caption>
+          <thead>
+            <tr><th>Shape</th><th>Reads as</th><th class="num">Enrichment</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>user &rarr; agent &rarr; user &rarr; agent</td><td class="note">Steady alternation</td><td class="num">13.7&times; smoother</td></tr>
+            <tr><td>user &rarr; user &rarr; error</td><td class="note">User repeats, agent breaks</td><td class="num">6.9&times; rougher</td></tr>
+          </tbody>
+        </table>
+
+        <p class="chart-sub" style="margin-top: -0.2rem;">
+          From 10,563 ENA-coded sessions. The cognitive-move graph shows the same picture: <strong>check-evidence &harr; self-correct</strong> is the strongest tie in smooth sessions; rough ones lean on <strong>plan &harr; frame-problem</strong> instead.
+        </p>
+
         <h3>6. Tool use is repetitive, but we're cautious about the universal version</h3>
 
         <p>
@@ -159,6 +247,22 @@
         <p>
           That's a real measurement, but it's exactly the kind of result that becomes irresponsible if you repeat it too confidently. A large fraction of the corpus is subagent sessions with deliberately narrow jobs &mdash; "read these files and tell me what you found" &mdash; and a subagent that only reads files isn't behaviorally pathological. It's doing the one boring job it was given. So the careful reading is: repetitive tool use is abundant, some of it probably reflects real agent behavior, some of it is population structure, and we need to finish pulling those apart before turning this into a headline.
         </p>
+
+        <table class="data-table">
+          <caption>Self-loop rates by tool &mdash; share of runs where the tool calls itself next</caption>
+          <thead>
+            <tr><th>Tool</th><th class="num">Self-loop rate</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Bash &rarr; Bash &rarr; Bash</td><td class="num">55.2%</td></tr>
+            <tr><td>Read &rarr; Read &rarr; Read</td><td class="num">69.2%</td></tr>
+            <tr><td>WebSearch &rarr; WebSearch</td><td class="num">74.2%</td></tr>
+            <tr><td>TaskCreate &rarr; TaskCreate</td><td class="num">79.9%</td></tr>
+            <tr><td>Median per-session tool-diversity (Shannon H)</td><td class="num">0.000</td></tr>
+            <tr><td>Sessions flagged as tool monocultures</td><td class="num">58.8%</td></tr>
+            <tr><td>Burstiness <em>B</em> of tool-call inter-arrivals</td><td class="num">0.59</td></tr>
+          </tbody>
+        </table>
 
         <h2 id="what-did-not-hold">What didn't hold up</h2>
 
