@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-18 (v0.0.1-beta.0 tagged and released; GH Pages landing site live at lightless-labs.github.io/third-thoughts/)
+**Last updated:** 2026-04-23 (v0.0.1-beta.0 released on the 3-target matrix; GH Pages initial cut live; Homebrew tap is next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -20,11 +20,11 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 | Failed | 0 | — |
 | Timed out | 0 | — |
 
-**v0.0.1-beta.0 was tagged on 2026-04-18 but the release workflow stalled on `macos-13` runner starvation.** Three targets (darwin-arm64, linux-x86_64, linux-arm64) built in ~5 minutes; the `x86_64-apple-darwin` job sat in queue for 9 hours waiting for a free Intel runner that never arrived. Run `24604776369` cancelled. No release was published.
+**v0.0.1-beta.0 is now out.** The release matrix was narrowed to 3 targets after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
 
-**Decision:** drop `x86_64-apple-darwin` from the matrix — Apple Silicon is dominant, Intel-Mac users can build from source. Workflow now ships 3 targets. Rationale doc updated at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` (with the runner-starvation lesson recorded as failure mode #6).
+**GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
 
-**Next concrete move:** Delete and re-push tag `v0.0.1-beta.0` (commits the workflow fix into the tagged commit), watch the new release run, then advance to Distribution Step C (Homebrew tap, `todos/distribution-homebrew-tap.md`). Pre-tag codex xhigh review already passed in two rounds; that work stands.
+**Next concrete move:** Distribution Step C — Homebrew tap (`todos/distribution-homebrew-tap.md`). After that, do Distribution Step D (source-built vs brew-installed validation runs), then fold those results back into the site install story.
 
 ---
 
@@ -70,9 +70,9 @@ middens list-techniques                                # 23 registered technique
 
 ## Open work (prioritized)
 
-### P0 — Distribution (now unblocked)
+### P0 — Distribution (remaining blockers)
 
-All five steps in order. See individual `todos/distribution-*.md` for detail.
+Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 1. ~~**Step A — e2e verb**~~ **DONE** (`middens run`, commit `7aea3c6`). Chains analyze → interpret → export. `--model` optional; omit to skip interpret. Hard-fails on interpret error.
 
@@ -82,7 +82,7 @@ All five steps in order. See individual `todos/distribution-*.md` for detail.
 
 4. **Step D — two validation runs**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. Open question: use full private corpus (PII risk on landing page) or create a small public fixture corpus? (`todos/distribution-validation-runs.md`)
 
-5. **Step E — GitHub Pages landing page**: orphan `www` branch, static HTML/CSS, no JS framework. Copy reviewed by Gemini 3.1 Pro + Codex xhigh. Open questions: domain, design polish level, first-draft ownership. (`todos/distribution-github-pages.md`)
+5. ~~**Step E — GitHub Pages landing page**~~ **INITIAL CUT SHIPPED** (2026-04-18). Site live at <https://lightless-labs.github.io/third-thoughts/>. Remaining non-blocking site follow-ups live in `todos/distribution-github-pages.md` (Homebrew install story, embedded validation reports, contribution surface, second copy review, roadmap teaser).
 
 ### P1 — Research follow-ups
 
@@ -148,9 +148,15 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | All work landed and pushed. Tag `v0.0.1-beta.0` at `de87c99` pushed 2026-04-18. |
+| `main` | `origin/main` at `90d5f3c`. Local branch is synced to origin, but the working tree is dirty (see below). Tag `v0.0.1-beta.0` currently peels to `5aea0e5`. |
 
-No open PRs. No feature branches. Release workflow run `24604776369` is in progress at time of last update.
+No open PRs. No feature branches.
+
+### Local working tree
+
+- Modified tracked files: `CLAUDE.md`, `docs/solutions/integration-issues/python-scientific-library-api-quirks-20260406.md`
+- Untracked docs: several `docs/solutions/...` files referenced below are present locally but not yet committed
+- Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
 
 ---
 
