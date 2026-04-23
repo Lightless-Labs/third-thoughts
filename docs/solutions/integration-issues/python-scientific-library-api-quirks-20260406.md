@@ -1,6 +1,7 @@
 ---
 title: Python scientific library API quirks blocking middens technique ports
 date: 2026-04-06
+last_updated: 2026-04-13
 category: integration-issues
 module: middens/python/techniques
 problem_type: integration_issue
@@ -70,9 +71,8 @@ bic = n_params * np.log(features.shape[0]) - 2 * log_likelihood
 ### Quirk 2: PrefixSpan combinatorial explosion
 File: `middens/python/techniques/prefixspan_mining.py`
 
-Use `topk` with `closed=True` to bound the search, and note the tuple order
-flips between APIs (`frequent` returns `(pattern, support)`, `topk` returns
-`(support, pattern)`):
+Use `topk` to bound the search, and note the tuple order flips between APIs
+(`frequent` returns `(pattern, support)`, `topk` returns `(support, pattern)`):
 
 ```python
 # Before (times out):
@@ -81,13 +81,21 @@ patterns = ps.frequent(min_support)  # returns ALL frequent subsequences
 
 # After:
 ps = PrefixSpan(sequences)
-all_patterns = ps.topk(200, closed=True)  # top 200 closed patterns by support
+all_patterns = ps.topk(200)  # top 200 patterns by support
 filtered_patterns = [
     (pattern, support)
     for support, pattern in all_patterns
     if 3 <= len(pattern) <= 6 and support >= min_support
 ]
 ```
+
+> **Note (2026-04-13):** An earlier version of this fix used `topk(200, closed=True)`.
+> The `closed=True` flag turned out to trigger O(n²) closed-pattern filtering
+> across the full candidate set, which timed out on corpora with ~13k sequences.
+> Drop `closed=True`. See
+> `docs/solutions/performance-issues/prefixspan-closed-flag-quadratic-timeout-20260413.md`
+> for the full investigation, including two collateral bugs (row-shape mismatch,
+> off-by-index cohort building) that were unmasked when output resumed.
 
 ### Quirk 3: statsmodels `InfeasibleTestError` on constant columns
 File: `middens/python/techniques/granger_causality.py`
@@ -135,10 +143,10 @@ def foo(name: Optional[str]) -> Optional[dict]: ...
   diagonal variances per state). Computing it directly removes the dependency
   on a private API that has churned across versions.
 - **PrefixSpan**: `frequent()` enumerates the full lattice of frequent
-  subsequences, which is exponential. `topk(k, closed=True)` uses a closed
-  pattern constraint and a bounded result set, transforming the search from
-  "all subsequences above threshold" to "top-k by support among non-redundant
-  patterns" — far cheaper and usually what you actually want.
+  subsequences, which is exponential. `topk(k)` bounds the result to the
+  top-k by support, which is far cheaper and usually what you actually want.
+  Do not add `closed=True` — it triggers a post-mining O(n²) closed-pattern
+  filter that re-times-out on large corpora.
 - **statsmodels**: `InfeasibleTestError` is a custom exception in
   `statsmodels.tools.sm_exceptions` and is not a subclass of the numerical
   errors the original handler caught. Constant columns produce zero-variance
@@ -155,9 +163,9 @@ def foo(name: Optional[str]) -> Optional[dict]: ...
 - For Python technique scripts, default the exception policy for "skip
   degenerate inputs" code paths to a broad `except Exception` with a logged
   reason, rather than enumerating numerical exceptions.
-- Constrain combinatorial mining APIs with explicit bounds (`topk`, `closed`,
-  max pattern length) instead of post-filtering — the cost is in the search,
-  not the filter.
+- Constrain combinatorial mining APIs with explicit bounds (`topk`, max pattern
+  length) instead of post-filtering — the cost is in the search, not the
+  filter. Avoid `closed=True` on large corpora — it adds an O(n²) post-filter.
 - Lint Python technique scripts under the target interpreter version
   (currently 3.9) before merging. A simple `python3.9 -c "import ast;
   ast.parse(open('script.py').read())"` catches PEP 604 regressions.
