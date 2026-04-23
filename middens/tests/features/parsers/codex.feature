@@ -18,6 +18,22 @@ Feature: Codex CLI Parser
     And the session should have at least 1 user message
     And the session should have at least 1 assistant message
 
+  Scenario: Preserve adaptive reasoning observability without treating summaries as thinking
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-adaptive-reasoning","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:00.001Z","type":"turn_context","payload":{"model":"gpt-5.5","approval_policy":"auto-edit","effort":"high"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":"Understanding user feedback\n\nI need to clarify the user's point.","thinkingSignature":{"encrypted":"opaque","summary":[{"text":"Understanding user feedback\n\nI need to clarify the user's point."}]}},{"type":"output_text","text":"Could you say more about which part is off?"}]}}
+      {"timestamp":"2026-04-23T10:00:02.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","thinkingSignature":{"encrypted":"opaque","summary":[]}},{"type":"output_text","text":"I'll wait for the detail before changing course."}]}}
+      """
+    When I parse the file with the Codex parser
+    Then there should be 1 session
+    And the session reasoning observability should be "Mixed"
+    And at least one message should have reasoning observability "SummaryVisible"
+    And at least one message should have reasoning observability "SignatureOnly"
+    And the session should have 1 reasoning summary block
+    And the session should have exactly 0 thinking blocks
+
   Scenario: Reject non-Codex files
     Given a session file path "/tmp/random.jsonl"
     When I check if the Codex parser can parse it

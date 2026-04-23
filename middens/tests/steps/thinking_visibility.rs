@@ -22,11 +22,18 @@ fn mk_assistant(thinking: Option<&str>, text: &str) -> Message {
     raw_content.push(ContentBlock::Text {
         text: text.to_string(),
     });
+    let reasoning_observability = if thinking.is_some() {
+        middens::session::ReasoningObservability::FullTextVisible
+    } else {
+        middens::session::ReasoningObservability::Absent
+    };
     Message {
         role: MessageRole::Assistant,
         timestamp: None,
         text: text.to_string(),
         thinking: thinking.map(ToOwned::to_owned),
+        reasoning_summary: None,
+        reasoning_observability,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::Other,
@@ -40,6 +47,8 @@ fn mk_user(text: &str) -> Message {
         timestamp: None,
         text: text.to_string(),
         thinking: None,
+        reasoning_summary: None,
+        reasoning_observability: middens::session::ReasoningObservability::Absent,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::HumanDirective,
@@ -64,6 +73,7 @@ fn mk_session(
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: visibility,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 

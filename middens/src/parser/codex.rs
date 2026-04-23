@@ -7,11 +7,75 @@ use serde::Deserialize;
 
 use super::SessionParser;
 use crate::session::{
-    ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole, Session,
-    SessionMetadata, SessionType, SourceTool, ToolCall, ToolResult,
+    ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole,
+    ReasoningObservability, Session, SessionMetadata, SessionReasoningObservability, SessionType,
+    SourceTool, ToolCall, ToolResult,
 };
 
 pub struct CodexParser;
+
+fn merge_reasoning_observability(
+    current: ReasoningObservability,
+    next: ReasoningObservability,
+) -> ReasoningObservability {
+    use ReasoningObservability::{Absent, FullTextVisible, SignatureOnly, SummaryVisible, Unknown};
+
+    match (current, next) {
+        (FullTextVisible, _) | (_, FullTextVisible) => FullTextVisible,
+        (SummaryVisible, _) | (_, SummaryVisible) => SummaryVisible,
+        (SignatureOnly, _) | (_, SignatureOnly) => SignatureOnly,
+        (Unknown, _) | (_, Unknown) => Unknown,
+        (Absent, Absent) => Absent,
+    }
+}
+
+fn extract_reasoning_summary(
+    summary: Option<&serde_json::Value>,
+    thinking_signature: Option<&serde_json::Value>,
+) -> Option<String> {
+    let mut parts = Vec::new();
+    if let Some(summary) = summary {
+        collect_text_fields(summary, &mut parts);
+    }
+    if let Some(signature_summary) =
+        thinking_signature.and_then(|signature| signature.get("summary"))
+    {
+        collect_text_fields(signature_summary, &mut parts);
+    }
+
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join("\n"))
+    }
+}
+
+fn collect_text_fields(value: &serde_json::Value, parts: &mut Vec<String>) {
+    match value {
+        serde_json::Value::String(text) => {
+            if !text.trim().is_empty() {
+                parts.push(text.clone());
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                collect_text_fields(item, parts);
+            }
+        }
+        serde_json::Value::Object(map) => {
+            for (key, item) in map {
+                if key == "text" {
+                    if let Some(text) = item.as_str().filter(|text| !text.trim().is_empty()) {
+                        parts.push(text.to_string());
+                    }
+                } else if item.is_array() || item.is_object() {
+                    collect_text_fields(item, parts);
+                }
+            }
+        }
+        _ => {}
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Raw deserialization types mirroring Codex CLI JSONL structure
@@ -73,8 +137,9 @@ enum RawContentBlock {
     Thinking {
         thinking: Option<String>,
         #[serde(default)]
-        #[allow(dead_code)]
         summary: Option<serde_json::Value>,
+        #[serde(default, rename = "thinkingSignature")]
+        thinking_signature: Option<serde_json::Value>,
     },
     #[serde(rename = "tool_use")]
     ToolUse {
@@ -267,6 +332,8 @@ impl SessionParser for CodexParser {
 
                             let mut text_parts: Vec<String> = Vec::new();
                             let mut thinking_parts: Vec<String> = Vec::new();
+                            let mut reasoning_summary_parts: Vec<String> = Vec::new();
+                            let mut reasoning_observability = ReasoningObservability::Absent;
                             let mut tool_calls: Vec<ToolCall> = Vec::new();
                             let mut tool_results: Vec<ToolResult> = Vec::new();
                             let mut raw_content: Vec<ContentBlock> = Vec::new();
@@ -279,12 +346,65 @@ impl SessionParser for CodexParser {
                                         text_parts.push(text.clone());
                                         raw_content.push(ContentBlock::Text { text: text.clone() });
                                     }
-                                    RawContentBlock::Thinking { thinking, .. } => {
-                                        if let Some(t) = thinking {
-                                            thinking_parts.push(t.clone());
+                                    RawContentBlock::Thinking {
+                                        thinking,
+                                        summary,
+                                        thinking_signature,
+                                    } => {
+                                        let thinking_text = thinking
+                                            .as_deref()
+                                            .filter(|text| !text.trim().is_empty());
+                                        let summary_text = extract_reasoning_summary(
+                                            summary.as_ref(),
+                                            thinking_signature.as_ref(),
+                                        );
+                                        let has_signature = thinking_signature.is_some();
+
+                                        if has_signature {
+                                            if let Some(summary_text) = summary_text
+                                                .or_else(|| thinking_text.map(str::to_string))
+                                            {
+                                                reasoning_summary_parts.push(summary_text.clone());
+                                                reasoning_observability =
+                                                    merge_reasoning_observability(
+                                                        reasoning_observability,
+                                                        ReasoningObservability::SummaryVisible,
+                                                    );
+                                                raw_content.push(ContentBlock::ReasoningSummary {
+                                                    text: summary_text,
+                                                });
+                                            } else {
+                                                reasoning_observability =
+                                                    merge_reasoning_observability(
+                                                        reasoning_observability,
+                                                        ReasoningObservability::SignatureOnly,
+                                                    );
+                                                raw_content.push(ContentBlock::ReasoningSignature);
+                                            }
+                                        } else if let Some(t) = thinking_text {
+                                            thinking_parts.push(t.to_string());
+                                            reasoning_observability = merge_reasoning_observability(
+                                                reasoning_observability,
+                                                ReasoningObservability::FullTextVisible,
+                                            );
                                             raw_content.push(ContentBlock::Thinking {
-                                                thinking: t.clone(),
+                                                thinking: t.to_string(),
                                             });
+                                        } else if let Some(summary_text) = summary_text {
+                                            reasoning_summary_parts.push(summary_text.clone());
+                                            reasoning_observability = merge_reasoning_observability(
+                                                reasoning_observability,
+                                                ReasoningObservability::SummaryVisible,
+                                            );
+                                            raw_content.push(ContentBlock::ReasoningSummary {
+                                                text: summary_text,
+                                            });
+                                        } else {
+                                            reasoning_observability = merge_reasoning_observability(
+                                                reasoning_observability,
+                                                ReasoningObservability::SignatureOnly,
+                                            );
+                                            raw_content.push(ContentBlock::ReasoningSignature);
                                         }
                                     }
                                     RawContentBlock::ToolUse { id, name, input } => {
@@ -331,19 +451,28 @@ impl SessionParser for CodexParser {
                             } else {
                                 Some(thinking_parts.join("\n"))
                             };
+                            let reasoning_summary = if reasoning_summary_parts.is_empty() {
+                                None
+                            } else {
+                                Some(reasoning_summary_parts.join("\n"))
+                            };
 
                             messages.push(Message {
                                 role,
                                 timestamp: ts,
                                 text,
                                 thinking,
+                                reasoning_summary,
+                                reasoning_observability,
                                 tool_calls,
                                 tool_results,
                                 classification: MessageClassification::Unclassified,
                                 raw_content,
                             });
                         }
-                        // "reasoning" items are encrypted in Codex; skip them.
+                        // Standalone `reasoning` items are usually encrypted in Codex and are
+                        // not user/assistant messages. Reasoning blocks embedded in messages
+                        // are handled above and labelled as full-text, summary, or signature-only.
                     }
                 }
 
@@ -378,6 +507,8 @@ impl SessionParser for CodexParser {
             SessionType::Unknown
         };
 
+        let reasoning_observability = SessionReasoningObservability::from_messages(&messages);
+
         let session = Session {
             id,
             source_path: path.to_path_buf(),
@@ -387,6 +518,7 @@ impl SessionParser for CodexParser {
             metadata,
             environment,
             thinking_visibility: crate::session::ThinkingVisibility::Unknown,
+            reasoning_observability,
         };
 
         Ok(vec![session])

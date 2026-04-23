@@ -280,6 +280,52 @@ fn then_min_thinking_blocks(world: &mut MiddensWorld, min: usize) {
     );
 }
 
+#[then(expr = "the session should have exactly {int} thinking blocks")]
+fn then_exact_thinking_blocks(world: &mut MiddensWorld, expected: usize) {
+    let session = &world.sessions[0];
+    assert_eq!(
+        session.thinking_count(),
+        expected,
+        "expected exactly {expected} thinking block(s)"
+    );
+}
+
+#[then(expr = "the session reasoning observability should be {string}")]
+fn then_session_reasoning_observability(world: &mut MiddensWorld, expected: String) {
+    let session = &world.sessions[0];
+    let actual = format!("{:?}", session.reasoning_observability);
+    assert_eq!(actual, expected, "session reasoning observability mismatch");
+}
+
+#[then(expr = "at least one message should have reasoning observability {string}")]
+fn then_any_message_reasoning_observability(world: &mut MiddensWorld, expected: String) {
+    let session = &world.sessions[0];
+    let found = session
+        .messages
+        .iter()
+        .any(|message| format!("{:?}", message.reasoning_observability) == expected);
+    assert!(
+        found,
+        "expected at least one message with reasoning observability {expected}, got {:?}",
+        session
+            .messages
+            .iter()
+            .map(|message| format!("{:?}", message.reasoning_observability))
+            .collect::<Vec<_>>()
+    );
+}
+
+#[then(expr = "the session should have {int} reasoning summary block")]
+fn then_reasoning_summary_count(world: &mut MiddensWorld, expected: usize) {
+    let session = &world.sessions[0];
+    let actual = session
+        .messages
+        .iter()
+        .filter(|message| message.reasoning_summary.is_some())
+        .count();
+    assert_eq!(actual, expected, "reasoning summary count mismatch");
+}
+
 #[then(expr = "the session should have at least {int} tool call(s)")]
 fn then_min_tool_calls(world: &mut MiddensWorld, min: usize) {
     let session = &world.sessions[0];

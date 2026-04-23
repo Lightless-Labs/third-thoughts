@@ -30,6 +30,12 @@ pub struct Session {
     /// field), and downstream techniques must branch on it frequently.
     #[serde(default)]
     pub thinking_visibility: ThinkingVisibility,
+    /// Session-level reasoning observability derived from message-level labels.
+    ///
+    /// This is distinct from `thinking_visibility`: provider traces can expose
+    /// plaintext summaries while keeping raw reasoning encrypted/signature-only.
+    #[serde(default)]
+    pub reasoning_observability: SessionReasoningObservability,
 }
 
 /// Which agent tool produced this session.
@@ -77,6 +83,39 @@ pub enum ThinkingVisibility {
     Unknown,
 }
 
+/// Message-level observability of private reasoning in the transcript.
+///
+/// `SummaryVisible` is deliberately separate from `FullTextVisible`: summaries
+/// are provider/model-selected abstractions, not raw chain-of-thought. Techniques
+/// that compare `Message::thinking` against public text must not silently treat
+/// summaries as raw thinking.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub enum ReasoningObservability {
+    /// Raw/full reasoning text is present in `Message::thinking`.
+    FullTextVisible,
+    /// A plaintext reasoning summary is present while raw reasoning is opaque.
+    SummaryVisible,
+    /// A reasoning/signature block exists, but no plaintext is present.
+    SignatureOnly,
+    /// No reasoning block was recorded for this message.
+    Absent,
+    /// Cannot be determined from the available data.
+    #[default]
+    Unknown,
+}
+
+/// Session-level rollup of message-level reasoning observability labels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub enum SessionReasoningObservability {
+    FullTextVisible,
+    SummaryVisible,
+    SignatureOnly,
+    Mixed,
+    Absent,
+    #[default]
+    Unknown,
+}
+
 /// Whether this session involved a human or was automated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SessionType {
@@ -97,8 +136,17 @@ pub struct Message {
     pub timestamp: Option<DateTime<Utc>>,
     /// The public text content (what the user sees).
     pub text: String,
-    /// Private thinking/reasoning content (if preserved).
+    /// Private thinking/reasoning content (if raw/full text is preserved).
     pub thinking: Option<String>,
+    /// Provider/model-selected reasoning summary, if present.
+    ///
+    /// This must stay separate from `thinking`: summary-visible traces measure a
+    /// different phenomenon than raw private reasoning.
+    #[serde(default)]
+    pub reasoning_summary: Option<String>,
+    /// How much private reasoning is observable for this message.
+    #[serde(default)]
+    pub reasoning_observability: ReasoningObservability,
     /// Tool calls made in this message.
     pub tool_calls: Vec<ToolCall>,
     /// Tool results returned in this message.
@@ -166,6 +214,10 @@ pub enum ContentBlock {
     Text { text: String },
     #[serde(rename = "thinking")]
     Thinking { thinking: String },
+    #[serde(rename = "reasoning_summary")]
+    ReasoningSummary { text: String },
+    #[serde(rename = "reasoning_signature")]
+    ReasoningSignature,
     #[serde(rename = "tool_use")]
     ToolUse {
         id: String,
@@ -220,6 +272,43 @@ pub struct EnvironmentFingerprint {
     pub plugins: Vec<String>,
     /// Hooks detected in session.
     pub hooks: Vec<String>,
+}
+
+impl SessionReasoningObservability {
+    /// Derive a session-level label from message-level observability.
+    ///
+    /// `Absent` user/system messages do not make an otherwise summary-visible
+    /// or full-text-visible session `Mixed`; only multiple concrete reasoning
+    /// modes do. This keeps the label aligned with the reasoning blocks that
+    /// actually exist in the transcript.
+    pub fn from_messages(messages: &[Message]) -> Self {
+        let mut has_full_text = false;
+        let mut has_summary = false;
+        let mut has_signature_only = false;
+        let mut has_unknown = false;
+
+        for message in messages {
+            match message.reasoning_observability {
+                ReasoningObservability::FullTextVisible => has_full_text = true,
+                ReasoningObservability::SummaryVisible => has_summary = true,
+                ReasoningObservability::SignatureOnly => has_signature_only = true,
+                ReasoningObservability::Unknown => has_unknown = true,
+                ReasoningObservability::Absent => {}
+            }
+        }
+
+        let concrete_modes =
+            usize::from(has_full_text) + usize::from(has_summary) + usize::from(has_signature_only);
+
+        match concrete_modes {
+            0 if has_unknown => Self::Unknown,
+            0 => Self::Absent,
+            1 if has_full_text => Self::FullTextVisible,
+            1 if has_summary => Self::SummaryVisible,
+            1 if has_signature_only => Self::SignatureOnly,
+            _ => Self::Mixed,
+        }
+    }
 }
 
 impl Session {

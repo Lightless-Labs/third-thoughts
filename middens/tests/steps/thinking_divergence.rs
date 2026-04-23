@@ -24,11 +24,19 @@ fn assistant_message(thinking: Option<&str>, text: &str) -> Message {
         text: text.to_string(),
     });
 
+    let reasoning_observability = if thinking.is_some() {
+        middens::session::ReasoningObservability::FullTextVisible
+    } else {
+        middens::session::ReasoningObservability::Absent
+    };
+
     Message {
         role: MessageRole::Assistant,
         timestamp: None,
         text: text.to_string(),
         thinking: thinking.map(ToOwned::to_owned),
+        reasoning_summary: None,
+        reasoning_observability,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::Other,
@@ -42,6 +50,8 @@ fn directive_message(text: &str) -> Message {
         timestamp: None,
         text: text.to_string(),
         thinking: None,
+        reasoning_summary: None,
+        reasoning_observability: middens::session::ReasoningObservability::Absent,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::HumanDirective,
@@ -64,6 +74,7 @@ fn session_with_thinking_and_text(id: &str, thinking: Option<&str>, text: &str) 
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Visible,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 
