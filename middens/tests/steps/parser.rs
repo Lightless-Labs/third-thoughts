@@ -283,10 +283,15 @@ fn then_min_thinking_blocks(world: &mut MiddensWorld, min: usize) {
 #[then(expr = "the session should have exactly {int} thinking blocks")]
 fn then_exact_thinking_blocks(world: &mut MiddensWorld, expected: usize) {
     let session = &world.sessions[0];
+    let actual = session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| matches!(block, middens::session::ContentBlock::Thinking { .. }))
+        .count();
     assert_eq!(
-        session.thinking_count(),
-        expected,
-        "expected exactly {expected} thinking block(s)"
+        actual, expected,
+        "expected exactly {expected} thinking block(s), got {actual}"
     );
 }
 
@@ -315,15 +320,39 @@ fn then_any_message_reasoning_observability(world: &mut MiddensWorld, expected: 
     );
 }
 
-#[then(expr = "the session should have {int} reasoning summary block")]
+#[then(expr = "the session reasoning summary block count should be {int}")]
 fn then_reasoning_summary_count(world: &mut MiddensWorld, expected: usize) {
     let session = &world.sessions[0];
     let actual = session
         .messages
         .iter()
-        .filter(|message| message.reasoning_summary.is_some())
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| {
+            matches!(
+                block,
+                middens::session::ContentBlock::ReasoningSummary { .. }
+            )
+        })
         .count();
-    assert_eq!(actual, expected, "reasoning summary count mismatch");
+    assert_eq!(
+        actual, expected,
+        "expected exactly {expected} reasoning summary block(s), got {actual}"
+    );
+}
+
+#[then(expr = "the session reasoning signature block count should be {int}")]
+fn then_reasoning_signature_count(world: &mut MiddensWorld, expected: usize) {
+    let session = &world.sessions[0];
+    let actual = session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| matches!(block, middens::session::ContentBlock::ReasoningSignature))
+        .count();
+    assert_eq!(
+        actual, expected,
+        "expected exactly {expected} reasoning signature block(s), got {actual}"
+    );
 }
 
 #[then(expr = "the session should have at least {int} tool call(s)")]

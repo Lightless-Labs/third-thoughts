@@ -361,9 +361,7 @@ impl SessionParser for CodexParser {
                                         let has_signature = thinking_signature.is_some();
 
                                         if has_signature {
-                                            if let Some(summary_text) = summary_text
-                                                .or_else(|| thinking_text.map(str::to_string))
-                                            {
+                                            if let Some(summary_text) = summary_text {
                                                 reasoning_summary_parts.push(summary_text.clone());
                                                 reasoning_observability =
                                                     merge_reasoning_observability(
@@ -400,11 +398,13 @@ impl SessionParser for CodexParser {
                                                 text: summary_text,
                                             });
                                         } else {
+                                            // Degenerate thinking block with no signature, no
+                                            // plaintext, and no summary. Treat it as absent rather
+                                            // than fabricating a signature marker.
                                             reasoning_observability = merge_reasoning_observability(
                                                 reasoning_observability,
-                                                ReasoningObservability::SignatureOnly,
+                                                ReasoningObservability::Absent,
                                             );
-                                            raw_content.push(ContentBlock::ReasoningSignature);
                                         }
                                     }
                                     RawContentBlock::ToolUse { id, name, input } => {

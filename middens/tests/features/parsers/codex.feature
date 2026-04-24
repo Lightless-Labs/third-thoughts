@@ -31,7 +31,21 @@ Feature: Codex CLI Parser
     And the session reasoning observability should be "Mixed"
     And at least one message should have reasoning observability "SummaryVisible"
     And at least one message should have reasoning observability "SignatureOnly"
-    And the session should have 1 reasoning summary block
+    And the session reasoning summary block count should be 1
+    And the session should have exactly 0 thinking blocks
+
+  Scenario: Treat degenerate empty thinking blocks without signatures as absent
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-empty-thinking","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:00.001Z","type":"turn_context","payload":{"model":"gpt-5.5","approval_policy":"auto-edit","effort":"high"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":""},{"type":"output_text","text":"No private reasoning is visible here."}]}}
+      """
+    When I parse the file with the Codex parser
+    Then there should be 1 session
+    And the session reasoning observability should be "Absent"
+    And the session reasoning signature block count should be 0
+    And the session reasoning summary block count should be 0
     And the session should have exactly 0 thinking blocks
 
   Scenario: Reject non-Codex files

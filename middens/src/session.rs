@@ -281,6 +281,10 @@ impl SessionReasoningObservability {
     /// or full-text-visible session `Mixed`; only multiple concrete reasoning
     /// modes do. This keeps the label aligned with the reasoning blocks that
     /// actually exist in the transcript.
+    ///
+    /// `Unknown` is conservative: if any message is unknown, the whole session
+    /// is unknown unless there are multiple concrete modes, in which case the
+    /// concrete heterogeneity is still reported as `Mixed`.
     pub fn from_messages(messages: &[Message]) -> Self {
         let mut has_full_text = false;
         let mut has_summary = false;
@@ -303,6 +307,7 @@ impl SessionReasoningObservability {
         match concrete_modes {
             0 if has_unknown => Self::Unknown,
             0 => Self::Absent,
+            1 if has_unknown => Self::Unknown,
             1 if has_full_text => Self::FullTextVisible,
             1 if has_summary => Self::SummaryVisible,
             1 if has_signature_only => Self::SignatureOnly,
