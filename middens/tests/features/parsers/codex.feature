@@ -81,6 +81,17 @@ Feature: Codex CLI Parser
     And parsing should fail with error containing "thinkingSignature summary and plaintext thinking differ"
     And parsing should fail with error containing "Example supported summary block"
 
+  Scenario: Reject mismatched unsigned plaintext and summary
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-mismatched-unsigned-summary","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":"Raw visible reasoning text.","summary":[{"text":"Different summary text."}]}]}}
+      """
+    When I parse the file with the Codex parser
+    Then parsing should fail with error containing "unsupported Codex thinking block"
+    And parsing should fail with error containing "unsigned plaintext thinking and summary differ"
+    And parsing should fail with error containing "Example supported raw block"
+
   Scenario: Deduplicate repeated reasoning summary parts while preserving order
     Given a temporary JSONL file with content:
       """

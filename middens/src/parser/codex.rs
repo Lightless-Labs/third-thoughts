@@ -432,6 +432,19 @@ impl SessionParser for CodexParser {
                                                 raw_content.push(ContentBlock::ReasoningSignature);
                                             }
                                         } else if let Some(t) = thinking_text {
+                                            if let Some(summary_extraction) = summary_extraction {
+                                                let thinking_text = t.trim();
+                                                let matches_raw = thinking_text
+                                                    == summary_extraction.raw_text.trim();
+                                                let matches_display = thinking_text
+                                                    == summary_extraction.display_text.trim();
+                                                if !matches_raw && !matches_display {
+                                                    anyhow::bail!(
+                                                        "{}",
+                                                        "unsupported Codex thinking block: unsigned plaintext thinking and summary differ; expected no summary for raw visible thinking, matching summary text, or thinkingSignature for provider summary-visible mode. Example supported raw block: {\"type\":\"thinking\",\"thinking\":\"raw visible reasoning\"}"
+                                                    );
+                                                }
+                                            }
                                             thinking_parts.push(t.to_string());
                                             reasoning_observability = merge_reasoning_observability(
                                                 reasoning_observability,
