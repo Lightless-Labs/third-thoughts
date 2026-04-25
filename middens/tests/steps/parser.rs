@@ -352,6 +352,24 @@ fn then_reasoning_summary_count(world: &mut MiddensWorld, expected: usize) {
     );
 }
 
+#[then("the first reasoning summary block should be:")]
+fn then_first_reasoning_summary_block(world: &mut MiddensWorld, step: &Step) {
+    let session = &world.sessions[0];
+    let expected = step
+        .docstring()
+        .expect("missing reasoning summary docstring");
+    let actual = session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .find_map(|block| match block {
+            middens::session::ContentBlock::ReasoningSummary { text } => Some(text.as_str()),
+            _ => None,
+        })
+        .expect("missing reasoning summary block");
+    assert_eq!(actual.trim(), expected.trim(), "reasoning summary mismatch");
+}
+
 #[then(expr = "the session reasoning signature block count should be {int}")]
 fn then_reasoning_signature_count(world: &mut MiddensWorld, expected: usize) {
     let session = &world.sessions[0];

@@ -70,6 +70,32 @@ Feature: Codex CLI Parser
     And parsing should fail with error containing "expected summary in payload.summary or thinkingSignature.summary"
     And parsing should fail with error containing "Example supported summary block"
 
+  Scenario: Reject mismatched signature plaintext and summary
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-mismatched-signature","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":"Raw visible reasoning text.","thinkingSignature":{"encrypted":"opaque","summary":[{"text":"Provider summary text."}]}}]}}
+      """
+    When I parse the file with the Codex parser
+    Then parsing should fail with error containing "unsupported Codex thinking block"
+    And parsing should fail with error containing "thinkingSignature summary and plaintext thinking differ"
+    And parsing should fail with error containing "Example supported summary block"
+
+  Scenario: Deduplicate repeated reasoning summary parts while preserving order
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-dedup-summary","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","summary":[{"text":"Repeated"},{"text":"Unique"},{"text":"Repeated"}],"thinkingSignature":{"encrypted":"opaque","summary":[{"text":"Unique"}]}},{"type":"output_text","text":"Done."}]}}
+      """
+    When I parse the file with the Codex parser
+    Then there should be 1 session
+    And the session reasoning summary block count should be 1
+    And the first reasoning summary block should be:
+      """
+      Repeated
+      Unique
+      """
+
   Scenario: Reject non-Codex files
     Given a session file path "/tmp/random.jsonl"
     When I check if the Codex parser can parse it

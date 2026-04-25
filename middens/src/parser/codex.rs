@@ -43,7 +43,8 @@ fn extract_reasoning_summary(
         collect_text_fields(signature_summary, &mut parts);
     }
 
-    parts.dedup();
+    let mut seen = std::collections::HashSet::new();
+    parts.retain(|part| seen.insert(part.clone()));
     if parts.is_empty() {
         None
     } else {
@@ -365,6 +366,14 @@ impl SessionParser for CodexParser {
 
                                         if has_signature {
                                             if let Some(summary_text) = summary_text {
+                                                if let Some(thinking_text) = thinking_text {
+                                                    if thinking_text.trim() != summary_text.trim() {
+                                                        anyhow::bail!(
+                                                            "{}",
+                                                            "unsupported Codex thinking block: thinkingSignature summary and plaintext thinking differ; expected matching summary text, omitted plaintext thinking, or no thinkingSignature for raw visible thinking. Example supported summary block: {\"type\":\"thinking\",\"thinking\":\"reasoning summary\",\"thinkingSignature\":{\"summary\":[{\"text\":\"reasoning summary\"}]}}"
+                                                        );
+                                                    }
+                                                }
                                                 reasoning_summary_parts.push(summary_text.clone());
                                                 reasoning_observability =
                                                     merge_reasoning_observability(
