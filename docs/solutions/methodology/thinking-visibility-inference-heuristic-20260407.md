@@ -51,6 +51,14 @@ Whenever the provider changes its redaction policy, that constant
 moves and every downstream technique re-derives its labels
 consistently.
 
+**Codex/pi caveat (2026-04-25):** `thinking_visibility` describes raw
+thinking visibility, not every form of reasoning observability. Codex/pi traces
+can contain encrypted reasoning signatures plus provider-selected plaintext
+summaries on a per-turn basis. Those summaries must not be treated as raw
+`thinking` blocks; use the separate `reasoning_observability` and
+`reasoning_summary` fields documented in
+`docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md`.
+
 ## Why This Matters
 
 Without a single authoritative heuristic, each technique ends up
@@ -95,6 +103,7 @@ These two techniques will report incompatible rates over the same
 cohort, and a reader comparing them will see a phantom effect.
 
 Related:
+- `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md`
 - `docs/solutions/methodology/redact-thinking-stratification-20260406.md`
 - `docs/solutions/methodology/visible-only-denominator-risk-suppression-20260407.md`
 - `docs/solutions/methodology/compound-scoping-rule-4-axis-stratification-20260407.md`

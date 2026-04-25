@@ -36,7 +36,7 @@ Adding a new format:
 | Tool | Format | Key Differences |
 |------|--------|----------------|
 | Claude Code | JSONL (rich) | Thinking blocks with signatures, `sessionId`+`version` envelope |
-| Codex CLI | JSONL | `session_meta`/`turn_context`/`message` types, encrypted reasoning |
+| Codex CLI | JSONL | `session_meta`/`turn_context`/`message` types, encrypted reasoning plus adaptive summary/signature observability |
 | OpenClaw | JSONL | Multi-agent metadata, delivery-mirror pattern, per-agent files |
 | Gemini CLI | Directory-based | NOT JSONL — needs fundamentally different approach |
 
@@ -46,6 +46,7 @@ Adding a new format:
 - Auto-detect should call `detect_format` (one line read) then dispatch to `parse` (one full read) — not `can_parse` + `parse` (two reads)
 - Path-based detection should check path components, not substrings (`.contains(".claude")` matches `.claude-tools`)
 - Post-parse, run classifiers on the parsed sessions — parsers emit `Unclassified` messages
+- For reasoning-bearing formats, preserve observability distinctions in the unified model rather than squeezing everything into raw `thinking`: Codex/pi may expose provider summaries (`SummaryVisible`), opaque signatures (`SignatureOnly`), raw thinking (`FullTextVisible`), or unknown future blocks. See `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md`.
 
 ## Cross-References
 
