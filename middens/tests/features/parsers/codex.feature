@@ -48,6 +48,28 @@ Feature: Codex CLI Parser
     And the session reasoning summary block count should be 0
     And the session should have exactly 0 thinking blocks
 
+  Scenario: Reject standalone reasoning response items clearly
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-standalone-reasoning","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"reasoning","content":[]}}
+      """
+    When I parse the file with the Codex parser
+    Then parsing should fail with error containing "unsupported Codex response_item.payload.type"
+    And parsing should fail with error containing "expected payload.type"
+    And parsing should fail with error containing "Example supported item"
+
+  Scenario: Reject ambiguous signature plaintext without explicit summary
+    Given a temporary JSONL file with content:
+      """
+      {"timestamp":"2026-04-23T10:00:00.000Z","type":"session_meta","payload":{"id":"codex-ambiguous-signature","cwd":"/tmp/test-project","cli_version":"0.120.0","model_provider":"openai"}}
+      {"timestamp":"2026-04-23T10:00:01.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"thinking","thinking":"Visible text, but no explicit summary field.","thinkingSignature":{"encrypted":"opaque"}}]}}
+      """
+    When I parse the file with the Codex parser
+    Then parsing should fail with error containing "unsupported Codex thinking block"
+    And parsing should fail with error containing "expected summary in payload.summary or thinkingSignature.summary"
+    And parsing should fail with error containing "Example supported summary block"
+
   Scenario: Reject non-Codex files
     Given a session file path "/tmp/random.jsonl"
     When I check if the Codex parser can parse it

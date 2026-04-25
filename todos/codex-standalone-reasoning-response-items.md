@@ -2,6 +2,7 @@
 title: "Model standalone Codex reasoning response_items"
 status: todo
 priority: P3
+issue_id: PR-2
 tags: [middens, parser, codex, reasoning-observability, review-feedback]
 source: pr-2-coderabbit-review-2026-04-24
 ---

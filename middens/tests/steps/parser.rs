@@ -154,6 +154,15 @@ fn then_not_parseable(world: &mut MiddensWorld) {
 // Then steps — session count and basic fields
 // ---------------------------------------------------------------------------
 
+#[then(expr = "parsing should fail with error containing {string}")]
+fn then_parsing_error_contains(world: &mut MiddensWorld, expected: String) {
+    let error = world.error.as_ref().expect("expected parser error");
+    assert!(
+        error.contains(&expected),
+        "expected parser error to contain '{expected}', got: {error}"
+    );
+}
+
 #[then(expr = "there should be {int} session(s)")]
 fn then_session_count(world: &mut MiddensWorld, expected: usize) {
     assert_eq!(
@@ -269,26 +278,29 @@ fn then_min_assistant_messages(world: &mut MiddensWorld, min: usize) {
     );
 }
 
+fn thinking_block_count(session: &middens::session::Session) -> usize {
+    session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| matches!(block, middens::session::ContentBlock::Thinking { .. }))
+        .count()
+}
+
 #[then(expr = "the session should have at least {int} thinking block(s)")]
 fn then_min_thinking_blocks(world: &mut MiddensWorld, min: usize) {
     let session = &world.sessions[0];
+    let actual = thinking_block_count(session);
     assert!(
-        session.thinking_count() >= min,
-        "expected at least {} thinking block(s), got {}",
-        min,
-        session.thinking_count()
+        actual >= min,
+        "expected at least {min} thinking block(s), got {actual}"
     );
 }
 
 #[then(expr = "the session should have exactly {int} thinking blocks")]
 fn then_exact_thinking_blocks(world: &mut MiddensWorld, expected: usize) {
     let session = &world.sessions[0];
-    let actual = session
-        .messages
-        .iter()
-        .flat_map(|message| &message.raw_content)
-        .filter(|block| matches!(block, middens::session::ContentBlock::Thinking { .. }))
-        .count();
+    let actual = thinking_block_count(session);
     assert_eq!(
         actual, expected,
         "expected exactly {expected} thinking block(s), got {actual}"

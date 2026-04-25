@@ -43,6 +43,7 @@ fn extract_reasoning_summary(
         collect_text_fields(signature_summary, &mut parts);
     }
 
+    parts.dedup();
     if parts.is_empty() {
         None
     } else {
@@ -67,8 +68,10 @@ fn collect_text_fields(value: &serde_json::Value, parts: &mut Vec<String>) {
                 if key == "text" {
                     if let Some(text) = item.as_str().filter(|text| !text.trim().is_empty()) {
                         parts.push(text.to_string());
+                        continue;
                     }
-                } else if item.is_array() || item.is_object() {
+                }
+                if item.is_array() || item.is_object() {
                     collect_text_fields(item, parts);
                 }
             }
@@ -371,6 +374,11 @@ impl SessionParser for CodexParser {
                                                 raw_content.push(ContentBlock::ReasoningSummary {
                                                     text: summary_text,
                                                 });
+                                            } else if thinking_text.is_some() {
+                                                anyhow::bail!(
+                                                    "{}",
+                                                    "unsupported Codex thinking block: thinkingSignature is present with plaintext thinking but no explicit summary; expected summary in payload.summary or thinkingSignature.summary, or omit thinkingSignature for raw visible thinking. Example supported summary block: {\"type\":\"thinking\",\"thinking\":\"\",\"thinkingSignature\":{\"summary\":[{\"text\":\"reasoning summary\"}]}}"
+                                                );
                                             } else {
                                                 reasoning_observability =
                                                     merge_reasoning_observability(
@@ -469,10 +477,16 @@ impl SessionParser for CodexParser {
                                 classification: MessageClassification::Unclassified,
                                 raw_content,
                             });
+                        } else if item_type == "reasoning" {
+                            anyhow::bail!(
+                                "{}",
+                                "unsupported Codex response_item.payload.type=\"reasoning\"; expected payload.type=\"message\" until standalone reasoning items are modelled. Example supported item: {\"type\":\"response_item\",\"payload\":{\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"ok\"}]}}"
+                            );
                         }
-                        // Standalone `reasoning` items are usually encrypted in Codex and are
-                        // not user/assistant messages. Reasoning blocks embedded in messages
-                        // are handled above and labelled as full-text, summary, or signature-only.
+                        // Reasoning blocks embedded in messages are handled above and labelled
+                        // as full-text, summary, or signature-only. Standalone `reasoning`
+                        // response_items fail clearly until the session model grows an event
+                        // stream or synthetic-message representation for them.
                     }
                 }
 
