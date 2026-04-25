@@ -29,55 +29,84 @@ fn merge_reasoning_observability(
     }
 }
 
+#[derive(Debug)]
+struct ReasoningSummaryExtraction {
+    raw_text: String,
+    display_text: String,
+}
+
 fn extract_reasoning_summary(
     summary: Option<&serde_json::Value>,
     thinking_signature: Option<&serde_json::Value>,
-) -> Option<String> {
-    let mut parts = Vec::new();
+) -> Option<ReasoningSummaryExtraction> {
+    let mut raw_parts = Vec::new();
     if let Some(summary) = summary {
-        collect_text_fields(summary, &mut parts);
+        collect_text_fields(summary, &mut raw_parts);
     }
     if let Some(signature_summary) =
         thinking_signature.and_then(|signature| signature.get("summary"))
     {
-        collect_text_fields(signature_summary, &mut parts);
+        collect_text_fields(signature_summary, &mut raw_parts);
     }
 
-    let mut seen = std::collections::HashSet::new();
-    parts.retain(|part| seen.insert(part.clone()));
-    if parts.is_empty() {
-        None
-    } else {
-        Some(parts.join("\n"))
+    if raw_parts.is_empty() {
+        return None;
     }
+
+    let raw_text = raw_parts.join("\n");
+    let mut display_parts = raw_parts;
+    let mut seen = std::collections::HashSet::new();
+    display_parts.retain(|part| seen.insert(part.clone()));
+
+    Some(ReasoningSummaryExtraction {
+        raw_text,
+        display_text: display_parts.join("\n"),
+    })
 }
 
 fn collect_text_fields(value: &serde_json::Value, parts: &mut Vec<String>) {
-    match value {
-        serde_json::Value::String(text) => {
-            if !text.trim().is_empty() {
-                parts.push(text.clone());
+    enum Action<'a> {
+        Visit(&'a serde_json::Value),
+        PushText(&'a str),
+    }
+
+    let mut stack = vec![Action::Visit(value)];
+    while let Some(action) = stack.pop() {
+        match action {
+            Action::PushText(text) => {
+                if !text.trim().is_empty() {
+                    parts.push(text.to_string());
+                }
             }
-        }
-        serde_json::Value::Array(items) => {
-            for item in items {
-                collect_text_fields(item, parts);
+            Action::Visit(serde_json::Value::String(text)) => {
+                if !text.trim().is_empty() {
+                    parts.push(text.clone());
+                }
             }
-        }
-        serde_json::Value::Object(map) => {
-            for (key, item) in map {
-                if key == "text" {
-                    if let Some(text) = item.as_str().filter(|text| !text.trim().is_empty()) {
-                        parts.push(text.to_string());
-                        continue;
+            Action::Visit(serde_json::Value::Array(items)) => {
+                for item in items.iter().rev() {
+                    stack.push(Action::Visit(item));
+                }
+            }
+            Action::Visit(serde_json::Value::Object(map)) => {
+                let mut actions = Vec::new();
+                for (key, item) in map {
+                    if key == "text" {
+                        if let Some(text) = item.as_str() {
+                            actions.push(Action::PushText(text));
+                            continue;
+                        }
+                    }
+                    if item.is_array() || item.is_object() {
+                        actions.push(Action::Visit(item));
                     }
                 }
-                if item.is_array() || item.is_object() {
-                    collect_text_fields(item, parts);
+                for action in actions.into_iter().rev() {
+                    stack.push(action);
                 }
             }
+            Action::Visit(_) => {}
         }
-        _ => {}
     }
 }
 
@@ -358,16 +387,22 @@ impl SessionParser for CodexParser {
                                         let thinking_text = thinking
                                             .as_deref()
                                             .filter(|text| !text.trim().is_empty());
-                                        let summary_text = extract_reasoning_summary(
+                                        let summary_extraction = extract_reasoning_summary(
                                             summary.as_ref(),
                                             thinking_signature.as_ref(),
                                         );
                                         let has_signature = thinking_signature.is_some();
 
                                         if has_signature {
-                                            if let Some(summary_text) = summary_text {
+                                            if let Some(summary_extraction) = summary_extraction {
+                                                let summary_text = summary_extraction.display_text;
                                                 if let Some(thinking_text) = thinking_text {
-                                                    if thinking_text.trim() != summary_text.trim() {
+                                                    let thinking_text = thinking_text.trim();
+                                                    let matches_raw = thinking_text
+                                                        == summary_extraction.raw_text.trim();
+                                                    let matches_display =
+                                                        thinking_text == summary_text.trim();
+                                                    if !matches_raw && !matches_display {
                                                         anyhow::bail!(
                                                             "{}",
                                                             "unsupported Codex thinking block: thinkingSignature summary and plaintext thinking differ; expected matching summary text, omitted plaintext thinking, or no thinkingSignature for raw visible thinking. Example supported summary block: {\"type\":\"thinking\",\"thinking\":\"reasoning summary\",\"thinkingSignature\":{\"summary\":[{\"text\":\"reasoning summary\"}]}}"
@@ -405,7 +440,9 @@ impl SessionParser for CodexParser {
                                             raw_content.push(ContentBlock::Thinking {
                                                 thinking: t.to_string(),
                                             });
-                                        } else if let Some(summary_text) = summary_text {
+                                        } else if let Some(summary_extraction) = summary_extraction
+                                        {
+                                            let summary_text = summary_extraction.display_text;
                                             reasoning_summary_parts.push(summary_text.clone());
                                             reasoning_observability = merge_reasoning_observability(
                                                 reasoning_observability,
@@ -457,6 +494,10 @@ impl SessionParser for CodexParser {
                                         });
                                     }
                                     RawContentBlock::Unknown => {
+                                        reasoning_observability = merge_reasoning_observability(
+                                            reasoning_observability,
+                                            ReasoningObservability::Unknown,
+                                        );
                                         raw_content.push(ContentBlock::Unknown);
                                     }
                                 }
