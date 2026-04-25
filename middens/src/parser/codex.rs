@@ -21,10 +21,10 @@ fn merge_reasoning_observability(
     use ReasoningObservability::{Absent, FullTextVisible, SignatureOnly, SummaryVisible, Unknown};
 
     match (current, next) {
+        (Unknown, _) | (_, Unknown) => Unknown,
         (FullTextVisible, _) | (_, FullTextVisible) => FullTextVisible,
         (SummaryVisible, _) | (_, SummaryVisible) => SummaryVisible,
         (SignatureOnly, _) | (_, SignatureOnly) => SignatureOnly,
-        (Unknown, _) | (_, Unknown) => Unknown,
         (Absent, Absent) => Absent,
     }
 }
