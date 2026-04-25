@@ -7,8 +7,9 @@ use serde::Deserialize;
 
 use super::SessionParser;
 use crate::session::{
-    ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole, Session,
-    SessionMetadata, SessionType, SourceTool, ToolCall, ToolResult,
+    ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole,
+    ReasoningObservability, Session, SessionMetadata, SessionReasoningObservability, SessionType,
+    SourceTool, ToolCall, ToolResult,
 };
 
 pub struct OpenClawParser;
@@ -304,6 +305,7 @@ impl SessionParser for OpenClawParser {
 
                         let mut text_parts: Vec<String> = Vec::new();
                         let mut thinking_parts: Vec<String> = Vec::new();
+                        let mut reasoning_observability = ReasoningObservability::Absent;
                         let mut tool_calls: Vec<ToolCall> = Vec::new();
                         let mut tool_results: Vec<ToolResult> = Vec::new();
                         let mut raw_content: Vec<ContentBlock> = Vec::new();
@@ -316,6 +318,8 @@ impl SessionParser for OpenClawParser {
                                 }
                                 OpenClawContentBlock::Thinking { thinking } => {
                                     thinking_parts.push(thinking.clone());
+                                    reasoning_observability =
+                                        ReasoningObservability::FullTextVisible;
                                     raw_content.push(ContentBlock::Thinking {
                                         thinking: thinking.clone(),
                                     });
@@ -405,6 +409,8 @@ impl SessionParser for OpenClawParser {
                             timestamp: ts,
                             text,
                             thinking,
+                            reasoning_summary: None,
+                            reasoning_observability,
                             tool_calls,
                             tool_results,
                             classification: MessageClassification::Unclassified,
@@ -463,6 +469,8 @@ impl SessionParser for OpenClawParser {
             SessionType::Unknown
         };
 
+        let reasoning_observability = SessionReasoningObservability::from_messages(&messages);
+
         let session = Session {
             id,
             source_path: path.to_path_buf(),
@@ -472,6 +480,7 @@ impl SessionParser for OpenClawParser {
             metadata,
             environment,
             thinking_visibility: crate::session::ThinkingVisibility::Unknown,
+            reasoning_observability,
         };
 
         Ok(vec![session])

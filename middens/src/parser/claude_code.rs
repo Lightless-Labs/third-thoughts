@@ -16,8 +16,9 @@ use serde_json::Value;
 
 use super::SessionParser;
 use crate::session::{
-    ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole, Session,
-    SessionMetadata, SessionType, SourceTool, ThinkingVisibility, ToolCall, ToolResult,
+    ContentBlock, EnvironmentFingerprint, Message, MessageClassification, MessageRole,
+    ReasoningObservability, Session, SessionMetadata, SessionReasoningObservability, SessionType,
+    SourceTool, ThinkingVisibility, ToolCall, ToolResult,
 };
 
 /// Cutoff timestamp for the `redact-thinking-2026-02-12` beta header rollout.
@@ -280,8 +281,15 @@ impl SessionParser for ClaudeCodeParser {
                 .and_then(|ts| ts.parse::<DateTime<Utc>>().ok());
 
             // Parse content blocks.
-            let (text, thinking, tool_calls, tool_results, raw_content) =
-                parse_content(&raw_msg.content, role);
+            let (
+                text,
+                thinking,
+                reasoning_summary,
+                reasoning_observability,
+                tool_calls,
+                tool_results,
+                raw_content,
+            ) = parse_content(&raw_msg.content, role);
 
             if role == MessageRole::User {
                 // Check if this message consists solely of tool_result blocks
@@ -303,6 +311,8 @@ impl SessionParser for ClaudeCodeParser {
                 timestamp,
                 text,
                 thinking,
+                reasoning_summary,
+                reasoning_observability,
                 tool_calls,
                 tool_results,
                 classification: MessageClassification::Unclassified,
@@ -376,6 +386,8 @@ impl SessionParser for ClaudeCodeParser {
             }
         };
 
+        let reasoning_observability = SessionReasoningObservability::from_messages(&messages);
+
         let session = Session {
             id,
             source_path: path.to_path_buf(),
@@ -385,6 +397,7 @@ impl SessionParser for ClaudeCodeParser {
             metadata,
             environment,
             thinking_visibility,
+            reasoning_observability,
         };
 
         Ok(vec![session])
@@ -403,12 +416,16 @@ fn parse_content(
 ) -> (
     String,
     Option<String>,
+    Option<String>,
+    ReasoningObservability,
     Vec<ToolCall>,
     Vec<ToolResult>,
     Vec<ContentBlock>,
 ) {
     let mut text_parts: Vec<String> = Vec::new();
     let mut thinking_parts: Vec<String> = Vec::new();
+    let reasoning_summary = None;
+    let mut reasoning_observability = ReasoningObservability::Absent;
     let mut tool_calls: Vec<ToolCall> = Vec::new();
     let mut tool_results: Vec<ToolResult> = Vec::new();
     let mut raw_content: Vec<ContentBlock> = Vec::new();
@@ -435,6 +452,7 @@ fn parse_content(
                     "thinking" => {
                         if let Some(t) = block.get("thinking").and_then(|v| v.as_str()) {
                             thinking_parts.push(t.to_string());
+                            reasoning_observability = ReasoningObservability::FullTextVisible;
                             raw_content.push(ContentBlock::Thinking {
                                 thinking: t.to_string(),
                             });
@@ -531,7 +549,15 @@ fn parse_content(
         Some(thinking_parts.join("\n"))
     };
 
-    (text, thinking, tool_calls, tool_results, raw_content)
+    (
+        text,
+        thinking,
+        reasoning_summary,
+        reasoning_observability,
+        tool_calls,
+        tool_results,
+        raw_content,
+    )
 }
 
 // ---------------------------------------------------------------------------

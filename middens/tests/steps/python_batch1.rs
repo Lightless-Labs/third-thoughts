@@ -118,11 +118,19 @@ fn make_message_varied(
         MessageClassification::Unclassified
     };
 
+    let reasoning_observability = if thinking.is_some() {
+        middens::session::ReasoningObservability::FullTextVisible
+    } else {
+        middens::session::ReasoningObservability::Absent
+    };
+
     Message {
         role,
         timestamp: None,
         text,
         thinking,
+        reasoning_summary: None,
+        reasoning_observability,
         tool_calls,
         tool_results,
         classification,
@@ -169,6 +177,7 @@ fn create_session_indexed(
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Visible,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 

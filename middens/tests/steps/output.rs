@@ -500,6 +500,8 @@ fn given_markov_sessions(world: &mut MiddensWorld) {
             timestamp: None,
             text: String::new(),
             thinking: None,
+            reasoning_summary: None,
+            reasoning_observability: middens::session::ReasoningObservability::Absent,
             tool_calls: vec![ToolCall {
                 id: format!("call_{}", name),
                 name: name.to_string(),
@@ -520,6 +522,7 @@ fn given_markov_sessions(world: &mut MiddensWorld) {
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     };
 
     world.sessions = vec![session];

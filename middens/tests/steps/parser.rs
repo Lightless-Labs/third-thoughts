@@ -154,6 +154,15 @@ fn then_not_parseable(world: &mut MiddensWorld) {
 // Then steps — session count and basic fields
 // ---------------------------------------------------------------------------
 
+#[then(expr = "parsing should fail with error containing {string}")]
+fn then_parsing_error_contains(world: &mut MiddensWorld, expected: String) {
+    let error = world.error.as_ref().expect("expected parser error");
+    assert!(
+        error.contains(&expected),
+        "expected parser error to contain '{expected}', got: {error}"
+    );
+}
+
 #[then(expr = "there should be {int} session(s)")]
 fn then_session_count(world: &mut MiddensWorld, expected: usize) {
     assert_eq!(
@@ -269,14 +278,110 @@ fn then_min_assistant_messages(world: &mut MiddensWorld, min: usize) {
     );
 }
 
+fn thinking_block_count(session: &middens::session::Session) -> usize {
+    session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| matches!(block, middens::session::ContentBlock::Thinking { .. }))
+        .count()
+}
+
 #[then(expr = "the session should have at least {int} thinking block(s)")]
 fn then_min_thinking_blocks(world: &mut MiddensWorld, min: usize) {
     let session = &world.sessions[0];
+    let actual = thinking_block_count(session);
     assert!(
-        session.thinking_count() >= min,
-        "expected at least {} thinking block(s), got {}",
-        min,
-        session.thinking_count()
+        actual >= min,
+        "expected at least {min} thinking block(s), got {actual}"
+    );
+}
+
+#[then(expr = "the session should have exactly {int} thinking blocks")]
+fn then_exact_thinking_blocks(world: &mut MiddensWorld, expected: usize) {
+    let session = &world.sessions[0];
+    let actual = thinking_block_count(session);
+    assert_eq!(
+        actual, expected,
+        "expected exactly {expected} thinking block(s), got {actual}"
+    );
+}
+
+#[then(expr = "the session reasoning observability should be {string}")]
+fn then_session_reasoning_observability(world: &mut MiddensWorld, expected: String) {
+    let session = &world.sessions[0];
+    let actual = format!("{:?}", session.reasoning_observability);
+    assert_eq!(actual, expected, "session reasoning observability mismatch");
+}
+
+#[then(expr = "at least one message should have reasoning observability {string}")]
+fn then_any_message_reasoning_observability(world: &mut MiddensWorld, expected: String) {
+    let session = &world.sessions[0];
+    let found = session
+        .messages
+        .iter()
+        .any(|message| format!("{:?}", message.reasoning_observability) == expected);
+    assert!(
+        found,
+        "expected at least one message with reasoning observability {expected}, got {:?}",
+        session
+            .messages
+            .iter()
+            .map(|message| format!("{:?}", message.reasoning_observability))
+            .collect::<Vec<_>>()
+    );
+}
+
+#[then(expr = "the session reasoning summary block count should be {int}")]
+fn then_reasoning_summary_count(world: &mut MiddensWorld, expected: usize) {
+    let session = &world.sessions[0];
+    let actual = session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| {
+            matches!(
+                block,
+                middens::session::ContentBlock::ReasoningSummary { .. }
+            )
+        })
+        .count();
+    assert_eq!(
+        actual, expected,
+        "expected exactly {expected} reasoning summary block(s), got {actual}"
+    );
+}
+
+#[then("the first reasoning summary block should be:")]
+fn then_first_reasoning_summary_block(world: &mut MiddensWorld, step: &Step) {
+    let session = &world.sessions[0];
+    let expected = step
+        .docstring()
+        .expect("missing reasoning summary docstring");
+    let actual = session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .find_map(|block| match block {
+            middens::session::ContentBlock::ReasoningSummary { text } => Some(text.as_str()),
+            _ => None,
+        })
+        .expect("missing reasoning summary block");
+    assert_eq!(actual.trim(), expected.trim(), "reasoning summary mismatch");
+}
+
+#[then(expr = "the session reasoning signature block count should be {int}")]
+fn then_reasoning_signature_count(world: &mut MiddensWorld, expected: usize) {
+    let session = &world.sessions[0];
+    let actual = session
+        .messages
+        .iter()
+        .flat_map(|message| &message.raw_content)
+        .filter(|block| matches!(block, middens::session::ContentBlock::ReasoningSignature))
+        .count();
+    assert_eq!(
+        actual, expected,
+        "expected exactly {expected} reasoning signature block(s), got {actual}"
     );
 }
 

@@ -42,6 +42,8 @@ fn make_message(role: MessageRole, classification: MessageClassification) -> Mes
         timestamp: None,
         text: String::new(),
         thinking: None,
+        reasoning_summary: None,
+        reasoning_observability: middens::session::ReasoningObservability::Absent,
         tool_calls: vec![],
         tool_results: vec![],
         classification,
@@ -55,6 +57,8 @@ fn user_msg(text: &str) -> Message {
         timestamp: None,
         text: text.to_string(),
         thinking: None,
+        reasoning_summary: None,
+        reasoning_observability: middens::session::ReasoningObservability::Absent,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::Unclassified,
@@ -68,6 +72,8 @@ fn user_msg_with_tool_result(text: &str) -> Message {
         timestamp: None,
         text: text.to_string(),
         thinking: None,
+        reasoning_summary: None,
+        reasoning_observability: middens::session::ReasoningObservability::Absent,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::Unclassified,
@@ -89,6 +95,7 @@ fn make_session(path: &str, messages: Vec<Message>) -> Session {
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 
@@ -127,6 +134,8 @@ fn given_assistant_message(world: &mut MiddensWorld, text: String) {
         timestamp: None,
         text: text.to_string(),
         thinking: None,
+        reasoning_summary: None,
+        reasoning_observability: middens::session::ReasoningObservability::Absent,
         tool_calls: vec![],
         tool_results: vec![],
         classification: MessageClassification::Unclassified,

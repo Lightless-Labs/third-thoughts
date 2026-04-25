@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-23 (v0.0.1-beta.0 released on the 3-target matrix; GH Pages initial cut live; Homebrew tap is next)
+**Last updated:** 2026-04-25 (PR #2 adaptive Codex reasoning observability shepherded through review; CI/reviews green; Homebrew tap remains next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -23,6 +23,8 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 **v0.0.1-beta.0 is now out.** The release matrix was narrowed to 3 targets after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
 
 **GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
+
+**PR #2 status (2026-04-25):** adaptive Codex/pi reasoning observability is on branch `feat/adaptive-codex-reasoning-observability`, latest commit `6d100b0`. Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit is approved, Codex reported no major issues on the final pass, review decision is approved, and the CodeRabbit status check is green. Last local validation: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`.
 
 **Next concrete move:** Distribution Step C — Homebrew tap (`todos/distribution-homebrew-tap.md`). After that, do Distribution Step D (source-built vs brew-installed validation runs), then fold those results back into the site install story.
 
@@ -64,7 +66,7 @@ middens list-techniques                                # 23 registered technique
 | `export` command | Done | Jupyter notebook; works without interpretation |
 | `run` command | Done | Chains analyze → interpret → export; hard-fails on any stage error |
 | CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
-| Test suite | **333/333 passing** | 1810 steps |
+| Test suite | **341/341 passing** | 1856 steps (PR #2 local validation, 2026-04-25) |
 
 ---
 

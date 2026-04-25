@@ -3,7 +3,7 @@ date: 2026-04-23
 source: pi-gpt-5.5-session
 problem_type: methodology
 severity: high
-status: observed
+status: addressed
 module: middens/parser/codex
 component: reasoning-observability
 tags: [thinking-blocks, reasoning, observability, codex, pi, stratification, adaptive-disclosure]
@@ -141,3 +141,13 @@ session_reasoning_observability=Mixed
 
 The key claim: reasoning visibility is no longer just a static transcript
 property. It can be conditional behavior.
+
+## Implementation note
+
+**Addressed:** 2026-04-23 — `middens` now carries message-level
+`reasoning_observability`, session-level `reasoning_observability`, and a
+separate `reasoning_summary` field. The Codex parser labels embedded reasoning
+blocks as `SummaryVisible` or `SignatureOnly` when `thinkingSignature` is
+present, and deliberately does **not** populate `Message::thinking` from Codex
+summary-visible blocks. This keeps `thinking-divergence` on raw thinking text
+rather than accidentally turning it into summary/public divergence.

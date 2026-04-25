@@ -32,6 +32,8 @@ fn session_with_tools(id: &str, tool_names: &[&str]) -> Session {
             timestamp: None,
             text: String::new(),
             thinking: None,
+            reasoning_summary: None,
+            reasoning_observability: middens::session::ReasoningObservability::Absent,
             tool_calls: tool_names
                 .iter()
                 .map(|name| ToolCall {
@@ -55,6 +57,7 @@ fn session_with_tools(id: &str, tool_names: &[&str]) -> Session {
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 
@@ -86,6 +89,8 @@ fn session_with_tools_per_message(id: &str, tool_names: &[&str]) -> Session {
             timestamp: None,
             text: String::new(),
             thinking: None,
+            reasoning_summary: None,
+            reasoning_observability: middens::session::ReasoningObservability::Absent,
             tool_calls: vec![ToolCall {
                 id: String::new(),
                 name: name.to_string(),
@@ -106,6 +111,7 @@ fn session_with_tools_per_message(id: &str, tool_names: &[&str]) -> Session {
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 
@@ -125,6 +131,8 @@ fn session_with_classifications(
             timestamp: None,
             text: "test".to_string(),
             thinking: None,
+            reasoning_summary: None,
+            reasoning_observability: middens::session::ReasoningObservability::Absent,
             tool_calls: vec![],
             tool_results: vec![],
             classification: *c,
@@ -135,6 +143,8 @@ fn session_with_classifications(
             timestamp: None,
             text: "response".to_string(),
             thinking: None,
+            reasoning_summary: None,
+            reasoning_observability: middens::session::ReasoningObservability::Absent,
             tool_calls: vec![],
             tool_results: vec![],
             classification: MessageClassification::Other,
@@ -154,6 +164,7 @@ fn session_with_classifications(
         },
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     }
 }
 
@@ -381,6 +392,7 @@ fn given_empty_session(world: &mut MiddensWorld, id: String) {
         metadata: SessionMetadata::default(),
         environment: EnvironmentFingerprint::default(),
         thinking_visibility: middens::session::ThinkingVisibility::Unknown,
+        reasoning_observability: middens::session::SessionReasoningObservability::Unknown,
     });
 }
 
