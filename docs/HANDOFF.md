@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-25 (PR #2 adaptive Codex reasoning observability shepherded through review; CI/reviews green; Homebrew tap remains next)
+**Last updated:** 2026-04-25 (PR #2 merged; reasoning-observability learnings compounded; Homebrew tap remains next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -24,7 +24,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
 
-**PR #2 status (2026-04-25):** adaptive Codex/pi reasoning observability is on branch `feat/adaptive-codex-reasoning-observability`, latest commit `6d100b0`. Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit is approved, Codex reported no major issues on the final pass, review decision is approved, and the CodeRabbit status check is green. Last local validation: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`.
+**PR #2 status (2026-04-25):** merged to `main` as `4afbc19` (`Handle adaptive Codex reasoning observability (#2)`). Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit approved, Codex reported no major issues on the final pass, and the CodeRabbit status check was green before merge. Last local validation before merge: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`. Post-merge compounding landed in `e36f1a3`, creating `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md` and refreshing related parser/thinking-visibility docs.
 
 **Next concrete move:** Distribution Step C — Homebrew tap (`todos/distribution-homebrew-tap.md`). After that, do Distribution Step D (source-built vs brew-installed validation runs), then fold those results back into the site install story.
 
