@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-25 (PR #2 merged; reasoning-observability learnings compounded; Homebrew tap remains next)
+**Last updated:** 2026-04-27 (Homebrew tap created and validated on Apple Silicon; validation runs are next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -26,7 +26,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **PR #2 status (2026-04-25):** merged to `main` as `4afbc19` (`Handle adaptive Codex reasoning observability (#2)`). Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit approved, Codex reported no major issues on the final pass, and the CodeRabbit status check was green before merge. Last local validation before merge: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`. Post-merge compounding landed in `e36f1a3`, creating `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md` and refreshing related parser/thinking-visibility docs.
 
-**Next concrete move:** Distribution Step C — Homebrew tap (`todos/distribution-homebrew-tap.md`). After that, do Distribution Step D (source-built vs brew-installed validation runs), then fold those results back into the site install story.
+**Next concrete move:** Distribution Step D — source-built vs brew-installed validation runs (`todos/distribution-validation-runs.md`). The Homebrew tap is live at <https://github.com/Lightless-Labs/homebrew-tap>; `brew install lightless-labs/tap/middens` works on the supported beta matrix, with Apple Silicon macOS validated locally on 2026-04-27. The default install pulls `uv` as a recommended dependency; `--without-uv` was also validated. After Step D, fold those results back into the site install story.
 
 ---
 
@@ -80,9 +80,9 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 2. ~~**Step B — release workflow**~~ **DONE** (commit `49d896f`; matrix narrowed 2026-04-18 after Intel-Mac runner starvation on first tag cut). `.github/workflows/release.yml` triggers on `v*` tag. Native GH-hosted runners (no `cross`): `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), `ubuntu-24.04-arm` (linux-arm64, free for public repos). `x86_64-apple-darwin` dropped — `macos-13` is queue-starved on free public repos and the first tag cut sat 9h waiting for a runner. Tarballs + per-artifact SHA256 + combined SHA256SUMS via `softprops/action-gh-release@v2`. Windows left as future stretch. Rationale + failure-mode log at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md`. Follow-up todos from the pre-tag codex review: `todos/release-workflow-pin-actions-and-toolchain.md` (P2), `todos/release-workflow-orphan-sha256-sidecars.md` (P3).
 
-3. **Step C — Homebrew tap** ← **next**: `brew install lightless-labs/tap/middens`. `uv` is a `recommend` not a `depend`. crates.io secondary. Open question: tap repo name (`Lightless-Labs/homebrew-tap` generic vs `Lightless-Labs/homebrew-middens` single-formula). (`todos/distribution-homebrew-tap.md`)
+3. ~~**Step C — Homebrew tap**~~ **DONE** (2026-04-27): tap repo created at <https://github.com/Lightless-Labs/homebrew-tap>. Formula installs `v0.0.1-beta.0` release binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. `uv` is `recommended`, not required; both `brew install --formula lightless-labs/tap/middens --without-uv` and the default `brew install --formula lightless-labs/tap/middens` passed locally on Apple Silicon, followed by `brew test lightless-labs/tap/middens`. Tap naming decision: generic `homebrew-tap`, yielding `brew install lightless-labs/tap/middens`. (`todos/distribution-homebrew-tap.md`)
 
-4. **Step D — two validation runs**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. Open question: use full private corpus (PII risk on landing page) or create a small public fixture corpus? (`todos/distribution-validation-runs.md`)
+4. **Step D — two validation runs** ← **next**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. Open question: use full private corpus (PII risk on landing page) or create a small public fixture corpus? (`todos/distribution-validation-runs.md`)
 
 5. ~~**Step E — GitHub Pages landing page**~~ **INITIAL CUT SHIPPED** (2026-04-18). Site live at <https://lightless-labs.github.io/third-thoughts/>. Remaining non-blocking site follow-ups live in `todos/distribution-github-pages.md` (Homebrew install story, embedded validation reports, contribution surface, second copy review, roadmap teaser).
 
@@ -150,15 +150,15 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | `origin/main` at `90d5f3c`. Local branch is synced to origin, but the working tree is dirty (see below). Tag `v0.0.1-beta.0` currently peels to `5aea0e5`. |
+| `main` | `origin/main` at the Homebrew tap docs commit (`Document Homebrew tap rollout`). Local branch is synced to origin. Tag `v0.0.1-beta.0` currently peels to `5aea0e5`. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- Modified tracked files: `CLAUDE.md`, `docs/solutions/integration-issues/python-scientific-library-api-quirks-20260406.md`
-- Untracked docs: several `docs/solutions/...` files referenced below are present locally but not yet committed
+- No modified tracked files after the Homebrew tap docs commit.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
+- Homebrew side effect: `middens` is currently installed from `lightless-labs/tap`; `uv` is also installed because the exact default install command was validated after the `--without-uv` path.
 
 ---
 
