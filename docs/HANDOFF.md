@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-27 (Homebrew install docs refreshed across tap, README, middens README, and Pages; validation runs are next)
+**Last updated:** 2026-04-27 (Homebrew + Linux tarball install docs refreshed; validation runs are next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -26,7 +26,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **PR #2 status (2026-04-25):** merged to `main` as `4afbc19` (`Handle adaptive Codex reasoning observability (#2)`). Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit approved, Codex reported no major issues on the final pass, and the CodeRabbit status check was green before merge. Last local validation before merge: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`. Post-merge compounding landed in `e36f1a3`, creating `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md` and refreshing related parser/thinking-visibility docs.
 
-**Next concrete move:** Distribution Step D — source-built vs brew-installed validation runs (`todos/distribution-validation-runs.md`). The Homebrew tap is live at <https://github.com/Lightless-Labs/homebrew-tap>; `brew install lightless-labs/tap/middens` works on the supported beta matrix, with Apple Silicon macOS validated locally on 2026-04-27. The default install pulls `uv` as a recommended dependency; `--without-uv` was also validated. Install docs now point at Homebrew in the tap README, repo README, middens README, and Pages landing page.
+**Next concrete move:** Distribution Step D — source-built vs brew-installed validation runs (`todos/distribution-validation-runs.md`). The Homebrew tap is live at <https://github.com/Lightless-Labs/homebrew-tap>; `brew install lightless-labs/tap/middens` works on the supported beta matrix, with Apple Silicon macOS validated locally on 2026-04-27. The default install pulls `uv` as a recommended dependency; `--without-uv` was also validated. Install docs now point at Homebrew while preserving direct Linux tarball instructions in the repo README, middens README, and Pages landing page.
 
 ---
 
@@ -150,14 +150,14 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | `origin/main` has Homebrew install-doc refresh commit (`ee9afa9`). Local branch is synced to origin. Tag `v0.0.1-beta.0` currently peels to `5aea0e5`. |
+| `main` | `origin/main` has the Linux tarball install-doc restoration commit. Local branch is synced to origin. Tag `v0.0.1-beta.0` currently peels to `5aea0e5`. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- No modified tracked files on `main` after the Homebrew install-doc refresh commit.
-- `www` branch landing-page install copy was pushed as `98496eb`.
+- No modified tracked files on `main` after the Linux install-doc restoration commit.
+- `www` branch landing-page Linux tarball copy was pushed as `0188acc`.
 - Tap README explanation was pushed to `Lightless-Labs/homebrew-tap` as `d6fae2f`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
 - Homebrew side effect: `middens` is currently installed from `lightless-labs/tap`; `uv` is also installed because the exact default install command was validated after the `--without-uv` path.

@@ -47,14 +47,23 @@ Gitignored: `corpus/`, `corpus-full/`, `corpus-split/`, `corpus-frozen/`, `exper
 
 ## Getting started
 
-Install the CLI with Homebrew:
+Install the CLI with Homebrew on macOS or Linux:
 
 ```bash
 brew install lightless-labs/tap/middens
 middens --help
 ```
 
-`middens` currently ships binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Homebrew is the easiest path; release tarballs and source builds are documented in [`middens/README.md`](middens/README.md).
+On Linux without Homebrew, grab the release tarball directly:
+
+```bash
+# x86_64 Linux
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.0-x86_64-unknown-linux-gnu/middens --help
+```
+
+`middens` currently ships binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Homebrew is the easiest path if you already use it; release tarballs and source builds are documented in [`middens/README.md`](middens/README.md).
 
 If you want to run the CLI on your own session logs, head to [`middens/`](middens/). If you want to read about the methodology and findings, start with `docs/methods-catalog.md` and the reports under `docs/reports/`.
 

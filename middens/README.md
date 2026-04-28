@@ -19,17 +19,34 @@ middens --help
 
 The Homebrew formula installs the published binary for supported platforms and recommends [`uv`](https://docs.astral.sh/uv/) so the Python-backed techniques work out of the box. If you really only want the Rust-native subset, `brew install lightless-labs/tap/middens --without-uv` works too.
 
-Supported Homebrew targets: Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Intel macOS is not in the initial binary matrix.
+Supported Homebrew targets: Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Intel macOS is not in the initial binary matrix. Homebrew works fine on Linux, but if you do not use it, use the tarball instructions below.
 
 ### From a GitHub Release
 
-Grab the tarball for your platform from [Releases](https://github.com/Lightless-Labs/third-thoughts/releases) and extract it:
+Grab the tarball for your platform from [Releases](https://github.com/Lightless-Labs/third-thoughts/releases) and extract it.
+
+Linux x86_64:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-<target>.tar.gz
-tar xzf middens-0.0.1-beta.0-<target>.tar.gz
-cd middens-0.0.1-beta.0-<target>
-./middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.0-x86_64-unknown-linux-gnu/middens --help
+```
+
+Linux arm64:
+
+```bash
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-aarch64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.0-aarch64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.0-aarch64-unknown-linux-gnu/middens --help
+```
+
+Apple Silicon macOS:
+
+```bash
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-aarch64-apple-darwin.tar.gz
+tar xzf middens-0.0.1-beta.0-aarch64-apple-darwin.tar.gz
+./middens-0.0.1-beta.0-aarch64-apple-darwin/middens --help
 ```
 
 Supported release targets: `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`. Windows and Intel macOS are planned-but-not-promised future stretch targets.
