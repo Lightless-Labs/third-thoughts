@@ -130,7 +130,13 @@
           <pre><code>brew install lightless-labs/tap/middens
 middens run ./corpus/ --all -o report.ipynb</code></pre>
           <p>
-            Prefer tarballs, source builds, or reading the caveats before you point it at private logs? The details live in the <a href="https://github.com/Lightless-Labs/third-thoughts/tree/main/middens#install">middens README</a>.
+            On Linux without Homebrew, download the release tarball instead:
+          </p>
+          <pre><code>curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.0-x86_64-unknown-linux-gnu/middens --help</code></pre>
+          <p>
+            Need arm64 Linux, source builds, checksums, or caveats before you point it at private logs? The details live in the <a href="https://github.com/Lightless-Labs/third-thoughts/tree/main/middens#install">middens README</a>.
           </p>
         </article>
       </section>
