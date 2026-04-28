@@ -17,8 +17,8 @@ source: user-direction-2026-04-10
 
 ## Follow-ups (not blocking)
 
-1. **Install story for homebrew** — `brew install lightless-labs/tap/middens` not yet live. The index currently points at the Releases tarball. Update once the tap ships.
-2. **Embedded validation reports** — the source-built vs homebrew-installed run comparison (distribution-validation-runs.md) is still deferred. Fold in when the tap lands.
+1. ~~**Install story for homebrew**~~ **DONE** (2026-04-27) — index now points at `brew install lightless-labs/tap/middens`, with release/source caveats delegated to the middens README.
+2. **Embedded validation reports** — the source-built vs homebrew-installed run comparison (distribution-validation-runs.md) is still deferred. Fold in after Step D.
 3. **Third-party contribution surface** — no "where help is welcome" section yet. Add once we're actually set up to absorb PRs from outside contributors (parsers, non-English support).
 4. **Second reviewer for copy** — with Gemini out of the loop, consider a Kimi K2.5 pass via OpenCode if we want independent copy review before the next big rewrite.
 5. **Roadmap teaser** — v2/v3/v4 roadmap items (TUI, risk surfacer, federated learning) are not yet on the site. Add when they're closer to real.

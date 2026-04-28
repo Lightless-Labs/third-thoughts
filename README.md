@@ -47,6 +47,15 @@ Gitignored: `corpus/`, `corpus-full/`, `corpus-split/`, `corpus-frozen/`, `exper
 
 ## Getting started
 
+Install the CLI with Homebrew:
+
+```bash
+brew install lightless-labs/tap/middens
+middens --help
+```
+
+`middens` currently ships binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Homebrew is the easiest path; release tarballs and source builds are documented in [`middens/README.md`](middens/README.md).
+
 If you want to run the CLI on your own session logs, head to [`middens/`](middens/). If you want to read about the methodology and findings, start with `docs/methods-catalog.md` and the reports under `docs/reports/`.
 
 ## License

@@ -6,11 +6,22 @@ A Rust CLI for extracting behavioral patterns from AI coding agent session logs.
 
 Give it a directory of agent transcripts (Claude Code, Codex, OpenClaw), and it will parse, classify, and run a battery of 23 analytical techniques against them — Markov chains, entropy measures, HSMMs, survival analysis, change-point detection, convention epidemiology, and more.
 
-> **Status: `0.0.1-beta.0`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Not yet on crates.io or Homebrew.
+> **Status: `0.0.1-beta.0`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Available through Homebrew and GitHub Releases; not yet on crates.io.
 
 ## Install
 
-### From a GitHub Release (recommended)
+### Homebrew (recommended)
+
+```bash
+brew install lightless-labs/tap/middens
+middens --help
+```
+
+The Homebrew formula installs the published binary for supported platforms and recommends [`uv`](https://docs.astral.sh/uv/) so the Python-backed techniques work out of the box. If you really only want the Rust-native subset, `brew install lightless-labs/tap/middens --without-uv` works too.
+
+Supported Homebrew targets: Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Intel macOS is not in the initial binary matrix.
+
+### From a GitHub Release
 
 Grab the tarball for your platform from [Releases](https://github.com/Lightless-Labs/third-thoughts/releases) and extract it:
 
@@ -21,7 +32,7 @@ cd middens-0.0.1-beta.0-<target>
 ./middens --help
 ```
 
-Supported targets: `aarch64-apple-darwin`, `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`. Windows is planned but not yet shipped.
+Supported release targets: `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`. Windows and Intel macOS are planned-but-not-promised future stretch targets.
 
 Verify the download against the release's `SHA256SUMS` file:
 
@@ -42,7 +53,7 @@ Requires Rust 1.88+.
 
 ### Python-technique dependency
 
-17 of the 23 techniques run in an embedded [`uv`](https://docs.astral.sh/uv/)-managed virtualenv. `uv` is a **runtime dependency** — if it's not on `PATH`, middens degrades to the 6 Rust-native techniques and prints a warning. Install `uv` to unlock the full battery:
+17 of the 23 techniques run in an embedded [`uv`](https://docs.astral.sh/uv/)-managed virtualenv. `uv` is a **runtime dependency** for the full battery — if it's not on `PATH`, middens degrades to the 6 Rust-native techniques and prints a warning. Homebrew installs `uv` by default as a recommended dependency. If you installed from a tarball or from source, install `uv` separately to unlock the full battery:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
