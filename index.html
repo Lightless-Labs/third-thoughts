@@ -122,16 +122,16 @@
           </div>
         </div>
         <article class="card panel">
-          <span class="card-eyebrow">From GitHub Releases</span>
-          <h2>Download the tarball for your platform.</h2>
+          <span class="card-eyebrow">Homebrew</span>
+          <h2>Install the CLI in one command.</h2>
           <p>
-            Grab the latest tarball from <a href="https://github.com/Lightless-Labs/third-thoughts/releases">GitHub Releases</a>, unpack it, run <code>./middens --help</code>. Homebrew is coming &mdash; once the release plumbing stops behaving like release plumbing.
+            The tap is live for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Homebrew also installs <code>uv</code> as a recommended dependency, which unlocks the Python-backed analysis techniques instead of leaving <code>middens</code> in its Rust-only fallback mode.
           </p>
-          <pre><code># macOS (Apple Silicon) or Linux
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/latest/download/middens-&lt;version&gt;-&lt;target&gt;.tar.gz
-tar -xzf middens-*.tar.gz
-cd middens-*/
-./middens run ./corpus/ --all</code></pre>
+          <pre><code>brew install lightless-labs/tap/middens
+middens run ./corpus/ --all -o report.ipynb</code></pre>
+          <p>
+            Prefer tarballs, source builds, or reading the caveats before you point it at private logs? The details live in the <a href="https://github.com/Lightless-Labs/third-thoughts/tree/main/middens#install">middens README</a>.
+          </p>
         </article>
       </section>
 
