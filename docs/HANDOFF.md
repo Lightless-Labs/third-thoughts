@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-27 (Homebrew + Linux tarball install docs refreshed; validation runs are next)
+**Last updated:** 2026-04-30 (Pages mobile code-block fix shipped; validation runs remain next)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -22,7 +22,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **v0.0.1-beta.0 is now out.** The release matrix was narrowed to 3 targets after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
 
-**GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
+**GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Mobile code blocks now preserve preformatted text and scroll horizontally instead of wrapping into soup (`www` commit `f01c672`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
 
 **PR #2 status (2026-04-25):** merged to `main` as `4afbc19` (`Handle adaptive Codex reasoning observability (#2)`). Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit approved, Codex reported no major issues on the final pass, and the CodeRabbit status check was green before merge. Last local validation before merge: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`. Post-merge compounding landed in `e36f1a3`, creating `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md` and refreshing related parser/thinking-visibility docs.
 
@@ -157,7 +157,7 @@ No open PRs. No feature branches.
 ### Local working tree
 
 - No modified tracked files on `main` after the Linux install-doc restoration commit.
-- `www` branch landing-page Linux tarball copy was pushed as `0188acc`.
+- `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap README explanation was pushed to `Lightless-Labs/homebrew-tap` as `d6fae2f`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
 - Homebrew side effect: `middens` is currently installed from `lightless-labs/tap`; `uv` is also installed because the exact default install command was validated after the `--without-uv` path.
