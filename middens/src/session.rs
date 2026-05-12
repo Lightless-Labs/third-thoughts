@@ -47,6 +47,7 @@ pub enum SourceTool {
     Cursor,
     OpenClaw,
     OpenCode,
+    PiCodingAgent,
     Unknown,
 }
 
@@ -59,6 +60,7 @@ impl std::fmt::Display for SourceTool {
             Self::Cursor => write!(f, "Cursor"),
             Self::OpenClaw => write!(f, "OpenClaw"),
             Self::OpenCode => write!(f, "OpenCode"),
+            Self::PiCodingAgent => write!(f, "Pi Coding Agent"),
             Self::Unknown => write!(f, "Unknown"),
         }
     }

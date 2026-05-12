@@ -18,17 +18,25 @@ use super::all_parsers;
 /// - Claude Code: `{"type":"summary",...}` or `{"parentUuid":...}` patterns
 /// - Codex CLI: `{"id":..., "model":...}` with OpenAI-style structure
 /// - Gemini CLI: fields specific to Gemini history format
-/// - OpenClaw: `{"session":...}` or OpenClaw-specific markers
+/// - Pi Coding Agent: `{"type":"session", "version": 3, ...}` session headers
+/// - OpenClaw: OpenClaw-specific path or payload markers
 ///
-/// Falls back to path-based heuristics if the first line is ambiguous.
+/// Uses path hints first for formats that share the same pi session envelope
+/// (generic pi sessions and OpenClaw SDK sessions both start with
+/// `type:"session"`). Falls back to first-line content detection when the path
+/// is uninformative.
 pub fn detect_format(path: &Path) -> Option<SourceTool> {
+    // Path hints are decisive for formats with shared JSONL envelopes.
+    if let Some(tool) = detect_from_path(path) {
+        return Some(tool);
+    }
+
     // Try first-line content detection.
     if let Some(tool) = detect_from_first_line(path) {
         return Some(tool);
     }
 
-    // Fall back to path-based heuristics.
-    detect_from_path(path)
+    None
 }
 
 /// Auto-detect the format of a session log file and parse it.
@@ -172,9 +180,21 @@ fn detect_from_json(value: &serde_json::Value) -> Option<SourceTool> {
         return Some(SourceTool::GeminiCli);
     }
 
-    // OpenClaw signals: first line has `{"type":"session", ...}` with a version field.
-    if obj.get("type").and_then(|v| v.as_str()) == Some("session") || obj.contains_key("openclaw") {
+    // OpenClaw explicit payload markers. Generic `type:"session"` JSONL is the
+    // pi session envelope; OpenClaw is selected by path hint unless a payload
+    // carries an explicit OpenClaw marker.
+    if obj.contains_key("openclaw") {
         return Some(SourceTool::OpenClaw);
+    }
+
+    // Pi Coding Agent session JSONL. These are the files produced under
+    // ~/.pi/agent/sessions and published by pi-share-hf datasets.
+    if obj.get("type").and_then(|v| v.as_str()) == Some("session")
+        && obj.get("id").and_then(|v| v.as_str()).is_some()
+        && obj.get("cwd").and_then(|v| v.as_str()).is_some()
+        && obj.get("version").and_then(|v| v.as_u64()).is_some()
+    {
+        return Some(SourceTool::PiCodingAgent);
     }
 
     None
@@ -191,6 +211,8 @@ fn detect_from_path(path: &Path) -> Option<SourceTool> {
         Some(SourceTool::GeminiCli)
     } else if s.contains("openclaw") {
         Some(SourceTool::OpenClaw)
+    } else if s.contains(".pi/agent/sessions") {
+        Some(SourceTool::PiCodingAgent)
     } else {
         None
     }

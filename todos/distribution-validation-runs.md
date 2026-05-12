@@ -10,6 +10,8 @@ source: user-direction-2026-04-10
 
 Two full e2e runs that validate the distribution artifact works identically to a source build.
 
+**Public corpus option:** Pi coding-agent sessions uploaded via `pi-share-hf` are public JSONL corpora on Hugging Face (for example `badlogicgames/pi-mono`). Middens now parses this envelope as `SourceTool::PiCodingAgent`, so Step D can use a small downloaded slice of a public Pi dataset instead of exposing the private Lightless Labs corpus.
+
 ## Run 1: source-built
 
 1. `cd middens && cargo install --path .`
@@ -36,3 +38,5 @@ This catches anything that accidentally depends on the source tree, dev fixtures
 ## Sequencing
 
 Depends on: distribution-e2e-verb.md, distribution-homebrew-tap.md
+
+Parser dependency now satisfied for the public-HF path: Pi coding-agent JSONL support landed with `middens/src/parser/pi.rs`.

@@ -6,7 +6,7 @@ Feature: Analyze pipeline
     Given a temporary analyze output directory
     When I run middens analyze on the fixtures directory
     Then the exit code should be 0
-    And every analyze output file should report corpus_size 3
+    And every analyze output file should report corpus_size 4
 
   Scenario: Empty directory returns zero counts
     Given an empty temporary directory for analyze input

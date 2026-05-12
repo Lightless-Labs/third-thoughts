@@ -5,6 +5,7 @@ pub mod claude_code;
 pub mod codex;
 pub mod gemini;
 pub mod openclaw;
+pub mod pi;
 
 use std::path::Path;
 
@@ -38,6 +39,7 @@ pub fn all_parsers() -> Vec<Box<dyn SessionParser>> {
     vec![
         Box::new(claude_code::ClaudeCodeParser),
         Box::new(codex::CodexParser),
+        Box::new(pi::PiParser),
         Box::new(openclaw::OpenClawParser),
         Box::new(gemini::GeminiParser),
     ]

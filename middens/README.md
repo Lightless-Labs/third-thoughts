@@ -4,7 +4,7 @@
 
 A Rust CLI for extracting behavioral patterns from AI coding agent session logs. Part of the [Third Thoughts](https://github.com/Lightless-Labs/third-thoughts) research project.
 
-Give it a directory of agent transcripts (Claude Code, Codex, OpenClaw), and it will parse, classify, and run a battery of 23 analytical techniques against them — Markov chains, entropy measures, HSMMs, survival analysis, change-point detection, convention epidemiology, and more.
+Give it a directory of agent transcripts (Claude Code, Codex, OpenClaw, or Pi coding-agent sessions), and it will parse, classify, and run a battery of 23 analytical techniques against them — Markov chains, entropy measures, HSMMs, survival analysis, change-point detection, convention epidemiology, and more.
 
 > **Status: `0.0.1-beta.0`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Available through Homebrew and GitHub Releases; not yet on crates.io.
 
@@ -136,7 +136,7 @@ middens list-techniques
 
 ## What it does
 
-- **Parsers** — Claude Code, Codex, OpenClaw transcripts (Gemini is stubbed).
+- **Parsers** — Claude Code, Codex, OpenClaw, and Pi coding-agent transcripts (Gemini is stubbed). Pi's JSONL session envelope is the same public format shared by `pi-share-hf` datasets on Hugging Face.
 - **Classifiers** — 5-priority message classifier + session-type classifier (interactive / subagent / autonomous). The correction classifier checks for `tool_result` blocks before applying lexical patterns — the naive regex approach has a 90% false-positive rate on subagent sessions.
 - **Techniques** — 6 Rust-native (Markov, entropy, thinking-divergence, survival, tool-diversity, correction-rate) + 17 Python (HSMM, SPC, NCD, ENA, convention epidemiology, lag-sequential, change-point detection, user-signal analysis, cross-project graph, and more).
 - **Outputs** — Markdown, JSON, ASCII, Jupyter notebooks (`.ipynb`) via `export`.

@@ -8,6 +8,7 @@ use middens::parser::auto_detect::{detect_format, parse_auto};
 use middens::parser::claude_code::ClaudeCodeParser;
 use middens::parser::codex::CodexParser;
 use middens::parser::openclaw::OpenClawParser;
+use middens::parser::pi::PiParser;
 
 use super::world::MiddensWorld;
 
@@ -69,6 +70,14 @@ fn when_openclaw_can_parse(world: &mut MiddensWorld) {
     world.numeric_result = Some(if result { 1.0 } else { 0.0 });
 }
 
+#[when("I check if the Pi parser can parse it")]
+fn when_pi_can_parse(world: &mut MiddensWorld) {
+    let parser = PiParser;
+    let path = world.file_path.as_ref().expect("file_path not set");
+    let result = parser.can_parse(path);
+    world.numeric_result = Some(if result { 1.0 } else { 0.0 });
+}
+
 // ---------------------------------------------------------------------------
 // When steps — parse
 // ---------------------------------------------------------------------------
@@ -96,6 +105,19 @@ fn when_parse_codex(world: &mut MiddensWorld) {
 #[when("I parse the file with the OpenClaw parser")]
 fn when_parse_openclaw(world: &mut MiddensWorld) {
     let parser = OpenClawParser;
+    let path = world.file_path.as_ref().expect("file_path not set");
+    // Reset state before storing new results to prevent stale data assertions.
+    world.sessions.clear();
+    world.error = None;
+    match parser.parse(path) {
+        Ok(sessions) => world.sessions = sessions,
+        Err(e) => world.error = Some(format!("{e:#}")),
+    }
+}
+
+#[when("I parse the file with the Pi parser")]
+fn when_parse_pi(world: &mut MiddensWorld) {
+    let parser = PiParser;
     let path = world.file_path.as_ref().expect("file_path not set");
     // Reset state before storing new results to prevent stale data assertions.
     world.sessions.clear();
