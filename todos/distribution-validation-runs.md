@@ -10,7 +10,7 @@ source: user-direction-2026-04-10
 
 Two full e2e runs that validate the distribution artifact works identically to a source build.
 
-**Public corpus option:** Pi coding-agent sessions uploaded via `pi-share-hf` are public JSONL corpora on Hugging Face (for example `badlogicgames/pi-mono`). Middens now parses this envelope as `SourceTool::PiCodingAgent`, so Step D can use a small downloaded slice of a public Pi dataset instead of exposing the private Lightless Labs corpus.
+**Public corpus option:** Pi coding-agent sessions uploaded via `pi-share-hf` are public JSONL corpora on Hugging Face (for example `badlogicgames/pi-mono`). Middens on `main` now parses this envelope as `SourceTool::PiCodingAgent`, so Step D can use a small downloaded slice of a public Pi dataset instead of exposing the private Lightless Labs corpus. Caveat: the current Homebrew beta predates this parser; a Pi-based brew comparison needs a beta.1/tap update or release-candidate install first.
 
 ## Run 1: source-built
 
