@@ -66,7 +66,7 @@ middens list-techniques                                # 23 registered technique
 | `export` command | Done | Jupyter notebook; works without interpretation |
 | `run` command | Done | Chains analyze → interpret → export; hard-fails on any stage error |
 | CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
-| Test suite | **341/341 passing** | 1856 steps (PR #2 local validation, 2026-04-25) |
+| Test suite | **345/345 passing** | 1883 steps (`cd middens && cargo test`, after Pi parser, 2026-04-30) |
 
 ---
 
@@ -150,13 +150,13 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | `origin/main` has the Linux tarball install-doc restoration commit. Local branch is synced to origin. Tag `v0.0.1-beta.0` currently peels to `5aea0e5`. |
+| `main` | `origin/main` includes Pi coding-agent parser support (`c309ee5`) and the validation-release caveat doc refresh (`36db7da`). Local branch is synced to origin. Tag `v0.0.1-beta.0` currently peels to `5aea0e5` and predates the Pi parser. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- No modified tracked files on `main` after the Linux install-doc restoration commit.
+- No modified tracked files on `main` after the Pi parser + validation-caveat commits.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap README explanation was pushed to `Lightless-Labs/homebrew-tap` as `d6fae2f`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
@@ -166,7 +166,7 @@ No open PRs. No feature branches.
 
 ## Test suite
 
-**333/333 Cucumber scenarios, 1810 steps — all passing.**
+**345/345 Cucumber scenarios, 1883 steps — all passing.**
 
 Run: `cd middens && cargo test`
 
