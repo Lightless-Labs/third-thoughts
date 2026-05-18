@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-04-30 (Pi parser added; public-HF validation corpus is now viable)
+**Last updated:** 2026-05-18 (v0.0.1-beta.1 released and Homebrew tap updated)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -20,13 +20,13 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 | Failed | 0 | — |
 | Timed out | 0 | — |
 
-**v0.0.1-beta.0 is now out.** The release matrix was narrowed to 3 targets after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
+**v0.0.1-beta.1 is now out.** The release matrix remains the narrowed 3-target set after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). The beta.1 release includes Pi coding-agent parser support and completed successfully on 2026-05-18. Release workflow emitted only GitHub's Node.js 20 deprecation warnings for v4 actions / `softprops/action-gh-release@v2`; artifacts were published successfully. The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
 
 **GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Mobile code blocks now preserve preformatted text and scroll horizontally instead of wrapping into soup (`www` commit `f01c672`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
 
 **PR #2 status (2026-04-25):** merged to `main` as `4afbc19` (`Handle adaptive Codex reasoning observability (#2)`). Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit approved, Codex reported no major issues on the final pass, and the CodeRabbit status check was green before merge. Last local validation before merge: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`. Post-merge compounding landed in `e36f1a3`, creating `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md` and refreshing related parser/thinking-visibility docs.
 
-**Next concrete move:** Distribution Step D — source-built vs brew-installed validation runs (`todos/distribution-validation-runs.md`). The Homebrew tap is live at <https://github.com/Lightless-Labs/homebrew-tap>; `brew install lightless-labs/tap/middens` works on the supported beta matrix, with Apple Silicon macOS validated locally on 2026-04-27. The default install pulls `uv` as a recommended dependency; `--without-uv` was also validated. Install docs now point at Homebrew while preserving direct Linux tarball instructions in the repo README, middens README, and Pages landing page. Public validation no longer needs the private Lightless corpus: Pi coding-agent sessions shared via `pi-share-hf` on Hugging Face are parseable as `SourceTool::PiCodingAgent` on `main`. Caveat: the current Homebrew beta predates the Pi parser, so a Pi-based source-vs-brew validation needs either a beta.1/tap update first or a source-built-vs-release-candidate comparison.
+**Next concrete move:** Distribution Step D — source-built vs brew-installed validation runs (`todos/distribution-validation-runs.md`). The Homebrew tap is live at <https://github.com/Lightless-Labs/homebrew-tap>; `brew install lightless-labs/tap/middens` now installs `v0.0.1-beta.1`, which includes Pi coding-agent parser support. Apple Silicon macOS was validated locally on 2026-05-18 via `brew reinstall --formula lightless-labs/tap/middens`, `middens --version`, `brew test lightless-labs/tap/middens`, and `brew audit --formula lightless-labs/tap/middens`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0. Install docs now point at Homebrew while preserving direct Linux tarball instructions in the repo README, middens README, and Pages landing page. Public validation no longer needs the private Lightless corpus: Pi coding-agent sessions shared via `pi-share-hf` on Hugging Face are parseable as `SourceTool::PiCodingAgent` in both source builds and the current Homebrew artifact.
 
 ---
 
@@ -66,7 +66,7 @@ middens list-techniques                                # 23 registered technique
 | `export` command | Done | Jupyter notebook; works without interpretation |
 | `run` command | Done | Chains analyze → interpret → export; hard-fails on any stage error |
 | CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
-| Test suite | **345/345 passing** | 1883 steps (`cd middens && cargo test`, after Pi parser, 2026-04-30) |
+| Test suite | **345/345 passing** | 1883 steps (`cd middens && cargo test`, after beta.1 version bump, 2026-05-18) |
 
 ---
 
@@ -80,9 +80,9 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 2. ~~**Step B — release workflow**~~ **DONE** (commit `49d896f`; matrix narrowed 2026-04-18 after Intel-Mac runner starvation on first tag cut). `.github/workflows/release.yml` triggers on `v*` tag. Native GH-hosted runners (no `cross`): `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), `ubuntu-24.04-arm` (linux-arm64, free for public repos). `x86_64-apple-darwin` dropped — `macos-13` is queue-starved on free public repos and the first tag cut sat 9h waiting for a runner. Tarballs + per-artifact SHA256 + combined SHA256SUMS via `softprops/action-gh-release@v2`. Windows left as future stretch. Rationale + failure-mode log at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md`. Follow-up todos from the pre-tag codex review: `todos/release-workflow-pin-actions-and-toolchain.md` (P2), `todos/release-workflow-orphan-sha256-sidecars.md` (P3).
 
-3. ~~**Step C — Homebrew tap**~~ **DONE** (2026-04-27): tap repo created at <https://github.com/Lightless-Labs/homebrew-tap>. Formula installs `v0.0.1-beta.0` release binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. `uv` is `recommended`, not required; both `brew install --formula lightless-labs/tap/middens --without-uv` and the default `brew install --formula lightless-labs/tap/middens` passed locally on Apple Silicon, followed by `brew test lightless-labs/tap/middens`. Tap naming decision: generic `homebrew-tap`, yielding `brew install lightless-labs/tap/middens`. (`todos/distribution-homebrew-tap.md`)
+3. ~~**Step C — Homebrew tap**~~ **DONE** (2026-04-27; refreshed 2026-05-18): tap repo created at <https://github.com/Lightless-Labs/homebrew-tap>. Formula installs `v0.0.1-beta.1` release binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. `uv` is `recommended`, not required; `--without-uv` and default install paths were validated for beta.0, and beta.1 was validated locally on Apple Silicon with default dependencies plus `brew test` and `brew audit`. Tap naming decision: generic `homebrew-tap`, yielding `brew install lightless-labs/tap/middens`. (`todos/distribution-homebrew-tap.md`)
 
-4. **Step D — two validation runs** ← **next**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. Use a small public Pi coding-agent Hugging Face dataset slice for the publishable validation path after the Pi parser is included in the tested artifact (beta.1/tap update or release-candidate install); the private corpus can still be used as a non-public stress check. (`todos/distribution-validation-runs.md`)
+4. **Step D — two validation runs** ← **next**: source-built run vs brew-installed run on same corpus; exports must be structurally identical. The public Pi coding-agent Hugging Face path is now unblocked because beta.1/tap includes the Pi parser; use a small public dataset slice for the publishable validation path. The private corpus can still be used as a non-public stress check. (`todos/distribution-validation-runs.md`)
 
 5. ~~**Step E — GitHub Pages landing page**~~ **INITIAL CUT SHIPPED** (2026-04-18). Site live at <https://lightless-labs.github.io/third-thoughts/>. Homebrew install story refreshed 2026-04-27. Remaining non-blocking site follow-ups live in `todos/distribution-github-pages.md` (embedded validation reports, contribution surface, second copy review, roadmap teaser).
 
@@ -150,23 +150,25 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | `origin/main` includes Pi coding-agent parser support (`c309ee5`) and the validation-release caveat doc refresh (`36db7da`). Local branch is synced to origin. Tag `v0.0.1-beta.0` currently peels to `5aea0e5` and predates the Pi parser. |
+| `main` | `origin/main` includes Pi coding-agent parser support and the beta.1 version/docs bump (`f842223`). Tag `v0.0.1-beta.1` peels to `f842223` and includes the Pi parser. A handoff/todo refresh is expected immediately after the tap update. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- No modified tracked files on `main` after the Pi parser + validation-caveat commits.
+- Handoff/todo refresh records beta.1/tap status; commit expected as the final repo update for this milestone.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
-- Tap README explanation was pushed to `Lightless-Labs/homebrew-tap` as `d6fae2f`.
+- Tap formula was updated to `v0.0.1-beta.1` and pushed to `Lightless-Labs/homebrew-tap` as `b3fd798`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
-- Homebrew side effect: `middens` is currently installed from `lightless-labs/tap`; `uv` is also installed because the exact default install command was validated after the `--without-uv` path.
+- Homebrew side effect: `middens` is currently installed from `lightless-labs/tap` at `0.0.1-beta.1`; `uv` is installed because the default install path was validated.
 
 ---
 
 ## Test suite
 
 **345/345 Cucumber scenarios, 1883 steps — all passing.**
+
+Last run: 2026-05-18, after beta.1 version bump.
 
 Run: `cd middens && cargo test`
 
