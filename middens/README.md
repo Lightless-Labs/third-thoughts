@@ -6,7 +6,7 @@ A Rust CLI for extracting behavioral patterns from AI coding agent session logs.
 
 Give it a directory of agent transcripts (Claude Code, Codex, OpenClaw, or Pi coding-agent sessions), and it will parse, classify, and run a battery of 23 analytical techniques against them — Markov chains, entropy measures, HSMMs, survival analysis, change-point detection, convention epidemiology, and more.
 
-> **Status: `0.0.1-beta.0`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Available through Homebrew and GitHub Releases; not yet on crates.io.
+> **Status: `0.0.1-beta.1`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Available through Homebrew and GitHub Releases; not yet on crates.io.
 
 ## Install
 
@@ -28,25 +28,25 @@ Grab the tarball for your platform from [Releases](https://github.com/Lightless-
 Linux x86_64:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
-tar xzf middens-0.0.1-beta.0-x86_64-unknown-linux-gnu.tar.gz
-./middens-0.0.1-beta.0-x86_64-unknown-linux-gnu/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.1/middens-0.0.1-beta.1-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.1-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.1-x86_64-unknown-linux-gnu/middens --help
 ```
 
 Linux arm64:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-aarch64-unknown-linux-gnu.tar.gz
-tar xzf middens-0.0.1-beta.0-aarch64-unknown-linux-gnu.tar.gz
-./middens-0.0.1-beta.0-aarch64-unknown-linux-gnu/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.1/middens-0.0.1-beta.1-aarch64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.1-aarch64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.1-aarch64-unknown-linux-gnu/middens --help
 ```
 
 Apple Silicon macOS:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.0/middens-0.0.1-beta.0-aarch64-apple-darwin.tar.gz
-tar xzf middens-0.0.1-beta.0-aarch64-apple-darwin.tar.gz
-./middens-0.0.1-beta.0-aarch64-apple-darwin/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.1/middens-0.0.1-beta.1-aarch64-apple-darwin.tar.gz
+tar xzf middens-0.0.1-beta.1-aarch64-apple-darwin.tar.gz
+./middens-0.0.1-beta.1-aarch64-apple-darwin/middens --help
 ```
 
 Supported release targets: `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`. Windows and Intel macOS are planned-but-not-promised future stretch targets.
