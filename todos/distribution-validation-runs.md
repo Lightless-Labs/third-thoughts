@@ -1,6 +1,6 @@
 ---
 title: "Two validation runs: source-built vs homebrew-installed"
-status: todo
+status: done
 priority: P1
 tags: [distribution, validation, workstream-3]
 source: user-direction-2026-04-10
@@ -39,4 +39,29 @@ This catches anything that accidentally depends on the source tree, dev fixtures
 
 Depends on: distribution-e2e-verb.md, distribution-homebrew-tap.md
 
-Parser dependency satisfied for the public-HF path: Pi coding-agent JSONL support landed with `middens/src/parser/pi.rs`, and the Homebrew tap was updated to `v0.0.1-beta.1` on 2026-05-18.
+Parser dependency satisfied for the public-HF path: Pi coding-agent JSONL support landed with `middens/src/parser/pi.rs`, and the Homebrew tap was updated through `v0.0.1-beta.3` by 2026-05-20.
+
+## Completed: 2026-05-20
+
+Validation completed against a deterministic 10-session public slice from `badlogicgames/pi-mono` (`pi-share-hf` JSONL). Both runs used `middens run <corpus> --all -o <report.ipynb>` with isolated XDG data/config/cache directories:
+
+- Source-built binary: `cargo install --path middens --root /tmp/.../source-root --locked` → `middens 0.0.1-beta.3`
+- Homebrew binary: `brew install/reinstall lightless-labs/tap/middens` → `middens 0.0.1-beta.3`
+
+Comparison result:
+
+- 10 sessions discovered and parsed in both runs
+- 23 techniques ran in both runs
+- 21 parquet files emitted in both runs
+- Manifest matched after excluding expected `run_id` / `created_at` differences and allowing tiny floating-point tolerance
+- Parquet schemas, row counts, and rows matched with numeric tolerance
+- Notebook structure matched after normalizing expected run-id/timestamp heading differences: 68 cells, 88 headings
+
+Local validation artifact root: `/tmp/third-thoughts-step-d-beta3-20260520172206` (not committed; safe to delete).
+
+During validation, two nondeterminism bugs were found and fixed before the final passing run:
+
+1. `information_foraging.py` selected a representative patch via `list(set)[0]`; fixed by sorting the candidate patches.
+2. `tpattern_detection.py` used an unseeded permutation test; fixed with a deterministic NumPy RNG seed.
+
+Those fixes shipped in `v0.0.1-beta.3`, and the Homebrew tap was updated to that release.
