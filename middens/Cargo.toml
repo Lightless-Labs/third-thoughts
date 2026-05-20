@@ -1,6 +1,6 @@
 [package]
 name = "middens"
-version = "0.0.1-beta.2"
+version = "0.0.1-beta.3"
 edition = "2024"
 rust-version = "1.88"
 description = "AI agent session log analyzer — archaeological extraction of behavioral patterns from coding agent transcripts"

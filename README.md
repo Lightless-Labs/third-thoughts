@@ -58,9 +58,9 @@ On Linux without Homebrew, grab the release tarball directly:
 
 ```bash
 # x86_64 Linux
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.2/middens-0.0.1-beta.2-x86_64-unknown-linux-gnu.tar.gz
-tar xzf middens-0.0.1-beta.2-x86_64-unknown-linux-gnu.tar.gz
-./middens-0.0.1-beta.2-x86_64-unknown-linux-gnu/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.3/middens-0.0.1-beta.3-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.3-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.3-x86_64-unknown-linux-gnu/middens --help
 ```
 
 `middens` currently ships binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Homebrew is the easiest path if you already use it; release tarballs and source builds are documented in [`middens/README.md`](middens/README.md).
