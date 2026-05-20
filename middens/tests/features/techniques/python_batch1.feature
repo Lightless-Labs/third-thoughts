@@ -156,6 +156,11 @@ Feature: Python Batch 1 Techniques
     And the result should contain a table named "T-Patterns Level 1"
     And the result should contain a table named "T-Patterns Level 2"
 
+  Scenario: tpattern_detection.py is deterministic across Python hash seeds
+    Given a set of 3 sessions, each with 30-50 turns, including thinking and tool use
+    When the "tpattern_detection" script is run with Python hash seeds "1" and "5"
+    Then both Python hash seed runs should produce identical JSON
+
   Scenario Outline: Batch 2 techniques handle an empty session array
     Given an empty array of sessions
     When the "<technique_name>" technique is run

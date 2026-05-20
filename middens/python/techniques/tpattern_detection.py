@@ -108,11 +108,12 @@ def permutation_test(events: List[str], observed: Counter, n_permutations: int =
     permutation_counts = {pair: [] for pair in observed.keys()}
     
     events_array = np.array(events)
+    rng = np.random.default_rng(0)
     
     for _ in range(n_permutations):
-        # Shuffle events
+        # Shuffle events with a fixed RNG seed so distribution artifacts are reproducible.
         shuffled = events_array.copy()
-        np.random.shuffle(shuffled)
+        rng.shuffle(shuffled)
         shuffled = shuffled.tolist()
         
         # Count transitions in shuffled sequence
