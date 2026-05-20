@@ -264,6 +264,33 @@ fn given_empty_sessions(world: &mut MiddensWorld) {
     world.sessions = Vec::new();
 }
 
+#[given("a session with one assistant turn touching multiple patches")]
+fn given_session_with_multi_patch_turn(world: &mut MiddensWorld) {
+    let mut session = create_session("multi_patch", 1, false);
+    let assistant = session
+        .messages
+        .iter_mut()
+        .find(|message| message.role == MessageRole::Assistant)
+        .expect("fixture should contain an assistant message");
+    assistant.tool_calls = vec![
+        ToolCall {
+            id: "call_alpha".to_string(),
+            name: "Read".to_string(),
+            input: json!({"path": "alpha/project/file.rs"}),
+        },
+        ToolCall {
+            id: "call_zeta".to_string(),
+            name: "Read".to_string(),
+            input: json!({"path": "zeta/project/file.rs"}),
+        },
+    ];
+    assistant.tool_results = vec![
+        make_tool_result("call_alpha", false),
+        make_tool_result("call_zeta", false),
+    ];
+    world.sessions = vec![session];
+}
+
 #[given("an invalid session file path")]
 fn given_invalid_path(world: &mut MiddensWorld) {
     if world.temp_dir.is_none() {
@@ -318,6 +345,47 @@ fn when_run_with_invalid_path(world: &mut MiddensWorld, name: String) {
             "Exit code: {:?}, Stderr: {}",
             world.cli_exit_code, world.cli_stderr
         ));
+    }
+}
+
+#[when(expr = "the {string} script is run with Python hash seeds {string} and {string}")]
+fn when_script_is_run_with_hash_seeds(
+    world: &mut MiddensWorld,
+    name: String,
+    seed_a: String,
+    seed_b: String,
+) {
+    let temp_dir = world
+        .temp_dir
+        .get_or_insert_with(|| tempfile::tempdir().expect("tempdir"));
+    let input_path = temp_dir.path().join("sessions.json");
+    let input = std::fs::File::create(&input_path).expect("create session input");
+    serde_json::to_writer(input, &world.sessions).expect("write session input");
+
+    let python_path = resolve_python_path();
+    let script_path = technique_script_path(&name);
+    world.cli_outputs.clear();
+    world.cli_stderr.clear();
+
+    for seed in [seed_a, seed_b] {
+        let output = std::process::Command::new(&python_path)
+            .arg(&script_path)
+            .arg(&input_path)
+            .env("PYTHONHASHSEED", &seed)
+            .output()
+            .expect("Failed to execute Python process");
+        if !output.status.success() {
+            world.cli_exit_code = output.status.code();
+            world.cli_stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            world.error = Some(format!(
+                "Seed {} failed with exit code {:?}: {}",
+                seed, world.cli_exit_code, world.cli_stderr
+            ));
+            return;
+        }
+        world
+            .cli_outputs
+            .push(String::from_utf8_lossy(&output.stdout).to_string());
     }
 }
 
@@ -503,6 +571,20 @@ fn then_technique_fails(world: &mut MiddensWorld) {
     if let Some(code) = world.cli_exit_code {
         assert_ne!(code, 0, "Exit code should be non-zero");
     }
+}
+
+#[then("both Python hash seed runs should produce identical JSON")]
+fn then_hash_seed_runs_match(world: &mut MiddensWorld) {
+    assert!(world.error.is_none(), "Technique failed: {:?}", world.error);
+    assert_eq!(world.cli_outputs.len(), 2, "Expected two captured outputs");
+    let first: serde_json::Value =
+        serde_json::from_str(&world.cli_outputs[0]).expect("first run should emit valid JSON");
+    let second: serde_json::Value =
+        serde_json::from_str(&world.cli_outputs[1]).expect("second run should emit valid JSON");
+    assert_eq!(
+        first, second,
+        "Python hash seeds produced different results"
+    );
 }
 
 #[then("the captured stderr should not be empty")]

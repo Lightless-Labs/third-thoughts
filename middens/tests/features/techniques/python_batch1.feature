@@ -32,6 +32,11 @@ Feature: Python Batch 1 Techniques
     And the result should have findings for "low_correction_foraging_time" and "high_correction_foraging_time"
     And the result should contain a table named "Patch Analysis"
 
+  Scenario: information_foraging.py is deterministic across Python hash seeds
+    Given a session with one assistant turn touching multiple patches
+    When the "information_foraging" script is run with Python hash seeds "1" and "5"
+    Then both Python hash seed runs should produce identical JSON
+
   Scenario: granger_causality.py successfully identifies causal relationships
     Given a set of 20 sessions, each with more than 25 turns
     When the "granger_causality" technique is run

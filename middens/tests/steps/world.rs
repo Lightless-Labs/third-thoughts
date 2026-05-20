@@ -24,6 +24,8 @@ pub struct MiddensWorld {
     pub classified_message: Option<MessageClassification>,
     /// CLI command stdout output.
     pub cli_output: String,
+    /// Additional CLI/stdout captures for scenarios that compare multiple runs.
+    pub cli_outputs: Vec<String>,
     /// CLI command stderr output.
     pub cli_stderr: String,
     /// CLI exit code.
@@ -53,6 +55,7 @@ impl MiddensWorld {
             classified_type: None,
             classified_message: None,
             cli_output: String::new(),
+            cli_outputs: Vec::new(),
             cli_stderr: String::new(),
             cli_exit_code: None,
             temp_dir: None,

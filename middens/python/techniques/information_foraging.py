@@ -88,7 +88,7 @@ def analyze_session(session):
             if dir_path:
                 turn_patches.add(dir_path)
         
-        patches.append(list(turn_patches)[0] if turn_patches else None)
+        patches.append(sorted(turn_patches)[0] if turn_patches else None)
 
     if not patches:
         return None
