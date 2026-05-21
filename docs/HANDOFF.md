@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-21 (self-contained archive plugins for Pi, Claude Code, Codex)
+**Last updated:** 2026-05-21 (next: Codex 5.5 xhigh review of archive plugins via Pi)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -30,7 +30,9 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Self-contained archive automation plugins are implemented for Pi, Claude Code, and Codex.** The first Pi cut originally shelled out to `middens`; user feedback corrected that the integrations should be self-contained, so all three now package a bundled Node archiver that writes a `middens archive`-compatible shape (`manifest.json`, `indexes/sessions.jsonl`, content-addressed `objects/sha256/...`) without requiring the `middens` CLI on `PATH`. Configuration is explicit via `MIDDENS_ARCHIVE_ROOT` (no default path), with `MIDDENS_ARCHIVE_INTERVAL_MINUTES` for debounce timing. Pi lives at `integrations/pi/middens-archive/` and registers `/middens-archive-now` / `/middens-archive-status`. Claude Code lives at `integrations/claude-code/middens-archive/`, with marketplace metadata at `integrations/claude-code/.claude-plugin/marketplace.json`; it uses `SessionStart`, `UserPromptSubmit`, and `Stop` hooks plus `/middens-archive-now`. Codex lives at `integrations/codex/middens-archive/`, with local marketplace metadata at `integrations/codex/.agents/plugins/marketplace.json`; it declares lifecycle hooks and `middens-archive-now` / `middens-archive-status` skills. Validation run in-session: Pi `npm run check`; fixture archives for all three sources with temp `HOME`; Pi `pi -e` command smoke; Claude `claude plugin validate` for plugin and marketplace; Codex `codex plugin marketplace add ./integrations/codex --enable plugin_hooks` against temp `HOME`; hook wrapper fixture smokes for Claude/Codex. Todos `archive-pi-extension-auto-backup.md`, `archive-claude-code-plugin-auto-backup.md`, and `archive-codex-plugin-auto-backup.md` are marked done.
 
-**Next concrete move:** decide whether to publish/distribute the three archive plugins (or cut a beta.4 that advertises them), then move on to the next P1 research follow-up (HSMM re-run with Boucle excluded, autonomous session stratum, or multilingual remediation). Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was validated with `brew reinstall`, `middens --version`, `brew test`, and `brew audit`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
+**TOP PRIORITY NEXT SESSION:** have all three self-contained archive plugins reviewed by **Codex 5.5 xhigh using Pi** before publishing/distribution or more feature work. Dedicated todo: `todos/archive-plugins-codex-55-xhigh-review.md`. Review scope is `integrations/pi/middens-archive/`, `integrations/claude-code/middens-archive/`, `integrations/codex/middens-archive/`, the bundled `scripts/archive.mjs` copies, and package/marketplace manifests. First confirm the exact Pi model ID with `pi --list-models codex`, then run the review through `pi -p --model <codex-5.5-xhigh-id> ...`; save output under `docs/reviews/`, triage findings, and fix/file any P0/P1 issues. Do **not** skip straight to plugin distribution just because the smoke tests passed; that way lies comedy, but not the good kind.
+
+After that review gate, decide whether to publish/distribute the three archive plugins (or cut a beta.4 that advertises them), then move on to the next P1 research follow-up (HSMM re-run with Boucle excluded, autonomous session stratum, or multilingual remediation). Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was validated with `brew reinstall`, `middens --version`, `brew test`, and `brew audit`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
 
 ---
 
@@ -92,6 +94,7 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 ### P0 — Next distribution/data-retention work
 
+- **Codex 5.5 xhigh review of archive plugins via Pi**: top priority for the next session. Run the review through Pi, save output under `docs/reviews/`, triage P0/P1/P2 findings, and fix/file any confirmed blockers before publishing or advertising the plugins. (`todos/archive-plugins-codex-55-xhigh-review.md`)
 - ~~**Session-log backup/archive**~~ **DONE** (2026-05-21, commit `51ef8b6`): `middens archive` discovers supported local session stores, copies raw JSONL logs into a user-controlled content-addressed archive, deduplicates by SHA-256, records object/observation manifest entries, supports dry-run, and never mutates source logs. Built via NLSpec + red/green adversarial process because raw private data plumbing should be boring and a little paranoid. (`todos/session-log-backup-archive.md`)
 
 ### P1 — Archive automation improvements
@@ -164,13 +167,13 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | Local `main` includes session archive work, archive-automation todo docs, and self-contained Pi/Claude Code/Codex archive plugins. `origin/main` still includes beta.3 (`4bcdd35`); tag `v0.0.1-beta.3` peels to `4bcdd35`. |
+| `main` | Local `main` includes session archive work, archive-automation todo docs, self-contained Pi/Claude Code/Codex archive plugins, and the P0 Codex 5.5 xhigh review todo. `origin/main` still includes beta.3 (`4bcdd35`); tag `v0.0.1-beta.3` peels to `4bcdd35`. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- No tracked working-tree changes expected after the self-contained archive plugin commits.
+- No tracked working-tree changes expected after the review-priority handoff/todo commit.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap formula was updated to `v0.0.1-beta.3` and pushed to `Lightless-Labs/homebrew-tap` as `74bf114`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
