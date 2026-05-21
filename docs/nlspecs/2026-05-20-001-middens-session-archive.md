@@ -3,7 +3,8 @@ date: 2026-05-20
 topic: middens-session-archive
 source_docs:
   - todos/session-log-backup-archive.md
-status: draft
+status: implemented
+implemented: 2026-05-21
 ---
 
 # NLSpec: `middens archive` — local session log backup
@@ -295,7 +296,7 @@ Acceptance criteria below are intentionally testable. Red team should convert th
 
 ## 6. Open questions
 
-1. Should `indexes/sessions.jsonl` be one line per source observation or one line per parsed session? The manifest is clear either way; implementation should pick one before red-team tests are finalised. Recommendation: one line per parsed session when parseable, plus one fallback line per unparseable observation.
+1. **Resolved in v1:** `indexes/sessions.jsonl` is one line per source observation, with parser/session metadata attached from the referenced manifest object. This keeps the index rebuildable from `manifest.json` and avoids inventing fake per-session rows for unparseable files.
 2. Should archive support a future `--encrypt` flag or explicitly delegate encryption to the user's filesystem/backups? Recommendation for v1: delegate and document.
 3. Should source defaults include OpenCode if/when a parser lands? Not in v1 unless a parser-backed source root is confirmed.
 4. Should stale lock detection include lock age? Recommendation for v1: no. Stale lock auto-break logic is how two writers become one exciting bug.

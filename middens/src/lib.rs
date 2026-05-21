@@ -1,3 +1,4 @@
+pub mod archive;
 pub mod bridge;
 pub mod classifier;
 pub mod commands;

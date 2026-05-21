@@ -123,7 +123,11 @@ fn copy_fixture_to(world: &mut MiddensWorld, fixture_name: &str, dest: &Path, la
     fs::write(dest, bytes)
         .unwrap_or_else(|error| panic!("failed to write fixture {}: {}", dest.display(), error));
     set_named_path(world, label, dest.to_path_buf());
-    remember_value(world, &format!("source-before:{}", dest.display()), sha256_file(dest));
+    remember_value(
+        world,
+        &format!("source-before:{}", dest.display()),
+        sha256_file(dest),
+    );
 }
 
 fn write_bytes(world: &mut MiddensWorld, dest: &Path, bytes: &[u8], label: &str) {
@@ -131,7 +135,11 @@ fn write_bytes(world: &mut MiddensWorld, dest: &Path, bytes: &[u8], label: &str)
     fs::write(dest, bytes)
         .unwrap_or_else(|error| panic!("failed to write {}: {}", dest.display(), error));
     set_named_path(world, label, dest.to_path_buf());
-    remember_value(world, &format!("source-before:{}", dest.display()), sha256_file(dest));
+    remember_value(
+        world,
+        &format!("source-before:{}", dest.display()),
+        sha256_file(dest),
+    );
 }
 
 fn write_string(world: &mut MiddensWorld, dest: &Path, content: &str, label: &str) {
@@ -166,7 +174,12 @@ fn archive_object_for_remembered_sha(world: &MiddensWorld, key: &str) -> PathBuf
     archive_object_path(&named_path(world, "archive"), remembered_value(world, key))
 }
 
-fn create_default_home_fixture(world: &mut MiddensWorld, tool: &str, fixture_name: &str, label: &str) {
+fn create_default_home_fixture(
+    world: &mut MiddensWorld,
+    tool: &str,
+    fixture_name: &str,
+    label: &str,
+) {
     let home = named_path(world, "home");
     let dest = match tool {
         "claude-code" => home
@@ -229,6 +242,7 @@ fn source_file_paths(world: &MiddensWorld) -> Vec<PathBuf> {
                 || key.starts_with("unparseable_")
                 || key.starts_with("parser_error_")
         })
+        .filter(|(_, path)| path.is_file())
         .map(|(_, path)| path.clone())
         .collect();
     paths.sort();
@@ -270,7 +284,12 @@ fn given_archive_root_missing(world: &mut MiddensWorld) {
 fn given_explicit_claude_source(world: &mut MiddensWorld) {
     let source_root = named_path(world, "claude_source");
     let session = source_root.join("project-a").join("claude-primary.jsonl");
-    copy_fixture_to(world, "claude_code_sample.jsonl", &session, "claude_primary");
+    copy_fixture_to(
+        world,
+        "claude_code_sample.jsonl",
+        &session,
+        "claude_primary",
+    );
 }
 
 #[given("an explicit Claude source root containing two identical sessions")]
@@ -288,7 +307,9 @@ fn given_explicit_claude_duplicates(world: &mut MiddensWorld) {
 #[given("an explicit Claude source root containing one unparseable JSONL file")]
 fn given_explicit_unparseable_source(world: &mut MiddensWorld) {
     let source_root = named_path(world, "claude_source");
-    let file = source_root.join("mystery").join("unparseable-session.jsonl");
+    let file = source_root
+        .join("mystery")
+        .join("unparseable-session.jsonl");
     write_string(
         world,
         &file,
@@ -310,7 +331,12 @@ fn given_explicit_parser_error_source(world: &mut MiddensWorld) {
 
 #[given("the sandbox home contains one default Claude session and one default Codex session")]
 fn given_default_claude_and_codex(world: &mut MiddensWorld) {
-    create_default_home_fixture(world, "claude-code", "claude_code_sample.jsonl", "claude_default");
+    create_default_home_fixture(
+        world,
+        "claude-code",
+        "claude_code_sample.jsonl",
+        "claude_default",
+    );
     create_default_home_fixture(world, "codex", "codex_sample.jsonl", "codex_default");
 }
 
@@ -351,10 +377,16 @@ fn given_symlinked_source(world: &mut MiddensWorld) {
         let target = source_root.join("targets").join("claude-target.jsonl");
         let link = source_root.join("links").join("claude-symlink.jsonl");
 
-        copy_fixture_to(world, "claude_code_sample.jsonl", &target, "claude_symlink_target");
+        copy_fixture_to(
+            world,
+            "claude_code_sample.jsonl",
+            &target,
+            "claude_symlink_target",
+        );
         ensure_parent(&link);
-        symlink(&target, &link)
-            .unwrap_or_else(|error| panic!("failed to create symlink {}: {}", link.display(), error));
+        symlink(&target, &link).unwrap_or_else(|error| {
+            panic!("failed to create symlink {}: {}", link.display(), error)
+        });
         set_named_path(world, "claude_symlink", link);
     }
 
@@ -372,7 +404,11 @@ fn given_symlink_loop_source(world: &mut MiddensWorld) {
         fs::create_dir_all(&source_root).expect("failed to create symlink-loop source root");
         let loop_link = source_root.join("loop");
         symlink(&source_root, &loop_link).unwrap_or_else(|error| {
-            panic!("failed to create symlink loop {}: {}", loop_link.display(), error)
+            panic!(
+                "failed to create symlink loop {}: {}",
+                loop_link.display(),
+                error
+            )
         });
         set_named_path(world, "claude_loop", loop_link);
     }
@@ -397,7 +433,11 @@ fn given_archive_has_user_gitignore(world: &mut MiddensWorld) {
     let gitignore = named_path(world, "archive").join(".gitignore");
     ensure_parent(&gitignore);
     fs::write(&gitignore, "# keep me\n*.tmp\n").unwrap_or_else(|error| {
-        panic!("failed to write archive .gitignore {}: {}", gitignore.display(), error)
+        panic!(
+            "failed to write archive .gitignore {}: {}",
+            gitignore.display(),
+            error
+        )
     });
     remember_value(
         world,
@@ -411,7 +451,11 @@ fn given_corrupt_manifest(world: &mut MiddensWorld) {
     let manifest = manifest_path(world);
     ensure_parent(&manifest);
     fs::write(&manifest, "{not valid json").unwrap_or_else(|error| {
-        panic!("failed to write corrupt manifest {}: {}", manifest.display(), error)
+        panic!(
+            "failed to write corrupt manifest {}: {}",
+            manifest.display(),
+            error
+        )
     });
 }
 
@@ -420,7 +464,11 @@ fn given_archive_lock(world: &mut MiddensWorld) {
     let lock_path = named_path(world, "archive").join(".archive.lock");
     ensure_parent(&lock_path);
     fs::write(&lock_path, "locked\n").unwrap_or_else(|error| {
-        panic!("failed to write archive lock {}: {}", lock_path.display(), error)
+        panic!(
+            "failed to write archive lock {}: {}",
+            lock_path.display(),
+            error
+        )
     });
 }
 
@@ -488,7 +536,11 @@ fn when_run_archive(world: &mut MiddensWorld, args: String) {
 #[when(expr = "I remember the source file hash for {string}")]
 fn when_remember_source_hash(world: &mut MiddensWorld, label: String) {
     let path = named_path(world, &label);
-    remember_value(world, &format!("{label}_source_sha_before"), sha256_file(&path));
+    remember_value(
+        world,
+        &format!("{label}_source_sha_before"),
+        sha256_file(&path),
+    );
 }
 
 #[when(expr = "I remember the archived object bytes for {string}")]
@@ -673,7 +725,11 @@ fn then_archive_index_references_manifest_hash(world: &mut MiddensWorld) {
     let manifest_hashes: Vec<String> = manifest_objects(&manifest).keys().cloned().collect();
     let index_path = archive_index_path(world);
 
-    assert!(index_path.is_file(), "missing archive index {}", index_path.display());
+    assert!(
+        index_path.is_file(),
+        "missing archive index {}",
+        index_path.display()
+    );
 
     let content = fs::read_to_string(&index_path)
         .unwrap_or_else(|error| panic!("failed to read {}: {}", index_path.display(), error));
@@ -693,7 +749,10 @@ fn then_archive_index_references_manifest_hash(world: &mut MiddensWorld) {
         }
     }
 
-    assert!(saw_record, "archive index should contain at least one JSONL record");
+    assert!(
+        saw_record,
+        "archive index should contain at least one JSONL record"
+    );
     assert!(
         saw_hash_reference,
         "archive index should reference at least one manifest object hash"
@@ -705,9 +764,13 @@ fn then_source_files_unchanged(world: &mut MiddensWorld) {
     for path in source_file_paths(world) {
         let key = format!("source-before:{}", path.display());
         let current_sha = sha256_file(&path);
-        let original_sha = world.remembered_values.entry(key.clone()).or_insert(current_sha.clone());
+        let original_sha = world
+            .remembered_values
+            .entry(key.clone())
+            .or_insert(current_sha.clone());
         assert_eq!(
-            original_sha, &current_sha,
+            original_sha,
+            &current_sha,
             "source fixture changed unexpectedly: {}",
             path.display()
         );
@@ -720,7 +783,8 @@ fn then_archived_object_bytes_unchanged(world: &mut MiddensWorld, label: String)
     let current = sha256_file(&object_path);
     let remembered = remembered_value(world, &format!("{label}_archived_bytes_sha"));
     assert_eq!(
-        current, remembered,
+        current,
+        remembered,
         "archived object bytes changed for {}",
         object_path.display()
     );
@@ -749,8 +813,16 @@ fn then_both_changed_source_objects_exist(world: &mut MiddensWorld) {
     let old_path = archive_object_for_remembered_sha(world, "claude_primary_source_sha_before");
     let new_path = archive_object_for_label(world, "claude_primary");
 
-    assert!(old_path.is_file(), "missing original archived object {}", old_path.display());
-    assert!(new_path.is_file(), "missing updated archived object {}", new_path.display());
+    assert!(
+        old_path.is_file(),
+        "missing original archived object {}",
+        old_path.display()
+    );
+    assert!(
+        new_path.is_file(),
+        "missing updated archived object {}",
+        new_path.display()
+    );
 }
 
 #[then("manifest.json should not exist under the archive root")]
@@ -835,7 +907,9 @@ fn then_no_observation_has_basename(world: &mut MiddensWorld, basename: String) 
     );
 }
 
-#[then(expr = "the archive observation for basename {string} should record canonical path {string}")]
+#[then(
+    expr = "the archive observation for basename {string} should record canonical path {string}"
+)]
 fn then_observation_records_canonical_path(
     world: &mut MiddensWorld,
     basename: String,
@@ -885,7 +959,10 @@ fn then_archive_gitignore_deny_all(world: &mut MiddensWorld) {
     let gitignore = named_path(world, "archive").join(".gitignore");
     let content = fs::read_to_string(&gitignore)
         .unwrap_or_else(|error| panic!("failed to read {}: {}", gitignore.display(), error));
-    assert_eq!(content, "*\n!.gitignore\n", "unexpected archive .gitignore contents");
+    assert_eq!(
+        content, "*\n!.gitignore\n",
+        "unexpected archive .gitignore contents"
+    );
 }
 
 #[then("the archive .gitignore should remain unchanged")]
@@ -894,5 +971,8 @@ fn then_archive_gitignore_unchanged(world: &mut MiddensWorld) {
     let current = fs::read_to_string(&gitignore)
         .unwrap_or_else(|error| panic!("failed to read {}: {}", gitignore.display(), error));
     let original = remembered_value(world, "archive_gitignore_before");
-    assert_eq!(current, original, "archive .gitignore was unexpectedly modified");
+    assert_eq!(
+        current, original,
+        "archive .gitignore was unexpectedly modified"
+    );
 }

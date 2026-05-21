@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand, ValueEnum};
+use middens::archive::discover::ArchiveSource;
 use middens::pipeline::{PipelineResult, TechniqueFilter};
 use middens::storage::RedactionConfig;
 
@@ -222,6 +223,33 @@ enum Commands {
         /// Write interpret prompt to disk without calling a runner.
         #[arg(long)]
         dry_run: bool,
+    },
+
+    /// Archive raw session logs into a user-controlled directory.
+    Archive {
+        /// Archive destination directory (required).
+        #[arg(long)]
+        to: Option<PathBuf>,
+
+        /// Source tool to archive (repeatable). Default: all known sources.
+        #[arg(long)]
+        source: Vec<ArchiveSource>,
+
+        /// Override the source root directory. Requires exactly one --source.
+        #[arg(long)]
+        from: Option<PathBuf>,
+
+        /// Discover and plan only; write nothing.
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Confirm copying raw private transcripts.
+        #[arg(long)]
+        yes: bool,
+
+        /// Fail if any discovered file cannot be parsed.
+        #[arg(long)]
+        require_parseable: bool,
     },
 }
 
@@ -526,6 +554,37 @@ fn main() -> anyhow::Result<()> {
             );
 
             Ok(())
+        }
+        Commands::Archive {
+            to,
+            source,
+            from,
+            dry_run,
+            yes,
+            require_parseable,
+        } => {
+            use middens::commands::archive::{self, ArchiveArgs};
+
+            let to = match to {
+                Some(path) => path,
+                None => {
+                    anyhow::bail!(
+                        "archive destination is required (--to ARCHIVE_ROOT).\n\
+                         Example: middens archive --to ~/agent-session-archive --dry-run"
+                    );
+                }
+            };
+
+            let args = ArchiveArgs {
+                to,
+                source,
+                from,
+                dry_run,
+                yes,
+                require_parseable,
+            };
+
+            archive::run_archive(args)
         }
     }
 }

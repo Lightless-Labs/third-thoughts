@@ -86,9 +86,13 @@ Three core commands form a pipeline:
 2. **`interpret`** — sends the analysis to an LLM runner (`claude`, `codex`, `gemini`, or `opencode`), which produces a cross-technique narrative with per-technique conclusions.
 3. **`export`** — renders the analysis (and optional interpretation) as a Jupyter notebook.
 
-Or `middens run` for the whole pipeline in one shot.
+Or `middens run` for the whole pipeline in one shot. If you are worried about vendor retention eating your local logs first, `middens archive` copies raw session JSONL into a private, content-addressed archive before analysis. Boring on purpose. Boring is good here.
 
 ```bash
+# 0. Archive — preserve raw logs before they disappear
+middens archive --to ~/agent-session-archive --dry-run
+middens archive --to ~/agent-session-archive --yes
+
 # 1. Analyze — compute everything, store results
 middens analyze ~/.claude/projects/
 # → run-0190e4b4-... written to ~/.local/share/com.lightless-labs.third-thoughts/analysis/
@@ -127,6 +131,10 @@ middens analyze path/ --techniques markov,entropy,thinking-divergence
 # Parse a single file for debugging
 middens parse file.jsonl
 
+# Copy raw local agent logs into a private content-addressed archive
+middens archive --to ~/agent-session-archive --dry-run
+middens archive --to ~/agent-session-archive --source claude-code --yes
+
 # Snapshot a corpus for reproducibility
 middens freeze corpus/ -o manifest.json
 
@@ -159,7 +167,9 @@ Middens enforces a few rules the authors learned the hard way:
 - raw project identifiers (often repo / directory names)
 - corpus source paths from your local machine
 
-If you share a `report.ipynb` or the contents of `~/.local/share/com.lightless-labs.third-thoughts/`, **assume it contains PII** until we land the default-scrub pass in a subsequent release. Track progress in the repo's todos and `docs/HANDOFF.md`.
+`middens archive` is even more direct: it stores byte-for-byte copies of raw transcripts, including prompts, tool outputs, local paths, and anything unfortunate that made it into a tool result. It requires an explicit `--to` destination and `--yes` for non-dry-run copies, but that is consent plumbing, not magic privacy dust. Keep archive directories private and out of git.
+
+If you share a `report.ipynb`, the contents of `~/.local/share/com.lightless-labs.third-thoughts/`, or a `middens archive` directory, **assume it contains PII** until proven otherwise. Track progress in the repo's todos and `docs/HANDOFF.md`.
 
 ## License
 

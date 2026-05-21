@@ -1,7 +1,8 @@
 ---
 title: "Backup and archive local agent session logs before vendor retention deletes them"
-status: todo
+status: done
 priority: P0
+completed: 2026-05-21
 tags: [corpus, backup, retention, distribution]
 source: user-direction-2026-05-20
 ---
@@ -205,6 +206,22 @@ Look specifically for:
 - XDG path handling
 - atomic write patterns
 
-## Recommended first concrete action
+## Completion notes
 
-Draft the NLSpec only, then pause for review. Do not start implementation in the same breath; this is raw private data plumbing, so two beats of paranoia are not excessive.
+Implemented via adversarial process on 2026-05-21:
+
+- NLSpec: `docs/nlspecs/2026-05-20-001-middens-session-archive.md`
+- Red-team Cucumber coverage: `middens/tests/features/cli/archive.feature`
+- Production command: `middens archive`
+- Archive layout: content-addressed `objects/sha256/<prefix>/<sha>.jsonl`
+- Manifest: `manifest.json` with object and source-observation records
+- Derived index: `indexes/sessions.jsonl` one line per source observation
+- Safety gates: explicit `--to`, `--yes` for non-dry-run, privacy warning, dry-run writes nothing, source/archive overlap rejection, corrupt manifest/drift failure, destination collision failure, lock file, and git-worktree `.gitignore` safety
+- Parser enrichment: best-effort by default, strict with `--require-parseable`
+
+Validation at completion:
+
+```bash
+cd middens && cargo test
+cd middens && cargo build --release
+```
