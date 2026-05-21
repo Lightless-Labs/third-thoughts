@@ -1,0 +1,20 @@
+{
+  "name": "lightless-labs-codex-integrations",
+  "interface": {
+    "displayName": "Lightless Labs"
+  },
+  "plugins": [
+    {
+      "name": "middens-archive",
+      "source": {
+        "source": "local",
+        "path": "./middens-archive"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 type RunTrigger = "manual" | "periodic" | "shutdown";
 type RunOutcome = "success" | "skipped" | "failed" | "timed-out";
@@ -6,7 +8,7 @@ type RunOutcome = "success" | "skipped" | "failed" | "timed-out";
 type Config = {
 	archiveRoot: string;
 	intervalMs: number;
-	middensBin: string;
+	archiveScript: string;
 	runTimeoutMs: number;
 	shutdownTimeoutMs: number;
 };
@@ -73,7 +75,7 @@ export default function (pi: ExtensionAPI) {
 		return {
 			archiveRoot,
 			intervalMs: intervalMinutes * 60 * 1000,
-			middensBin: process.env.MIDDENS_ARCHIVE_MIDDENS_BIN?.trim() || "middens",
+			archiveScript: join(dirname(fileURLToPath(import.meta.url)), "..", "scripts", "archive.mjs"),
 			runTimeoutMs,
 			shutdownTimeoutMs,
 		};
@@ -153,13 +155,13 @@ export default function (pi: ExtensionAPI) {
 		setStatus(ctx, "archiving…");
 
 		const timeoutMs = options.timeoutMs ?? cfg.runTimeoutMs;
-		const args = ["archive", "--source", "pi-coding-agent", "--to", cfg.archiveRoot, "--yes"];
+		const args = [cfg.archiveScript, "--source", "pi-coding-agent", "--to", cfg.archiveRoot, "--quiet"];
 		let outcome: RunOutcome = "failed";
 		let message = "Archive failed.";
 		let exitCode: number | undefined;
 
 		try {
-			const result = await pi.exec(cfg.middensBin, args, { timeout: timeoutMs });
+			const result = await pi.exec(process.execPath, args, { timeout: timeoutMs });
 			exitCode = result.code;
 			if (result.code === 0) {
 				outcome = "success";
@@ -168,8 +170,8 @@ export default function (pi: ExtensionAPI) {
 			} else {
 				outcome = result.killed ? "timed-out" : "failed";
 				message = result.killed
-					? `middens archive timed out after ${formatDuration(timeoutMs)}.`
-					: `middens archive failed with exit code ${result.code}.`;
+					? `bundled middens archiver timed out after ${formatDuration(timeoutMs)}.`
+					: `bundled middens archiver failed with exit code ${result.code}.`;
 				notify(ctx, message, "error");
 			}
 		} catch (error) {

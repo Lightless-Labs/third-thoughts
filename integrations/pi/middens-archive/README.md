@@ -1,6 +1,6 @@
 # Pi middens archive extension
 
-A tiny Pi package that runs `middens archive` for Pi coding-agent session logs. It is intentionally boring: you choose the archive root, it copies raw JSONL logs there, and it tries hard not to do anything surprising.
+A tiny Pi package that archives Pi coding-agent session logs with its bundled archiver. It is intentionally boring: you choose the archive root, it copies raw JSONL logs there, and it tries hard not to do anything surprising.
 
 ## Privacy warning
 
@@ -15,9 +15,8 @@ The archive root contains raw transcripts. Treat it like private data:
 ## Requirements
 
 - Pi coding-agent with TypeScript extension support.
-- `middens` available on `PATH`.
 
-If `middens` is installed somewhere unusual, set `MIDDENS_ARCHIVE_MIDDENS_BIN=/path/to/middens`.
+The package is self-contained and does not require the `middens` CLI to be installed.
 
 ## Configuration
 
@@ -32,9 +31,6 @@ Optional settings:
 ```bash
 # Default: 60. Minimum: 1.
 export MIDDENS_ARCHIVE_INTERVAL_MINUTES=60
-
-# Default: middens from PATH.
-export MIDDENS_ARCHIVE_MIDDENS_BIN=middens
 
 # Default: 300000 (5 minutes). Minimum: 1000.
 export MIDDENS_ARCHIVE_TIMEOUT_MS=300000
@@ -53,7 +49,7 @@ From the repository root:
 pi -e ./integrations/pi/middens-archive
 ```
 
-For a quick command smoke test without touching real sessions, point `HOME` at a temp fixture because `middens archive --source pi-coding-agent` discovers `~/.pi/agent/sessions`:
+For a quick command smoke test without touching real sessions, point `HOME` at a temp fixture because the bundled archiver discovers `~/.pi/agent/sessions`:
 
 ```bash
 tmp_home=$(mktemp -d)
@@ -70,7 +66,17 @@ pi --no-extensions --offline --no-session \
 find "$archive_root" -maxdepth 3 -type f | sort
 ```
 
-The exact fixture JSONL does not need to be parseable unless you later add `--require-parseable`; the archive command still copies raw logs and records parser status.
+The exact fixture JSONL only needs to be valid JSONL for parser metadata to be marked `parsed`; the archive still copies raw logs and records parser status.
+
+Manual dry-run of the bundled archiver:
+
+```bash
+node ./integrations/pi/middens-archive/scripts/archive.mjs \
+  --source pi-coding-agent \
+  --from /path/to/fixture/.pi/agent/sessions \
+  --to /path/to/archive \
+  --dry-run
+```
 
 ## Install as a Pi package
 
@@ -107,13 +113,13 @@ Inside Pi:
 
 ## What gets executed
 
-The command is:
+The extension invokes its bundled `scripts/archive.mjs` with:
 
 ```bash
-middens archive --source pi-coding-agent --to "$MIDDENS_ARCHIVE_ROOT" --yes
+node scripts/archive.mjs --source pi-coding-agent --to "$MIDDENS_ARCHIVE_ROOT" --quiet
 ```
 
-The extension relies on `middens archive` for content-addressing, manifest/index writes, source/archive overlap rejection, destination collision checks, and lock-file protection. The extension also keeps an in-process `running` flag so it does not intentionally start overlapping runs. Belt, suspenders, faint air of paranoia.
+It does not require a separately installed `middens` binary. The bundled archiver performs content-addressing, manifest/index writes, source/archive overlap rejection, destination collision checks, and lock-file protection. The extension also keeps an in-process `running` flag so it does not intentionally start overlapping runs. Belt, suspenders, faint air of paranoia.
 
 ## Uninstall
 

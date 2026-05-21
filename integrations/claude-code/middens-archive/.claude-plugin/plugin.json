@@ -1,0 +1,11 @@
+{
+  "name": "middens-archive",
+  "version": "0.1.0",
+  "description": "Self-contained automatic archives for Claude Code session logs.",
+  "author": {
+    "name": "Lightless Labs",
+    "url": "https://github.com/Lightless-Labs/third-thoughts"
+  },
+  "homepage": "https://github.com/Lightless-Labs/third-thoughts",
+  "license": "AGPL-3.0-or-later"
+}

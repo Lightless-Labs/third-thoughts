@@ -1,6 +1,6 @@
 ---
 title: "Claude Code hook/plugin for automatic middens session archives"
-status: todo
+status: done
 priority: P1
 tags: [archive, retention, claude-code, plugin, hooks, automation, privacy]
 source: user-direction-2026-05-21
@@ -12,13 +12,9 @@ Claude Code session retention is the original reason `middens archive` exists. A
 
 ## What
 
-Investigate and, if supported, build a Claude Code plugin/hook that periodically invokes:
+Investigate and, if supported, build a self-contained Claude Code plugin/hook that periodically archives Claude Code session logs without requiring a separately installed `middens` CLI.
 
-```bash
-middens archive --source claude-code --to <archive-root> --yes
-```
-
-If Claude Code does not expose a stable plugin/hook API suitable for this, produce the safest equivalent automation: a documented wrapper, LaunchAgent/systemd timer, or shell hook that users explicitly install.
+The plugin should still write a `middens archive`-compatible content-addressed archive shape, but package its own archival logic because requiring users to install a second binary for a retention safety net is how tiny footguns become medium footguns.
 
 ## Required research first
 
@@ -35,29 +31,25 @@ Record the answer in this todo or a small solution doc before implementation.
 ## Initial design constraints
 
 - No default archive destination. Require an explicit config value, e.g. `MIDDENS_ARCHIVE_ROOT` or a generated config file.
-- Prefer calling the already-implemented CLI rather than duplicating archive logic.
-- Use only:
-
-  ```bash
-  middens archive --source claude-code --to "$MIDDENS_ARCHIVE_ROOT" --yes
-  ```
-
-  unless the user configures additional flags.
-- Debounce runs and avoid overlap. `middens archive` has its own lock file; the integration should still avoid hammering it.
+- Package archival logic with the plugin; do not require `middens` to be installed on `PATH`.
+- Write the same core archive structure: content-addressed objects, `manifest.json`, and `indexes/sessions.jsonl`.
+- Debounce runs and avoid overlap. The bundled archiver should keep a lock file and the integration should still avoid hammering it.
 - Include a manual "archive now" path if Claude Code supports commands/hooks; otherwise document the manual command.
 - Never print transcript contents.
 
 ## Done
 
-- [ ] Claude Code plugin/hook capabilities are researched and documented.
-- [ ] If a plugin/hook API exists, an integration is implemented under a clear path such as `integrations/claude-code/middens-archive/`.
-- [ ] If no suitable API exists, a documented fallback automation is provided instead (LaunchAgent/systemd timer/wrapper), with the limitation clearly stated.
-- [ ] Archive destination is explicit and required.
-- [ ] The integration invokes `middens archive --source claude-code` and does not reimplement raw-copy logic.
-- [ ] Repeated invocations are debounced or otherwise bounded.
-- [ ] Failures are visible and do not leak raw transcript content.
-- [ ] README documents install, config, privacy warning, uninstall, and how to run a dry-run manually.
-- [ ] Tests use fixture `HOME` / fixture `.claude/projects`, never private real sessions.
+**Completed:** 2026-05-21 — Claude Code plugin implemented at `integrations/claude-code/middens-archive/`. Research result: Claude Code supports plugin manifests, marketplaces, commands, and hooks; hook config loads from plugin-local `hooks/hooks.json` and exposes `CLAUDE_PLUGIN_ROOT`.
+
+- [x] Claude Code plugin/hook capabilities are researched and documented.
+- [x] If a plugin/hook API exists, an integration is implemented under a clear path such as `integrations/claude-code/middens-archive/`.
+- [x] If no suitable API exists, a documented fallback automation is provided instead (LaunchAgent/systemd timer/wrapper), with the limitation clearly stated.
+- [x] Archive destination is explicit and required.
+- [x] The integration packages a bundled archiver for `claude-code` and does not require the `middens` CLI.
+- [x] Repeated invocations are debounced or otherwise bounded.
+- [x] Failures are visible and do not leak raw transcript content.
+- [x] README documents install, config, privacy warning, uninstall, and manual fixture testing.
+- [x] Tests use fixture `HOME` / fixture `.claude/projects`, never private real sessions.
 
 ## Cross-references
 

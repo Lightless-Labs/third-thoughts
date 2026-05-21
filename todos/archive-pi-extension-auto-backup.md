@@ -75,13 +75,13 @@ Use `pi.exec` or Node `child_process` to run `middens`. Prefer `pi.exec` when po
 
 ## Done
 
-**Completed:** 2026-05-21 — implemented as `integrations/pi/middens-archive/`, with local package install and temp-`HOME` smoke tests.
+**Completed:** 2026-05-21 — implemented as `integrations/pi/middens-archive/`, with a bundled self-contained archiver, local package install, and temp-`HOME` smoke tests. Updated the same day to stop requiring a separately installed `middens` CLI.
 
 - [x] A Pi extension package exists under `integrations/pi/middens-archive/` or another documented path.
 - [x] It can be loaded with `pi -e <path>` for local testing.
 - [x] It can be installed as a Pi package from a local path or git URL.
 - [x] With `MIDDENS_ARCHIVE_ROOT` unset, it performs no archive writes.
-- [x] With `MIDDENS_ARCHIVE_ROOT` set, `/middens-archive-now` invokes `middens archive --source pi-coding-agent --to <root> --yes`.
+- [x] With `MIDDENS_ARCHIVE_ROOT` set, `/middens-archive-now` invokes the bundled archiver for `pi-coding-agent` and writes a `middens archive`-compatible archive.
 - [x] Periodic scheduling is debounced and does not start overlapping archive runs.
 - [x] Shutdown-triggered archive is best-effort and bounded by a timeout.
 - [x] Errors are visible but do not leak transcript content.

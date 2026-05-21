@@ -1,0 +1,25 @@
+{
+  "name": "lightless-labs-claude-code-integrations",
+  "owner": {
+    "name": "Lightless Labs",
+    "url": "https://github.com/Lightless-Labs"
+  },
+  "metadata": {
+    "description": "Lightless Labs Claude Code integrations",
+    "version": "0.1.0",
+    "repository": "https://github.com/Lightless-Labs/third-thoughts",
+    "homepage": "https://github.com/Lightless-Labs/third-thoughts"
+  },
+  "plugins": [
+    {
+      "name": "middens-archive",
+      "description": "Self-contained automatic archives for Claude Code session logs",
+      "author": {
+        "name": "Lightless Labs"
+      },
+      "category": "productivity",
+      "source": "./middens-archive",
+      "homepage": "https://github.com/Lightless-Labs/third-thoughts"
+    }
+  ]
+}

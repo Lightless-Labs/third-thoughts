@@ -1,0 +1,21 @@
+{
+  "name": "middens-archive",
+  "version": "0.1.0",
+  "description": "Self-contained automatic archives for Codex session logs.",
+  "author": {
+    "name": "Lightless Labs",
+    "url": "https://github.com/Lightless-Labs/third-thoughts"
+  },
+  "homepage": "https://github.com/Lightless-Labs/third-thoughts",
+  "repository": "https://github.com/Lightless-Labs/third-thoughts",
+  "license": "AGPL-3.0-or-later",
+  "keywords": ["archive", "session-retention", "privacy"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "middens archive",
+    "shortDescription": "Archive Codex JSONL sessions locally",
+    "developerName": "Lightless Labs",
+    "category": "Productivity"
+  }
+}
