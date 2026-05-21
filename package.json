@@ -1,0 +1,17 @@
+{
+  "name": "@lightless-labs/third-thoughts-pi-packages",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Pi package entrypoints for Third Thoughts integrations.",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "pi-package",
+    "third-thoughts",
+    "middens"
+  ],
+  "pi": {
+    "extensions": [
+      "./integrations/pi/middens-archive/extensions/middens-archive.ts"
+    ]
+  }
+}

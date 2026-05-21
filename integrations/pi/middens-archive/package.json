@@ -1,0 +1,29 @@
+{
+  "name": "@lightless-labs/pi-middens-archive",
+  "version": "0.0.1",
+  "description": "Pi extension that periodically archives Pi coding-agent session logs with middens.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "middens",
+    "session-archive"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/middens-archive.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}

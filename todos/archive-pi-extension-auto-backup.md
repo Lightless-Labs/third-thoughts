@@ -1,6 +1,6 @@
 ---
 title: "Pi extension for automatic middens session archives"
-status: todo
+status: done
 priority: P1
 tags: [archive, retention, pi, extension, automation, privacy]
 source: user-direction-2026-05-21
@@ -75,16 +75,18 @@ Use `pi.exec` or Node `child_process` to run `middens`. Prefer `pi.exec` when po
 
 ## Done
 
-- [ ] A Pi extension package exists under `integrations/pi/middens-archive/` or another documented path.
-- [ ] It can be loaded with `pi -e <path>` for local testing.
-- [ ] It can be installed as a Pi package from a local path or git URL.
-- [ ] With `MIDDENS_ARCHIVE_ROOT` unset, it performs no archive writes.
-- [ ] With `MIDDENS_ARCHIVE_ROOT` set, `/middens-archive-now` invokes `middens archive --source pi-coding-agent --to <root> --yes`.
-- [ ] Periodic scheduling is debounced and does not start overlapping archive runs.
-- [ ] Shutdown-triggered archive is best-effort and bounded by a timeout.
-- [ ] Errors are visible but do not leak transcript content.
-- [ ] README documents install, config, privacy implications, and uninstall.
-- [ ] Tested against a fixture `$PI_CODING_AGENT_SESSION_DIR` or temp `HOME`, not private real sessions.
+**Completed:** 2026-05-21 — implemented as `integrations/pi/middens-archive/`, with local package install and temp-`HOME` smoke tests.
+
+- [x] A Pi extension package exists under `integrations/pi/middens-archive/` or another documented path.
+- [x] It can be loaded with `pi -e <path>` for local testing.
+- [x] It can be installed as a Pi package from a local path or git URL.
+- [x] With `MIDDENS_ARCHIVE_ROOT` unset, it performs no archive writes.
+- [x] With `MIDDENS_ARCHIVE_ROOT` set, `/middens-archive-now` invokes `middens archive --source pi-coding-agent --to <root> --yes`.
+- [x] Periodic scheduling is debounced and does not start overlapping archive runs.
+- [x] Shutdown-triggered archive is best-effort and bounded by a timeout.
+- [x] Errors are visible but do not leak transcript content.
+- [x] README documents install, config, privacy implications, and uninstall.
+- [x] Tested against a fixture `$PI_CODING_AGENT_SESSION_DIR` or temp `HOME`, not private real sessions.
 
 ## Cross-references
 
