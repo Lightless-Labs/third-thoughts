@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-21 (session archive command implemented)
+**Last updated:** 2026-05-21 (archive automation integration todos filed)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -28,7 +28,9 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Session archive command is implemented** (commit `51ef8b6`, after NLSpec `68dee67` and red tests `fe51730`). `middens archive --to <dir> [--source ...] [--from ...] [--dry-run] [--yes] [--require-parseable]` discovers local agent JSONL stores, copies raw logs into a content-addressed archive, dedupes by SHA-256, writes `manifest.json` + `indexes/sessions.jsonl`, and never mutates source logs. Safety gates: explicit `--to`, `--yes` for non-dry-run, raw-transcript warning, dry-run writes nothing, source/archive overlap rejection, corrupt-manifest and drift failures, destination collision checks, lock file, git-worktree `.gitignore`, parser enrichment with strict `--require-parseable`. Validation: `cd middens && cargo test` → 375/375 scenarios, 2081/2081 steps; `cd middens && cargo build --release` → pass.
 
-**Next concrete move:** choose the next P1 research follow-up (HSMM re-run with Boucle excluded, autonomous session stratum, or multilingual remediation) unless a distribution patch release is desired for `middens archive`. Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was validated with `brew reinstall`, `middens --version`, `brew test`, and `brew audit`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
+**Archive automation integration todos are filed:** Pi extension, Claude Code hook/plugin, and Codex hook/plugin follow-ups now live in `todos/archive-pi-extension-auto-backup.md`, `todos/archive-claude-code-plugin-auto-backup.md`, and `todos/archive-codex-plugin-auto-backup.md`. Pi is the most concrete target: docs confirm TypeScript extensions can use lifecycle events, commands, notifications, and `pi.exec`, so a small package can run `middens archive --source pi-coding-agent --to <root> --yes` on a debounced interval and via `/middens-archive-now`. Claude Code and Codex need plugin/hook API research first; if no stable APIs exist, document wrapper/LaunchAgent/systemd timer fallbacks rather than pretending a cron job is a plugin in a fake moustache.
+
+**Next concrete move:** if continuing data-retention work, start with the Pi extension (`todos/archive-pi-extension-auto-backup.md`) because the extension API is known. Otherwise choose the next P1 research follow-up (HSMM re-run with Boucle excluded, autonomous session stratum, or multilingual remediation) unless a distribution patch release is desired for `middens archive`. Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was validated with `brew reinstall`, `middens --version`, `brew test`, and `brew audit`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
 
 ---
 
@@ -91,6 +93,12 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 ### P0 — Next distribution/data-retention work
 
 - ~~**Session-log backup/archive**~~ **DONE** (2026-05-21, commit `51ef8b6`): `middens archive` discovers supported local session stores, copies raw JSONL logs into a user-controlled content-addressed archive, deduplicates by SHA-256, records object/observation manifest entries, supports dry-run, and never mutates source logs. Built via NLSpec + red/green adversarial process because raw private data plumbing should be boring and a little paranoid. (`todos/session-log-backup-archive.md`)
+
+### P1 — Archive automation improvements
+
+- **Pi extension for automatic archives**: Build a Pi TypeScript extension/package that runs `middens archive --source pi-coding-agent --to <root> --yes` on a debounced interval and exposes manual `/middens-archive-now` / status commands. Pi docs were checked; lifecycle/session events, commands, `pi.exec`, and notifications are available. (`todos/archive-pi-extension-auto-backup.md`)
+- **Claude Code hook/plugin for automatic archives**: Research Claude Code's current plugin/hook surface first. If supported, add an integration that invokes `middens archive --source claude-code`; otherwise document an explicit wrapper/scheduler fallback. (`todos/archive-claude-code-plugin-auto-backup.md`)
+- **Codex hook/plugin for automatic archives**: Research Codex CLI plugin/hook support first. If supported, add an integration that invokes `middens archive --source codex`; otherwise document an explicit wrapper/scheduler fallback. (`todos/archive-codex-plugin-auto-backup.md`)
 
 ### P1 — Research follow-ups
 
@@ -156,13 +164,13 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | Local `main` includes session archive work through `51ef8b6` and is ahead of `origin/main`. `origin/main` still includes beta.3 (`4bcdd35`); tag `v0.0.1-beta.3` peels to `4bcdd35`. |
+| `main` | Local `main` includes session archive work through `efc3242` plus archive-automation todo docs. `origin/main` still includes beta.3 (`4bcdd35`); tag `v0.0.1-beta.3` peels to `4bcdd35`. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- No tracked working-tree changes expected after the archive handoff commit.
+- No tracked working-tree changes expected after the archive automation todo commit.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap formula was updated to `v0.0.1-beta.3` and pushed to `Lightless-Labs/homebrew-tap` as `74bf114`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)

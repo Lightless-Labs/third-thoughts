@@ -1,0 +1,93 @@
+---
+title: "Pi extension for automatic middens session archives"
+status: todo
+priority: P1
+tags: [archive, retention, pi, extension, automation, privacy]
+source: user-direction-2026-05-21
+---
+
+## Why
+
+`middens archive` now exists, but humans forget to run boring backup commands. Pi has a real TypeScript extension API with lifecycle/session events, commands, UI notifications, and `pi.exec`, so a Pi-side auto-archive integration is feasible and should be the first automation target.
+
+This still touches raw transcripts, so the extension must be explicit, quiet, and hard to accidentally misconfigure. The goal is "regularly copy logs into the archive the user chose", not "spray private conversations into a surprise directory". Tiny but important distinction.
+
+## What
+
+Build a Pi extension / pi package that periodically invokes:
+
+```bash
+middens archive --source pi-coding-agent --to <archive-root> --yes
+```
+
+and exposes a manual command such as:
+
+```text
+/middens-archive-now
+/middens-archive-status
+```
+
+Suggested package shape:
+
+```text
+integrations/pi/middens-archive/
+  package.json
+  extensions/
+    middens-archive.ts
+  README.md
+```
+
+Pi docs read before filing this todo:
+
+- `/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/docs/extensions.md`
+- `/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/docs/packages.md`
+- `/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/examples/extensions/README.md`
+- Relevant examples: `file-trigger.ts`, `shutdown-command.ts`, `auto-commit-on-exit.ts`
+
+## Initial design
+
+Configuration should be explicit, probably via env vars first:
+
+```bash
+export MIDDENS_ARCHIVE_ROOT="$HOME/agent-session-archive"
+export MIDDENS_ARCHIVE_INTERVAL_MINUTES=60
+```
+
+Optional later config via extension command/UI is fine, but v1 should not require writing a settings subsystem.
+
+Trigger candidates:
+
+- `session_start`: schedule a debounced interval timer.
+- `session_shutdown`: run one final archive if enough time has elapsed.
+- `/middens-archive-now`: user-triggered immediate archive.
+
+Use `pi.exec` or Node `child_process` to run `middens`. Prefer `pi.exec` when possible because it fits Pi cancellation/observability patterns.
+
+## Safety requirements
+
+- If `MIDDENS_ARCHIVE_ROOT` is unset, do nothing except optionally show one non-spammy warning/status.
+- Never invent a default archive path.
+- Do not run more frequently than the configured interval; guard against overlapping runs.
+- Use `middens archive`'s lock file and also keep an in-extension `running` flag.
+- Surface failures with `ctx.ui.notify(..., "error")` when UI exists; log otherwise.
+- Do not include raw transcript content in notifications, logs, or tool results.
+- Package README must warn that archive roots contain raw transcripts and should stay private/out of git.
+
+## Done
+
+- [ ] A Pi extension package exists under `integrations/pi/middens-archive/` or another documented path.
+- [ ] It can be loaded with `pi -e <path>` for local testing.
+- [ ] It can be installed as a Pi package from a local path or git URL.
+- [ ] With `MIDDENS_ARCHIVE_ROOT` unset, it performs no archive writes.
+- [ ] With `MIDDENS_ARCHIVE_ROOT` set, `/middens-archive-now` invokes `middens archive --source pi-coding-agent --to <root> --yes`.
+- [ ] Periodic scheduling is debounced and does not start overlapping archive runs.
+- [ ] Shutdown-triggered archive is best-effort and bounded by a timeout.
+- [ ] Errors are visible but do not leak transcript content.
+- [ ] README documents install, config, privacy implications, and uninstall.
+- [ ] Tested against a fixture `$PI_CODING_AGENT_SESSION_DIR` or temp `HOME`, not private real sessions.
+
+## Cross-references
+
+- `docs/nlspecs/2026-05-20-001-middens-session-archive.md`
+- `todos/archive-claude-code-plugin-auto-backup.md`
+- `todos/archive-codex-plugin-auto-backup.md`
