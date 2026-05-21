@@ -26,7 +26,7 @@ export MIDDENS_ARCHIVE_INTERVAL_MINUTES=60
 Add the local marketplace that contains this plugin:
 
 ```bash
-codex plugin marketplace add ./integrations/codex
+codex plugin marketplace add ./integrations/codex --enable plugin_hooks
 ```
 
 Then enable/install `middens-archive` from Codex's plugin UI/flow.

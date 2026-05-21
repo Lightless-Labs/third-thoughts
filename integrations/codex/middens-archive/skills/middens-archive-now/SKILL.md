@@ -5,7 +5,7 @@ description: Archive Codex session logs now with the bundled middens archiver
 
 Run the bundled middens archiver for Codex session logs now.
 
-If the user supplies an archive root, use that. Otherwise require `MIDDENS_ARCHIVE_ROOT` to be set. Do not invent a default path.
+Require `MIDDENS_ARCHIVE_ROOT` to be set. Do not accept or invent a default path.
 
 Use this shell pattern from the plugin root:
 

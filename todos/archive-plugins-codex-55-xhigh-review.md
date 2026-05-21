@@ -1,6 +1,6 @@
 ---
 title: "Review self-contained archive plugins with Codex 5.5 xhigh via Pi"
-status: todo
+status: done
 priority: P0
 tags: [archive, plugins, review, codex, pi, privacy, retention]
 source: user-direction-2026-05-21
@@ -58,12 +58,12 @@ If Pi's CLI/model syntax has changed, use the current Pi help/list-models output
 
 ## Done
 
-- [ ] Codex 5.5 xhigh review is run through Pi, not directly through Codex CLI.
-- [ ] Review output is saved under `docs/reviews/` with a date-stamped filename.
-- [ ] Findings are triaged into P0/P1/P2 buckets.
-- [ ] Any confirmed P0/P1 issues are fixed or filed as dedicated todos.
-- [ ] The three plugin todos remain done unless the review finds a release-blocking issue that requires reopening them.
-- [ ] `docs/HANDOFF.md` is updated with the review result and next action.
+- [x] Codex 5.5 xhigh review is run through Pi, not directly through Codex CLI.
+- [x] Review output is saved under `docs/reviews/` with a date-stamped filename.
+- [x] Findings are triaged into P0/P1/P2 buckets.
+- [x] Any confirmed P0/P1 issues are fixed or filed as dedicated todos.
+- [x] The three plugin todos remain done unless the review finds a release-blocking issue that requires reopening them.
+- [x] `docs/HANDOFF.md` is updated with the review result and next action.
 
 ## Cross-references
 

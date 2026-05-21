@@ -50,6 +50,7 @@ export async function archiveSessions(options) {
   }
 
   await mkdir(archiveRoot, { recursive: true });
+  await checkOverlap(sourceRoot, archiveRoot);
 
   if (debounce && !(await debounceDue(archiveRoot, source, intervalMs))) {
     return { skipped: true, reason: "debounced" };
@@ -77,7 +78,7 @@ export async function archiveSessions(options) {
       const canonicalPath = await realpath(originalPath).catch(() => undefined);
       const basename = originalPath.split(/[\\/]/).pop() || "";
       const observationId = observationIdFor(originalPath, canonicalPath, source, sha256);
-      const enrichment = await enrichJsonl(originalPath);
+      const enrichment = await enrichJsonl(originalPath, source);
 
       const afterHashStat = await stat(originalPath);
       if (afterHashStat.size !== sizeBytes || afterHashStat.mtime.toISOString() !== sourceMtime) {
@@ -155,9 +156,16 @@ function parseArgs(argv) {
   const out = { quiet: false, debounce: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--source") out.source = argv[++i];
-    else if (arg === "--to") out.archiveRoot = argv[++i];
-    else if (arg === "--from") out.sourceRoot = argv[++i];
+    const readOptionValue = (flag) => {
+      const value = argv[++i];
+      if (!value || value.startsWith("-")) {
+        throw new Error(`${flag} requires a value; expected ${flag} <path-or-value>. Example: archive.mjs --source pi-coding-agent --to /private/archive-root`);
+      }
+      return value;
+    };
+    if (arg === "--source") out.source = readOptionValue("--source");
+    else if (arg === "--to") out.archiveRoot = readOptionValue("--to");
+    else if (arg === "--from") out.sourceRoot = readOptionValue("--from");
     else if (arg === "--quiet") out.quiet = true;
     else if (arg === "--debounce") out.debounce = true;
     else if (arg === "--dry-run") out.dryRun = true;
@@ -311,18 +319,32 @@ async function releaseLock(path) {
 }
 
 async function checkOverlap(sourceRoot, archiveRoot) {
-  const variants = new Set([sourceRoot]);
-  variants.add(await realpath(sourceRoot).catch(() => sourceRoot));
-  const archiveVariants = new Set([archiveRoot]);
-  archiveVariants.add(await realpath(archiveRoot).catch(() => archiveRoot));
+  const variants = new Set([sourceRoot, await canonicalizeExistingOrNearest(sourceRoot)]);
+  const archiveVariants = new Set([archiveRoot, await canonicalizeExistingOrNearest(archiveRoot)]);
   for (const source of variants) {
     for (const archive of archiveVariants) {
-      const rel = relative(source, archive);
-      const reverse = relative(archive, source);
-      if (rel === "" || (!rel.startsWith("..") && !isAbsolute(rel))) throw new Error(`archive root overlaps source root: ${archiveRoot}`);
-      if (reverse === "" || (!reverse.startsWith("..") && !isAbsolute(reverse))) throw new Error(`source root overlaps archive root: ${sourceRoot}`);
+      if (containsPath(source, archive)) throw new Error(`archive root overlaps source root: ${archiveRoot}`);
+      if (containsPath(archive, source)) throw new Error(`source root overlaps archive root: ${sourceRoot}`);
     }
   }
+}
+
+async function canonicalizeExistingOrNearest(path) {
+  const absolute = normalizeAbsolute(path);
+  let current = absolute;
+  while (!(await exists(current))) {
+    const parent = dirname(current);
+    if (parent === current) return absolute;
+    current = parent;
+  }
+  const canonicalBase = await realpath(current).catch(() => current);
+  const remainder = relative(current, absolute);
+  return remainder ? join(canonicalBase, remainder) : canonicalBase;
+}
+
+function containsPath(parent, child) {
+  const rel = relative(parent, child);
+  return rel === "" || (rel !== "" && !rel.startsWith("..") && !isAbsolute(rel));
 }
 
 async function writeGitignoreIfInsideWorktree(archiveRoot) {
@@ -330,14 +352,25 @@ async function writeGitignoreIfInsideWorktree(archiveRoot) {
   while (current && current !== dirname(current)) {
     if (await exists(join(current, ".git"))) {
       const gitignore = join(archiveRoot, ".gitignore");
-      if (!(await exists(gitignore))) await writeFile(gitignore, "*\n!.gitignore\n", "utf8");
+      const marker = "# middens archive plugin: raw transcripts";
+      const block = `${marker}\n*\n!.gitignore\n`;
+      const existing = await readFile(gitignore, "utf8").catch((error) => {
+        if (error?.code === "ENOENT") return "";
+        throw error;
+      });
+      if (existing.includes(marker)) return;
+      const separator = existing.length === 0 || existing.endsWith("\n") ? "" : "\n";
+      const next = existing.length === 0 ? block : `${existing}${separator}\n${block}`;
+      const tmp = `${gitignore}.tmp-${process.pid}-${randomUUID()}`;
+      await writeFile(tmp, next, "utf8");
+      await rename(tmp, gitignore);
       return;
     }
     current = dirname(current);
   }
 }
 
-async function enrichJsonl(path) {
+async function enrichJsonl(path, source) {
   const raw = await readFile(path, "utf8");
   if (!raw.trim()) return { parser_status: "empty_placeholder", parser_error: null, session_count: 0, session_ids: [], first_timestamp: null, last_timestamp: null };
   const sessionIds = new Set();
@@ -348,7 +381,8 @@ async function enrichJsonl(path) {
     try {
       const value = JSON.parse(line);
       parsed += 1;
-      collectSessionIds(value, sessionIds);
+      if (source === "pi-coding-agent") collectPiSessionIds(value, sessionIds);
+      else collectSessionIds(value, sessionIds);
       collectTimestamps(value, timestamps);
     } catch (error) {
       return { parser_status: "unparseable", parser_error: error.message, session_count: 0, session_ids: [], first_timestamp: null, last_timestamp: null };
@@ -364,6 +398,19 @@ async function enrichJsonl(path) {
     first_timestamp: timestamps[0] || null,
     last_timestamp: timestamps[timestamps.length - 1] || null,
   };
+}
+
+function collectPiSessionIds(value, out) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return;
+  if (
+    value.type === "session" &&
+    typeof value.id === "string" &&
+    value.id.length <= 200 &&
+    typeof value.cwd === "string" &&
+    typeof value.version === "number"
+  ) {
+    out.add(value.id);
+  }
 }
 
 function collectSessionIds(value, out) {
@@ -444,7 +491,14 @@ function printSummary(result, archiveRoot) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  archiveSessions(parseArgs(process.argv.slice(2))).then((result) => {
+  let options;
+  try {
+    options = parseArgs(process.argv.slice(2));
+  } catch (error) {
+    console.error(`middens archive plugin error: ${error.message}`);
+    process.exit(1);
+  }
+  archiveSessions(options).then((result) => {
     if (result.skipped && !process.argv.includes("--quiet")) console.error(`archive skipped: ${result.reason}`);
   }).catch((error) => {
     console.error(`middens archive plugin error: ${error.message}`);

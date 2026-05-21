@@ -33,7 +33,6 @@ export default function (pi: ExtensionAPI) {
 	let configError: string | undefined;
 	let timer: ReturnType<typeof setInterval> | undefined;
 	let running = false;
-	let sessionStartedAt = 0;
 	let lastStartedAt = 0;
 	let lastFinishedAt = 0;
 	let lastRun: LastRun | undefined;
@@ -103,11 +102,11 @@ export default function (pi: ExtensionAPI) {
 		}
 	}
 
-	function shouldRunConfigured(trigger: RunTrigger, force: boolean, now: number): boolean {
+	function shouldRunConfigured(_trigger: RunTrigger, force: boolean, now: number): boolean {
 		if (!config) return false;
 		if (running) return false;
 		if (force) return true;
-		const lastActivityAt = Math.max(lastStartedAt, lastFinishedAt, trigger === "shutdown" ? sessionStartedAt : 0);
+		const lastActivityAt = Math.max(lastStartedAt, lastFinishedAt);
 		return lastActivityAt === 0 || now - lastActivityAt >= config.intervalMs;
 	}
 
@@ -138,7 +137,7 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		if (!shouldRunConfigured(trigger, force, now)) {
-			const lastActivityAt = Math.max(lastStartedAt, lastFinishedAt, trigger === "shutdown" ? sessionStartedAt : 0);
+			const lastActivityAt = Math.max(lastStartedAt, lastFinishedAt);
 			const remainingMs = lastActivityAt === 0 ? cfg.intervalMs : cfg.intervalMs - (now - lastActivityAt);
 			lastRun = {
 				trigger,
@@ -195,7 +194,6 @@ export default function (pi: ExtensionAPI) {
 
 	function configureForSession(ctx: ExtensionContext) {
 		stopTimer();
-		sessionStartedAt = Date.now();
 		config = loadConfig();
 
 		if (!config) {
@@ -211,6 +209,7 @@ export default function (pi: ExtensionAPI) {
 			void runArchive("periodic", ctx);
 		}, config.intervalMs);
 		if (typeof timer.unref === "function") timer.unref();
+		void runArchive("periodic", ctx);
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
@@ -220,7 +219,7 @@ export default function (pi: ExtensionAPI) {
 	pi.on("session_shutdown", async (_event, ctx) => {
 		stopTimer();
 		if (!config) return;
-		await runArchive("shutdown", ctx, { timeoutMs: config.shutdownTimeoutMs });
+		await runArchive("shutdown", ctx, { force: true, timeoutMs: config.shutdownTimeoutMs });
 	});
 
 	pi.registerCommand("middens-archive-now", {
@@ -248,7 +247,7 @@ export default function (pi: ExtensionAPI) {
 			const next = running
 				? "currently running"
 				: lastFinishedAt === 0
-					? "waiting for first interval or /middens-archive-now"
+					? "initial archive is due now or /middens-archive-now can force it"
 					: `next automatic run in ${formatDuration(Math.max(0, config.intervalMs - (Date.now() - lastFinishedAt)))}`;
 			notify(
 				ctx,

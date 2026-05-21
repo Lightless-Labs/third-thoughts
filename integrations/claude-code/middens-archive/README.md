@@ -42,8 +42,10 @@ The plugin installs hooks for:
 Manual command:
 
 ```text
-/middens-archive-now [archive-root]
+/middens-archive-now
 ```
+
+Set `MIDDENS_ARCHIVE_ROOT` before using the command; it intentionally does not accept a positional archive path.
 
 The bundled archiver discovers `~/.claude/projects` unless `--from` is used when running `scripts/archive.mjs` directly.
 
