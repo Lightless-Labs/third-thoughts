@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use cucumber::World;
@@ -44,6 +45,12 @@ pub struct MiddensWorld {
     pub numeric_result: Option<f64>,
     /// Whether the scenario was skipped due to environment constraints.
     pub skipped: bool,
+    /// Named paths used by fixture-heavy CLI scenarios.
+    pub named_paths: BTreeMap<String, PathBuf>,
+    /// Per-scenario environment overrides for CLI execution.
+    pub env_vars: BTreeMap<String, String>,
+    /// Remembered hashes/content snapshots for before/after assertions.
+    pub remembered_values: BTreeMap<String, String>,
 }
 
 impl MiddensWorld {
@@ -65,6 +72,9 @@ impl MiddensWorld {
             discovered_files: Vec::new(),
             numeric_result: None,
             skipped: false,
+            named_paths: BTreeMap::new(),
+            env_vars: BTreeMap::new(),
+            remembered_values: BTreeMap::new(),
         }
     }
 }

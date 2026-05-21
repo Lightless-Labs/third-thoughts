@@ -5,6 +5,8 @@ use steps::world::MiddensWorld;
 
 // Import all step modules so the cucumber proc macros register their steps.
 #[allow(unused_imports)]
+use steps::archive;
+#[allow(unused_imports)]
 use steps::classifier;
 #[allow(unused_imports)]
 use steps::cli;

@@ -1,3 +1,4 @@
+pub mod archive;
 pub mod classifier;
 pub mod cli;
 pub mod cli_triad;
