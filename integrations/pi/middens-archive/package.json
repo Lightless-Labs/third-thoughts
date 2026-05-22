@@ -11,7 +11,8 @@
     "session-archive"
   ],
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "node --test ../../tests/archive-plugin-regression.test.mjs"
   },
   "pi": {
     "extensions": [

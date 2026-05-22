@@ -78,6 +78,14 @@ node ./integrations/pi/middens-archive/scripts/archive.mjs \
   --dry-run
 ```
 
+Regression tests for the shared bundled archiver copies:
+
+```bash
+cd integrations/pi/middens-archive && npm test
+```
+
+The test suite verifies the Pi, Claude Code, and Codex `scripts/archive.mjs` copies are identical before exercising the shared safety cases.
+
 ## Install as a Pi package
 
 Install globally from a local checkout:
@@ -109,7 +117,7 @@ Inside Pi:
 /middens-archive-status
 ```
 
-`/middens-archive-now` runs immediately, guarded against overlapping runs. Automatic runs happen on the configured interval. On session shutdown, the extension performs a best-effort final archive if the interval has elapsed; that run is bounded by `MIDDENS_ARCHIVE_SHUTDOWN_TIMEOUT_MS`.
+`/middens-archive-now` runs immediately, guarded against overlapping runs. The extension also starts an automatic archive when a session begins, then repeats on the configured interval. On session shutdown, the extension performs a best-effort final archive regardless of the debounce interval; that run is bounded by `MIDDENS_ARCHIVE_SHUTDOWN_TIMEOUT_MS`.
 
 ## What gets executed
 

@@ -1,6 +1,6 @@
 ---
 title: "Add committed regression tests for archive plugin safety cases"
-status: todo
+status: done
 priority: P2
 tags: [archive, plugins, tests, privacy, safety]
 source: codex-55-xhigh-review-2026-05-21
@@ -23,7 +23,7 @@ Add shared tests for the bundled archiver behavior across the Pi, Claude Code, a
 
 ## Done
 
-- [ ] Tests are committed under `integrations/` or a shared integration-test location.
-- [ ] All three bundled `scripts/archive.mjs` copies are covered or verified identical before testing.
-- [ ] Test command is documented in the relevant README or handoff.
-- [ ] CI/local validation includes the new test command.
+- [x] Tests are committed under `integrations/` or a shared integration-test location.
+- [x] All three bundled `scripts/archive.mjs` copies are covered or verified identical before testing.
+- [x] Test command is documented in the relevant README or handoff.
+- [x] CI/local validation includes the new test command.
