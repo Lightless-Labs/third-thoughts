@@ -58,14 +58,31 @@ On Linux without Homebrew, grab the release tarball directly:
 
 ```bash
 # x86_64 Linux
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.3/middens-0.0.1-beta.3-x86_64-unknown-linux-gnu.tar.gz
-tar xzf middens-0.0.1-beta.3-x86_64-unknown-linux-gnu.tar.gz
-./middens-0.0.1-beta.3-x86_64-unknown-linux-gnu/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.4/middens-0.0.1-beta.4-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.4-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.4-x86_64-unknown-linux-gnu/middens --help
 ```
 
 `middens` currently ships binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. Homebrew is the easiest path if you already use it; release tarballs and source builds are documented in [`middens/README.md`](middens/README.md).
 
 If you want to run the CLI on your own session logs, head to [`middens/`](middens/). If you want to read about the methodology and findings, start with `docs/methods-catalog.md` and the reports under `docs/reports/`.
+
+## Archiving agent sessions
+
+`middens archive` copies local agent JSONL logs into a private, content-addressed archive before vendors, retention policies, or your own late-night cleanup impulses make them vanish. It stores raw transcripts, so treat the archive root as private data:
+
+```bash
+middens archive --to ~/agent-session-archive --dry-run
+middens archive --to ~/agent-session-archive --yes
+```
+
+Self-contained automation plugins live under `integrations/` and do **not** require the `middens` binary on `PATH`:
+
+- [`integrations/pi/middens-archive/`](integrations/pi/middens-archive/) — Pi extension with `/middens-archive-now` and `/middens-archive-status`.
+- [`integrations/claude-code/middens-archive/`](integrations/claude-code/middens-archive/) — Claude Code hooks plus `/middens-archive-now`.
+- [`integrations/codex/middens-archive/`](integrations/codex/middens-archive/) — Codex hooks plus archive skills.
+
+All three require an explicit `MIDDENS_ARCHIVE_ROOT`; no default archive path is chosen for you, because surprise raw-transcript folders are rude.
 
 ## License
 

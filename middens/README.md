@@ -6,7 +6,7 @@ A Rust CLI for extracting behavioral patterns from AI coding agent session logs.
 
 Give it a directory of agent transcripts (Claude Code, Codex, OpenClaw, or Pi coding-agent sessions), and it will parse, classify, and run a battery of 23 analytical techniques against them — Markov chains, entropy measures, HSMMs, survival analysis, change-point detection, convention epidemiology, and more.
 
-> **Status: `0.0.1-beta.3`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Available through Homebrew and GitHub Releases; not yet on crates.io.
+> **Status: `0.0.1-beta.4`.** First public beta. Functional end-to-end on real corpora — but expect rough edges, incomplete privacy scrubbing in exports (see *Privacy notes* below), and a moving CLI surface. Available through Homebrew and GitHub Releases; not yet on crates.io.
 
 ## Install
 
@@ -28,25 +28,25 @@ Grab the tarball for your platform from [Releases](https://github.com/Lightless-
 Linux x86_64:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.3/middens-0.0.1-beta.3-x86_64-unknown-linux-gnu.tar.gz
-tar xzf middens-0.0.1-beta.3-x86_64-unknown-linux-gnu.tar.gz
-./middens-0.0.1-beta.3-x86_64-unknown-linux-gnu/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.4/middens-0.0.1-beta.4-x86_64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.4-x86_64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.4-x86_64-unknown-linux-gnu/middens --help
 ```
 
 Linux arm64:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.3/middens-0.0.1-beta.3-aarch64-unknown-linux-gnu.tar.gz
-tar xzf middens-0.0.1-beta.3-aarch64-unknown-linux-gnu.tar.gz
-./middens-0.0.1-beta.3-aarch64-unknown-linux-gnu/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.4/middens-0.0.1-beta.4-aarch64-unknown-linux-gnu.tar.gz
+tar xzf middens-0.0.1-beta.4-aarch64-unknown-linux-gnu.tar.gz
+./middens-0.0.1-beta.4-aarch64-unknown-linux-gnu/middens --help
 ```
 
 Apple Silicon macOS:
 
 ```bash
-curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.3/middens-0.0.1-beta.3-aarch64-apple-darwin.tar.gz
-tar xzf middens-0.0.1-beta.3-aarch64-apple-darwin.tar.gz
-./middens-0.0.1-beta.3-aarch64-apple-darwin/middens --help
+curl -LO https://github.com/Lightless-Labs/third-thoughts/releases/download/v0.0.1-beta.4/middens-0.0.1-beta.4-aarch64-apple-darwin.tar.gz
+tar xzf middens-0.0.1-beta.4-aarch64-apple-darwin.tar.gz
+./middens-0.0.1-beta.4-aarch64-apple-darwin/middens --help
 ```
 
 Supported release targets: `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`. Windows and Intel macOS are planned-but-not-promised future stretch targets.
@@ -150,6 +150,16 @@ middens list-techniques
 - **Outputs** — Markdown, JSON, ASCII, Jupyter notebooks (`.ipynb`) via `export`.
 
 Full technique catalog with academic references: [`../docs/methods-catalog.md`](../docs/methods-catalog.md).
+
+## Archive automation plugins
+
+For ongoing backups, this repo also ships self-contained archive plugins that write the same content-addressed archive shape as `middens archive` without needing the CLI on `PATH`:
+
+- [`../integrations/pi/middens-archive/`](../integrations/pi/middens-archive/) — Pi extension with `/middens-archive-now` and `/middens-archive-status`.
+- [`../integrations/claude-code/middens-archive/`](../integrations/claude-code/middens-archive/) — Claude Code hooks for `SessionStart`, `UserPromptSubmit`, and `Stop`, plus `/middens-archive-now`.
+- [`../integrations/codex/middens-archive/`](../integrations/codex/middens-archive/) — Codex lifecycle hooks plus `middens-archive-now` / `middens-archive-status` skills.
+
+Each plugin requires an explicit `MIDDENS_ARCHIVE_ROOT` and stores raw transcripts. Keep that directory private and out of git; the archiver writes a `.gitignore` guard when it detects a worktree, but that is a seatbelt, not absolution.
 
 ## Methodological guardrails
 
