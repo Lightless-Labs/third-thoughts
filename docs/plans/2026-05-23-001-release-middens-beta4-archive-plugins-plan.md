@@ -1,6 +1,7 @@
 # Release middens v0.0.1-beta.4 with archive plugin distribution notes
 
 **Created:** 2026-05-23
+**Completed:** 2026-05-23
 
 ## Why
 
@@ -42,6 +43,6 @@ Scope:
 - [x] Release-facing README snippets point at `v0.0.1-beta.4`.
 - [x] Archive plugin distribution notes are visible from the main docs.
 - [x] Local validation gates pass.
-- [ ] `v0.0.1-beta.4` tag is pushed and GitHub release workflow succeeds.
-- [ ] Homebrew tap is updated and validated, or a clear blocker is documented.
-- [ ] `docs/HANDOFF.md` is updated.
+- [x] `v0.0.1-beta.4` tag is pushed and GitHub release workflow succeeds.
+- [x] Homebrew tap is updated and validated, or a clear blocker is documented.
+- [x] `docs/HANDOFF.md` is updated.

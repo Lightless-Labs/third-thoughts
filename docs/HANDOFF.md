@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-21 (archive plugin regression tests added; next: publish/beta.4 decision)
+**Last updated:** 2026-05-23 (v0.0.1-beta.4 released; next: research P1)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -20,7 +20,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 | Failed | 0 | — |
 | Timed out | 0 | — |
 
-**v0.0.1-beta.3 is now out.** The release matrix remains the narrowed 3-target set after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). beta.1 added Pi coding-agent parser support; beta.2/beta.3 fixed two validation-discovered nondeterminism bugs (`information_foraging.py` set iteration and `tpattern_detection.py` unseeded permutation test). Release workflows completed successfully and emitted only GitHub's Node.js 20 deprecation warnings for v4 actions / `softprops/action-gh-release@v2`. The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
+**v0.0.1-beta.4 is now out.** The release matrix remains the narrowed 3-target set after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). beta.1 added Pi coding-agent parser support; beta.2/beta.3 fixed two validation-discovered nondeterminism bugs (`information_foraging.py` set iteration and `tpattern_detection.py` unseeded permutation test). beta.4 is the archive-support release: it advertises `middens archive` and the self-contained Pi / Claude Code / Codex archive plugins in release-facing docs. Release workflow `26325365657` completed successfully and emitted only GitHub's Node.js 20 deprecation warnings for v4 actions / `softprops/action-gh-release@v2`. Homebrew tap was updated to beta.4 at `Lightless-Labs/homebrew-tap@7d488f8` and validated locally (`brew reinstall`, `middens --version`, `brew test`, `brew audit --strict --online`). The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
 
 **GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Mobile code blocks now preserve preformatted text and scroll horizontally instead of wrapping into soup (`www` commit `f01c672`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
 
@@ -32,7 +32,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Codex 5.5 xhigh archive-plugin review gate is complete.** Model availability was confirmed with `pi --list-models codex` (`openai-codex/gpt-5.5`), then the review was run through Pi with `--thinking xhigh`. Output is saved at `docs/reviews/2026-05-21-archive-plugins-codex-55-xhigh-pi.md`. Findings: three High/P1 issues and several lower-severity issues. Fixed: existing `.gitignore` protection now appends a managed blanket-ignore block, Pi auto-archive now runs immediately and forces bounded shutdown archive, symlinked-parent source/archive overlap is caught, missing option values fail clearly, Pi archive enrichment counts only the Pi session header ID, manual Claude/Codex docs no longer imply ambiguous positional archive roots, and Codex install docs include `--enable plugin_hooks`. The follow-up regression suite is also done at `integrations/tests/archive-plugin-regression.test.mjs`, runnable via `cd integrations/pi/middens-archive && npm test`; it covers identical bundled scripts, missing/flag-looking option values, no-`middens` PATH dependency, `.gitignore` protection, symlink overlap, Pi session-count enrichment, drift, and destination collisions. Validation after regression tests: `cd integrations/pi/middens-archive && npm test`; `cd integrations/pi/middens-archive && npm run check`; prior plugin validations remain recorded in the review doc.
 
-**NEXT:** decide whether to publish/distribute the three archive plugins (or cut a beta.4 that advertises them). After that, move on to the next P1 research follow-up (HSMM re-run with Boucle excluded, autonomous session stratum, or multilingual remediation). Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was validated with `brew reinstall`, `middens --version`, `brew test`, and `brew audit`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
+**NEXT:** move on to the next P1 research follow-up: HSMM re-run with Boucle excluded is the best first pick, followed by autonomous session stratum or multilingual remediation. Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was refreshed again for beta.4 with `brew reinstall`, `middens --version`, `brew test`, and `brew audit --strict --online`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
 
 ---
 
@@ -86,7 +86,7 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 2. ~~**Step B — release workflow**~~ **DONE** (commit `49d896f`; matrix narrowed 2026-04-18 after Intel-Mac runner starvation on first tag cut). `.github/workflows/release.yml` triggers on `v*` tag. Native GH-hosted runners (no `cross`): `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), `ubuntu-24.04-arm` (linux-arm64, free for public repos). `x86_64-apple-darwin` dropped — `macos-13` is queue-starved on free public repos and the first tag cut sat 9h waiting for a runner. Tarballs + per-artifact SHA256 + combined SHA256SUMS via `softprops/action-gh-release@v2`. Windows left as future stretch. Rationale + failure-mode log at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md`. Follow-up todos from the pre-tag codex review: `todos/release-workflow-pin-actions-and-toolchain.md` (P2), `todos/release-workflow-orphan-sha256-sidecars.md` (P3).
 
-3. ~~**Step C — Homebrew tap**~~ **DONE** (2026-04-27; refreshed 2026-05-20): tap repo created at <https://github.com/Lightless-Labs/homebrew-tap>. Formula installs `v0.0.1-beta.3` release binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. `uv` is `recommended`, not required; `--without-uv` and default install paths were validated for beta.0, and beta.3 was validated locally on Apple Silicon with default dependencies plus `brew test` and `brew audit`. Tap naming decision: generic `homebrew-tap`, yielding `brew install lightless-labs/tap/middens`. (`todos/distribution-homebrew-tap.md`)
+3. ~~**Step C — Homebrew tap**~~ **DONE** (2026-04-27; refreshed 2026-05-23): tap repo created at <https://github.com/Lightless-Labs/homebrew-tap>. Formula installs `v0.0.1-beta.4` release binaries for Apple Silicon macOS, x86_64 Linux, and arm64 Linux. `uv` is `recommended`, not required; `--without-uv` and default install paths were validated for beta.0, beta.3 was validated locally on Apple Silicon, and beta.4 was validated with default dependencies plus `brew test` and `brew audit --strict --online`. Tap naming decision: generic `homebrew-tap`, yielding `brew install lightless-labs/tap/middens`. (`todos/distribution-homebrew-tap.md`)
 
 4. ~~**Step D — two validation runs**~~ **DONE** (2026-05-20): source-built run vs brew-installed run completed on the same 10-session public Pi coding-agent Hugging Face slice. Both ran 23 techniques; manifests/parquet/notebook structure matched after expected run-id/timestamp normalization and tiny float tolerance. Validation found and fixed two nondeterminism bugs before the final beta.3/tap pass. (`todos/distribution-validation-runs.md`)
 
@@ -167,17 +167,17 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | Local `main` includes session archive work, archive-automation todo docs, self-contained Pi/Claude Code/Codex archive plugins, the Codex 5.5 xhigh review output/fixes, and committed archive-plugin regression tests. `origin/main` includes the review/fix commit (`d4bb6b9`) but not the regression-test commit until pushed. Tag `v0.0.1-beta.3` peels to `4bcdd35`. |
+| `main` | Local `main` includes session archive work, archive automation plugins, Codex 5.5 xhigh review fixes, archive-plugin regression tests, and beta.4 release docs/plan. `origin/main` includes beta.4 prep commit `3b9cf56`; tag `v0.0.1-beta.4` is pushed and released. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- No tracked working-tree changes expected after the archive-plugin regression-test commit.
+- No tracked working-tree changes expected after the beta.4 handoff/plan commit.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
-- Tap formula was updated to `v0.0.1-beta.3` and pushed to `Lightless-Labs/homebrew-tap` as `74bf114`.
+- Tap formula was updated to `v0.0.1-beta.4` and pushed to `Lightless-Labs/homebrew-tap` as `7d488f8`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
-- Homebrew side effect: `middens` is currently installed from `lightless-labs/tap` at `0.0.1-beta.3`; `uv` is installed because the default install path was validated.
+- Homebrew side effect: `middens` is currently installed from `lightless-labs/tap` at `0.0.1-beta.4`; `uv` is installed because the default install path was validated.
 
 ---
 
@@ -185,11 +185,13 @@ No open PRs. No feature branches.
 
 **375/375 Cucumber scenarios, 2081 steps — all passing.**
 
-Last Rust run: 2026-05-21, after `middens archive` implementation.
+Last Rust run: 2026-05-23, before `v0.0.1-beta.4` tag.
 
 Run: `cd middens && cargo test`
 
-Archive plugin validation (2026-05-21): `cd integrations/pi/middens-archive && npm test` → 8/8 Node tests; `cd integrations/pi/middens-archive && npm run check`; bundled archiver fixture smokes for `pi-coding-agent`, `claude-code`, and `codex`; Pi `pi -e ./integrations/pi/middens-archive -p /middens-archive-status` with temp `HOME` and unset root; Pi temp-`HOME` `/middens-archive-now` smoke without `middens` on `PATH`; temp `PI_CODING_AGENT_DIR` local package install smoke for both subpackage and repo-root manifests; `claude plugin validate integrations/claude-code/middens-archive`; `claude plugin validate integrations/claude-code`; `codex plugin marketplace add ./integrations/codex --enable plugin_hooks` with temp `HOME`; Claude/Codex hook wrapper fixture smokes.
+Archive plugin validation (2026-05-23): `cd integrations/pi/middens-archive && npm test` → 8/8 Node tests; `cd integrations/pi/middens-archive && npm run check`; bundled archiver fixture smokes for `pi-coding-agent`, `claude-code`, and `codex`; Pi `pi -e ./integrations/pi/middens-archive -p /middens-archive-status` with temp `HOME` and unset root; Pi temp-`HOME` `/middens-archive-now` smoke without `middens` on `PATH`; temp `PI_CODING_AGENT_DIR` local package install smoke for both subpackage and repo-root manifests; `claude plugin validate integrations/claude-code/middens-archive`; `claude plugin validate integrations/claude-code`; `codex plugin marketplace add ./integrations/codex --enable plugin_hooks` with temp `HOME`; Claude/Codex hook wrapper fixture smokes.
+
+Release validation (2026-05-23, beta.4): `cd middens && cargo test` → 375/375 scenarios, 2081/2081 steps plus doctest; `cd middens && cargo build --release --locked`; `cd integrations/pi/middens-archive && npm test`; `cd integrations/pi/middens-archive && npm run check`; GitHub release workflow `26325365657` success; Homebrew `brew reinstall lightless-labs/tap/middens`, `middens --version`, `brew test lightless-labs/tap/middens`, and `brew audit --strict --online lightless-labs/tap/middens` all passed.
 
 ---
 
