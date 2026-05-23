@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-23 (v0.0.1-beta.4 released; next: research P1)
+**Last updated:** 2026-05-23 (v0.0.1-beta.4 released; next: HSMM Boucle-excluded re-run)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -32,7 +32,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Codex 5.5 xhigh archive-plugin review gate is complete.** Model availability was confirmed with `pi --list-models codex` (`openai-codex/gpt-5.5`), then the review was run through Pi with `--thinking xhigh`. Output is saved at `docs/reviews/2026-05-21-archive-plugins-codex-55-xhigh-pi.md`. Findings: three High/P1 issues and several lower-severity issues. Fixed: existing `.gitignore` protection now appends a managed blanket-ignore block, Pi auto-archive now runs immediately and forces bounded shutdown archive, symlinked-parent source/archive overlap is caught, missing option values fail clearly, Pi archive enrichment counts only the Pi session header ID, manual Claude/Codex docs no longer imply ambiguous positional archive roots, and Codex install docs include `--enable plugin_hooks`. The follow-up regression suite is also done at `integrations/tests/archive-plugin-regression.test.mjs`, runnable via `cd integrations/pi/middens-archive && npm test`; it covers identical bundled scripts, missing/flag-looking option values, no-`middens` PATH dependency, `.gitignore` protection, symlink overlap, Pi session-count enrichment, drift, and destination collisions. Validation after regression tests: `cd integrations/pi/middens-archive && npm test`; `cd integrations/pi/middens-archive && npm run check`; prior plugin validations remain recorded in the review doc.
 
-**NEXT:** move on to the next P1 research follow-up: HSMM re-run with Boucle excluded is the best first pick, followed by autonomous session stratum or multilingual remediation. Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was refreshed again for beta.4 with `brew reinstall`, `middens --version`, `brew test`, and `brew audit --strict --online`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
+**NEXT:** run the P1 HSMM re-analysis with W10–W12 Boucle-contaminated sessions excluded. Dedicated todo: `todos/hsmm-rerun-boucle-excluded.md`. Start by re-reading `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md` and `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md`, then produce a filtered/stratified HSMM result without committing private `experiments/` output. Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was refreshed again for beta.4 with `brew reinstall`, `middens --version`, `brew test`, and `brew audit --strict --online`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
 
 ---
 
@@ -105,7 +105,7 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 ### P1 — Research follow-ups
 
-- **HSMM re-run with Boucle excluded**: The 24.6× pre-failure lift collapsed to 2.15× on the 2026-04-14 run. Direction replicates but magnitude is suspect — likely Boucle contamination. Re-run with W10–W12 stripped and stratified. Update finding status in CLAUDE.md accordingly.
+- **HSMM re-run with Boucle excluded**: The 24.6× pre-failure lift collapsed to 2.15× on the 2026-04-14 run. Direction replicates but magnitude is suspect — likely Boucle contamination. Re-run with W10–W12 stripped and stratified. Dedicated todo: `todos/hsmm-rerun-boucle-excluded.md`. Update finding status in CLAUDE.md/docs accordingly.
 - **Autonomous session stratum**: `SessionType::Autonomous` classifier + `corpus-split/autonomous/` bucket. Full plan at `todos/autonomous-session-stratum.md`. Required for the 4-axis compound scoping rule. Phase 2: run 23-technique battery on the new stratum.
 - **Multilingual remediation**: implement language detection + refusal on `thinking-divergence`, `correction-rate` lexical layer, `user_signal_analysis`. Adds `whatlang` (or equivalent). Populates `Session::language`. Then re-run risk-suppression replications under `language=en` gate. (`todos/multilingual-text-techniques.md`)
 
