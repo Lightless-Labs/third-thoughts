@@ -17,8 +17,8 @@ The corpus itself (`corpus/`, `experiments/`) is gitignored — the sessions con
 
 | Finding | Status | Scope |
 |---------|--------|-------|
-| 100% risk-token suppression in paired thinking/text messages | Provisional | `language=en ∧ thinking_visibility=Visible ∧ ¬contaminated_by_Boucle`. N=828 sessions, 4,819 risk tokens, 209 paired messages. |
-| HSMM pre-failure state (24.6× lift) | Robust (mixed corpus) | Pending re-run under 4-axis stratification. |
+| 99.99% risk-token suppression in visible-thinking sessions | Strengthened | `language=en ∧ thinking_visibility=Visible`. N=4,518 sessions, 31,679 risk tokens, 2 leaks. |
+| HSMM pre-failure/pre-correction state | Provisional — direction replicated, magnitude unstable | Fixed public HF re-run: current middens 5.61× Boucle-excluded; legacy script 41.32× under its own filters/sampling. Do not cite one 24.6×-style headline. |
 | MVT violated — agents under-explore | Robust | See `experiments/full-corpus/information-foraging.md`. |
 | Session degradation (agents get worse over time) | Holds on interactive only | See `experiments/interactive/survival_analysis.txt`. |
 | W10–W12 Boucle contamination in "interactive" bucket | Confirmed | 1,820/1,826 sessions carry autonomous-loop markers. |

@@ -1,7 +1,8 @@
 ---
 title: "Build a fixed public Hugging Face agent-session cohort for HSMM replication"
-status: todo
+status: done
 priority: P1
+completed: 2026-05-24
 tags: [research, hsmm, reproducibility, huggingface, corpus, privacy, secrets]
 source: user-direction-2026-05-23
 ---
@@ -147,16 +148,42 @@ Cohorts:
 
 7. Compare only within the same implementation.
 
+## Completion notes (2026-05-24)
+
+Implemented `scripts/build_public_hf_hsmm_cohort.py` and materialized the fixed cohort under gitignored `experiments/hsmm-public-hf-fixed/`.
+
+Pinned primary inference datasets:
+
+- `cfahlgren1/agent-sessions-list@10d6d295cb79a11194cfd93f0e9752b76889fbba`
+- `badlogicgames/pi-mono@dac2a1d3ba12dda597b973a791a77618ccb5f413`
+
+Pinned but excluded from headline inference:
+
+- `armand0e/badlogicgames-pi-mono-opus-filtered@32e67a8d04febcb38a2d28798a6d80fb41481a38` — derivative/cross-check only.
+- `archit11/claude-code-traces@416248040ba2c706c475bba238782c3e334fd4d8` — Parquet request/response traces normalized separately, excluded from HSMM inference because they are not durable session logs.
+
+Generated aggregate counts:
+
+| Cohort | Sessions | Legacy JSONL files | Assistant turns | Tool calls | Corrections |
+|---|---:|---:|---:|---:|---:|
+| `public_hf_baseline_fixed` | 633 | 633 | 15,942 | 15,738 | 640 |
+| `public_hf_boucle_excluded_fixed` | 622 | 622 | 15,913 | 15,725 | 640 |
+| `crosscheck_filtered_pi` | 182 | 182 | 4,082 | 4,243 | 159 |
+
+Manifest status: 825 object rows, 815 parseable JSONL transcript files, 1 normalized Parquet trace object, 9 metadata objects excluded. The manifest records SHA-256, size, parser/normalizer status, contamination flags, inclusion flags, and lightweight secret-screening provenance. This is not equivalent to TruffleHog; public data is still treated as not-safe-to-commit.
+
+Sanitized methodology summary: `docs/solutions/methodology/fixed-public-hf-hsmm-rerun-20260524.md`.
+
 ## Done
 
-- [ ] Dataset revisions are pinned and recorded.
-- [ ] Raw object SHA-256 hashes are recorded for JSONL, Parquet, and any other accepted source format.
-- [ ] Source schemas are inspected and normalization status is recorded.
-- [ ] Cohort inclusion/exclusion criteria are explicit.
-- [ ] Manifest and generated outputs live under `experiments/` and are not committed.
-- [ ] Both HSMM implementations run on the same fixed cohort(s), or blockers are documented.
-- [ ] Results are summarized without leaking transcript contents.
-- [ ] `todos/hsmm-rerun-boucle-excluded.md` and `docs/HANDOFF.md` are updated with the actual fixed-cohort results.
+- [x] Dataset revisions are pinned and recorded.
+- [x] Raw object SHA-256 hashes are recorded for JSONL, Parquet, and any other accepted source format.
+- [x] Source schemas are inspected and normalization status is recorded.
+- [x] Cohort inclusion/exclusion criteria are explicit.
+- [x] Manifest and generated outputs live under `experiments/` and are not committed.
+- [x] Both HSMM implementations run on the same fixed materialized cohort(s); the legacy script's extra sampling/filtering caveat is documented.
+- [x] Results are summarized without leaking transcript contents.
+- [x] `todos/hsmm-rerun-boucle-excluded.md` and `docs/HANDOFF.md` are updated with the actual fixed-cohort results.
 
 ## References
 

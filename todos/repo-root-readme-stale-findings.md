@@ -1,7 +1,8 @@
 ---
 title: "Repo-root README cites superseded finding magnitudes"
-status: todo
+status: done
 priority: P2
+completed: 2026-05-24
 tags: [docs, readme, findings, codex-review]
 source: codex-review-v0.0.1-beta.0-2026-04-17
 ---
@@ -29,6 +30,10 @@ Mirror the update in `docs/HANDOFF.md` so the two docs stay coherent.
 ## Why
 
 From the codex pre-release review: the README is the first impression for a first-time reader. Shipping with already-superseded figures undermines trust in the project before the first command runs. The compound scoping rule in `CLAUDE.md` explicitly says "A finding that doesn't survive all four [axes] is not a finding" — continuing to lead with the unscoped numbers violates our own rule.
+
+## Completion notes (2026-05-24)
+
+Updated `README.md` to the current finding table: 99.99% visible-thinking risk-token suppression and HSMM as "direction replicated, magnitude unstable" using the fixed public HF re-run results. `CLAUDE.md` and `docs/HANDOFF.md` now point to `docs/solutions/methodology/fixed-public-hf-hsmm-rerun-20260524.md` for the HSMM status.
 
 ## Priority
 

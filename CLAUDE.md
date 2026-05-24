@@ -54,7 +54,7 @@ todos/                      # Individual todo files (phil-connors pattern)
 |---------|--------|----------|
 | 99.99% risk suppression on visible-thinking sessions | **Strengthened** (2026-04-14 full-corpus run) | `language=en AND thinking_visibility=Visible`. N=4,518 sessions, 31,679 risk tokens, 2 leaks. Prior provisional (PR #7): N=828, 4,819 tokens. `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md` |
 | 85.5% risk suppression on mixed corpus | **SUPERSEDED** (PR #7) | Mixed-corpus artifact — redacted sessions trivially scored 0% and dragged the per-session mean down. The phenomenon is unchanged; only the reported percentage moves. |
-| HSMM pre-failure state (24.6x lift) | **Provisional — magnitude unconfirmed** (2026-04-14 run: 2.15x) | Direction replicates; 24.6x likely a Boucle contamination artifact. Needs re-run with W10–W12 excluded. `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md` |
+| HSMM pre-failure/pre-correction state | **Provisional — direction replicated, magnitude unstable** (2026-05-24 fixed public HF re-run) | Current middens: 3.55x baseline → 5.61x Boucle-excluded; legacy script: 24.72x → 41.32x under its own filters/sampling. Do not cite one 24.6x-style headline. `docs/solutions/methodology/fixed-public-hf-hsmm-rerun-20260524.md` |
 | MVT violated (agents under-explore) | Robust | `experiments/full-corpus/information-foraging.md` |
 | Thinking blocks prevent corrections | **RETRACTED** (did not survive population split) | `experiments/interactive/survival-results.json` |
 | Session degradation (agents get worse) | Holds on interactive only | `experiments/interactive/survival_analysis.txt` |

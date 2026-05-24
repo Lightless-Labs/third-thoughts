@@ -1,7 +1,8 @@
 ---
 title: "Re-run HSMM pre-failure analysis with Boucle-contaminated windows excluded"
-status: todo
+status: done
 priority: P1
+completed: 2026-05-24
 tags: [research, hsmm, boucle, stratification, methodology, replication]
 source: beta4-next-step-2026-05-23
 ---
@@ -54,15 +55,39 @@ Suggested first pass:
 
 Do not cite the 2026-05-23 ad-hoc smoke checks as results. They were non-fixed pipeline diagnostics only: current HSMM sample baseline 1.25× vs Boucle-excluded 3.13×; legacy filtered attempt loaded only 29 sessions and had insufficient correction data; full local filtered `middens analyze --techniques hsmm` timed out.
 
+## Completion notes (2026-05-24)
+
+Re-run completed on the fixed public Hugging Face cohort built by `scripts/build_public_hf_hsmm_cohort.py`. Raw/normalized artifacts are under gitignored `experiments/hsmm-public-hf-fixed/`; sanitized write-up is `docs/solutions/methodology/fixed-public-hf-hsmm-rerun-20260524.md`.
+
+Boucle exclusion criteria: remove any primary-baseline JSONL object with `queue-operation`, a Boucle/autonomous marker, or `iso_week in {2026-W10, 2026-W11, 2026-W12}` plus zero parsed tool calls. On the public fixed cohort this removed 11 sessions: 1 `queue-operation` session and 10 W10–W12 zero-tool sessions. The public cohort does not reproduce the private corpus's large W10–W12 Boucle contamination.
+
+Current middens HSMM (`middens/python/techniques/hsmm.py`) results:
+
+| Cohort | Sessions | Assistant turns | Optimal states | Pre-correction lift |
+|---|---:|---:|---:|---:|
+| `public_hf_baseline_fixed` | 633 | 15,942 | 4 | 3.55× |
+| `public_hf_boucle_excluded_fixed` | 622 | 15,913 | 5 | 5.61× |
+| `crosscheck_filtered_pi` | 182 | 4,082 | 4 | 6.04× |
+
+Legacy HSMM (`scripts/hsmm_behavioral_states.py`) results on fixed raw symlink cohorts, with legacy filters/sampling (`MAX_SESSIONS=200`, `MIN_TURNS_PER_SESSION=15`, random seed 42):
+
+| Cohort | Loaded sessions | Observation vectors | Optimal states | Top pre-correction lift |
+|---|---:|---:|---:|---:|
+| `public_hf_baseline_fixed` | 56 | 1,896 | 7 | 24.72× |
+| `public_hf_boucle_excluded_fixed` | 56 | 1,832 | 7 | 41.32× |
+| `crosscheck_filtered_pi` | 74 | 2,294 | 4 | 25.56× |
+
+Conclusion: direction replicates, but magnitude is implementation-sensitive. The old 24.6× headline should remain downgraded/provisional rather than being promoted as a stable finding.
+
 ## Done
 
-- [ ] Exclusion criteria are explicit and reproducible.
-- [ ] Session counts before/after W10–W12 Boucle exclusion are recorded.
-- [ ] HSMM re-run completes or a clear blocker is documented.
-- [ ] Results are stratified rather than mixed.
-- [ ] Output artifacts are written under `experiments/` and not committed.
-- [ ] The HSMM finding status is updated in `docs/HANDOFF.md`.
-- [ ] Any required methodology solution doc is added or updated.
+- [x] Exclusion criteria are explicit and reproducible.
+- [x] Session counts before/after W10–W12 Boucle exclusion are recorded.
+- [x] HSMM re-run completes or a clear blocker is documented.
+- [x] Results are stratified/caveated by source/tool, thinking visibility, temporal window, and the missing language/autonomous axes.
+- [x] Output artifacts are written under `experiments/` and not committed.
+- [x] The HSMM finding status is updated in `docs/HANDOFF.md`.
+- [x] Required methodology solution doc is added.
 
 ## References
 
