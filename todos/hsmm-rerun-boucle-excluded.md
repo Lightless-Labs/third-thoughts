@@ -28,24 +28,31 @@ Minimum scope:
 
 ## How
 
+This depends on the fixed public Hugging Face cohort in `todos/fixed-public-hf-agent-session-cohort.md`. Do that first. Do not run the decisive HSMM comparison on mutable local symlinked corpora.
+
 Suggested first pass:
 
 1. Re-read the contamination investigation:
    - `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md`
    - `docs/solutions/methodology/full-corpus-23-technique-run-findings-20260414.md`
-2. Locate the current HSMM technique and any scripts/notebooks that produced the 2.15× figure.
-3. Build a filtered corpus or filtered manifest that excludes W10–W12 Boucle sessions without deleting source data.
-4. Run HSMM on:
+2. Build or load the fixed public HF cohort manifest from `todos/fixed-public-hf-agent-session-cohort.md`.
+3. Locate the current HSMM technique and any scripts/notebooks that produced the 2.15× figure.
+4. Build a filtered cohort or filtered manifest that excludes W10–W12 Boucle sessions without deleting source data.
+5. Run HSMM on:
    - interactive excluding Boucle;
    - subagent separately, if applicable;
    - any already-available autonomous bucket separately, or explicitly document if autonomous stratum is not yet available.
-5. Record:
+6. Record:
+   - dataset repos and pinned revisions;
+   - raw object hashes;
    - session counts before/after filtering;
    - exclusion criteria;
    - state definitions / model parameters;
    - lift estimate and uncertainty / caveats;
    - whether the direction and magnitude replicate.
-6. Update the finding table and methodology docs with the new status.
+7. Update the finding table and methodology docs with the new status.
+
+Do not cite the 2026-05-23 ad-hoc smoke checks as results. They were non-fixed pipeline diagnostics only: current HSMM sample baseline 1.25× vs Boucle-excluded 3.13×; legacy filtered attempt loaded only 29 sessions and had insufficient correction data; full local filtered `middens analyze --techniques hsmm` timed out.
 
 ## Done
 

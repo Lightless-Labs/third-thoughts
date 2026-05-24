@@ -10,7 +10,22 @@ source: user-direction-2026-05-23
 
 The HSMM re-run must not depend on whatever local Claude/Pi/Codex logs still happen to exist today. Local agent logs are live, symlinked, and subject to pruning. Comparing an old 24.6× result to a new run on a different moving corpus is not replication; it is numerology with better fonts.
 
-Use a fixed, public Hugging Face cohort instead. Pin dataset revisions, hash every raw JSONL, and run both HSMM implementations on the same materialized cohort.
+Use a fixed, public Hugging Face cohort instead. Pin dataset revisions, hash every raw JSONL / Parquet / source object, and run both HSMM implementations on the same materialized cohort.
+
+## Start here next session
+
+1. Read this todo and `todos/hsmm-rerun-boucle-excluded.md`.
+2. Build the fixed HF cohort manifest first; do **not** start by running HSMM on local `corpus-full/` or `corpus-split/`.
+3. Normalize accepted source formats into a common `Session[]` shape, with unsupported schemas recorded explicitly.
+4. Run HSMM only after the cohort is pinned, hashed, and materialized.
+
+Important: ad-hoc smoke checks from 2026-05-23 are **not findings**. They were:
+
+- current `middens/python/techniques/hsmm.py`, non-fixed 200-session samples: baseline 1.25×, Boucle-excluded 3.13×;
+- legacy `scripts/hsmm_behavioral_states.py`, filtered corpus attempt: loaded only 29 sessions and reported insufficient correction data;
+- full `middens analyze --techniques hsmm` on a local filtered corpus timed out before producing usable output.
+
+Treat those only as pipeline diagnostics. The publishable result starts with this fixed public cohort.
 
 ## Candidate public datasets
 
