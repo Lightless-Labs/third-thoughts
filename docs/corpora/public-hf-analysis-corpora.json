@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "description": "Pinned public Hugging Face corpora used by CI to run middens analyze/export without LLM interpretation.",
+  "default_ci_tier": "representative",
+  "corpora": [
+    {
+      "id": "agent-sessions-list-mixed",
+      "dataset_repo": "cfahlgren1/agent-sessions-list",
+      "dataset_revision": "10d6d295cb79a11194cfd93f0e9752b76889fbba",
+      "source": "seed",
+      "storage_format": "jsonl",
+      "description": "Small mixed-source sanity cohort: Claude Code, Codex, and Pi coding-agent sessions.",
+      "analysis_enabled": true,
+      "ci_tiers": ["smoke", "representative", "full"],
+      "expected_min_jsonl_files": 7,
+      "expected_min_sessions": 7,
+      "notes": "Tiny by design; useful for parser mix and fast PR checks. HSMM alone has insufficient data, but full analyze should still complete with insufficient summaries where appropriate."
+    },
+    {
+      "id": "badlogicgames-pi-mono",
+      "dataset_repo": "badlogicgames/pi-mono",
+      "dataset_revision": "dac2a1d3ba12dda597b973a791a77618ccb5f413",
+      "source": "seed/pi-share-hf",
+      "storage_format": "jsonl",
+      "description": "Main public Pi coding-agent cohort.",
+      "analysis_enabled": true,
+      "ci_tiers": ["representative", "full"],
+      "expected_min_jsonl_files": 627,
+      "expected_min_sessions": 620,
+      "notes": "Primary public Pi corpus used in the fixed HF HSMM replication."
+    },
+    {
+      "id": "thomasmustier-pi-for-excel",
+      "dataset_repo": "thomasmustier/pi-for-excel-sessions",
+      "dataset_revision": "1b7218d2acf621e52bb5208435b1f80154342e3f",
+      "source": "other=pi-share-hf",
+      "storage_format": "jsonl",
+      "description": "Independent public Pi coding-agent project corpus.",
+      "analysis_enabled": true,
+      "ci_tiers": ["full"],
+      "expected_min_jsonl_files": 162,
+      "expected_min_sessions": 150,
+      "notes": "Good medium-sized non-pi-mono corpus; independent HSMM lift was 7.86x under current middens."
+    },
+    {
+      "id": "aaaaliou-pi-mono",
+      "dataset_repo": "aaaaliou/pi-mono",
+      "dataset_revision": "61eee21d662f8736ace59507fc30555e1bff5c6e",
+      "source": "other=pi-share-hf",
+      "storage_format": "jsonl",
+      "description": "Independent public Pi coding-agent corpus with different HSMM magnitude than badlogicgames/pi-mono.",
+      "analysis_enabled": true,
+      "ci_tiers": ["full"],
+      "expected_min_jsonl_files": 146,
+      "expected_min_sessions": 140,
+      "notes": "Included because it varies materially from pi-mono; independent HSMM lift was 1.44x under current middens."
+    },
+    {
+      "id": "kimi-claude-code-traces-jsonl",
+      "dataset_repo": "armand0e/kimi-k2.6-claude-code-traces",
+      "dataset_revision": "1f02263eb3c1d41f9d7b264baf56a09063a67963",
+      "source": "search=claude code",
+      "storage_format": "jsonl",
+      "description": "Claude-Code-style JSONL trace corpus from the public claude-code search candidates.",
+      "analysis_enabled": true,
+      "ci_tiers": ["full"],
+      "expected_min_jsonl_files": 36,
+      "expected_min_sessions": 30,
+      "notes": "Provides non-Pi JSONL coverage."
+    },
+    {
+      "id": "archit11-claude-code-traces-parquet",
+      "dataset_repo": "archit11/claude-code-traces",
+      "dataset_revision": "416248040ba2c706c475bba238782c3e334fd4d8",
+      "source": "seed/claude-code-search",
+      "storage_format": "parquet_trace_rows",
+      "description": "Claude API request/response trace rows; not yet suitable for middens analyze over raw JSONL corpus directories.",
+      "analysis_enabled": false,
+      "ci_tiers": [],
+      "expected_min_jsonl_files": 0,
+      "expected_min_sessions": 0,
+      "notes": "Kept in registry as a known public corpus candidate, but excluded from analyze CI until the Parquet-to-session normalizer is promoted into the analyze path."
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+name: HF Corpus Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "Corpus tier to run when corpus=all"
+        type: choice
+        default: representative
+        options:
+          - smoke
+          - representative
+          - full
+      corpus:
+        description: "Specific corpus id, or all"
+        type: string
+        default: all
+  schedule:
+    # Weekly full public-corpus validation. Manual dispatch can run it sooner.
+    - cron: "17 3 * * 1"
+  pull_request:
+    paths:
+      - ".github/workflows/hf-corpus-analysis.yml"
+      - "docs/corpora/public-hf-analysis-corpora.json"
+      - "middens/**"
+      - "scripts/hf_corpus_matrix.py"
+      - "scripts/materialize_hf_analysis_corpus.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hf-corpus-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matrix:
+    name: Select corpora
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build matrix
+        id: matrix
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TIER="smoke"
+            CORPUS="all"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            TIER="full"
+            CORPUS="all"
+          else
+            TIER="${{ inputs.tier }}"
+            CORPUS="${{ inputs.corpus }}"
+          fi
+          MATRIX="$(python3 scripts/hf_corpus_matrix.py --tier "$TIER" --corpus "$CORPUS")"
+          echo "$MATRIX"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  analyze:
+    name: Analyze ${{ matrix.id }}
+    needs: matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    env:
+      XDG_DATA_HOME: ${{ github.workspace }}/.tmp/xdg-data/${{ matrix.id }}
+      HF_HUB_DISABLE_PROGRESS_BARS: "1"
+      MIDDENS_CORPUS_ID: ${{ matrix.id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: middens
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install workflow Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install huggingface_hub
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build middens
+        working-directory: middens
+        run: cargo build --release --locked
+
+      - name: Materialize pinned HF corpus
+        run: |
+          python scripts/materialize_hf_analysis_corpus.py \
+            --corpus "${{ matrix.id }}" \
+            --output ".tmp/hf-corpora/${{ matrix.id }}" \
+            --cache-dir ".tmp/hf-cache" \
+            --force
+
+      - name: Run full analysis battery (no LLM interpretation)
+        run: |
+          ./middens/target/release/middens analyze \
+            ".tmp/hf-corpora/${{ matrix.id }}" \
+            --all \
+            --timeout 1800 \
+            --force \
+            --output ".tmp/middens-results/${{ matrix.id }}"
+
+      - name: Resolve latest analysis directory
+        id: latest
+        run: |
+          ROOT="$XDG_DATA_HOME/com.lightless-labs.third-thoughts/analysis"
+          ANALYSIS_DIR="$(find "$ROOT" -maxdepth 1 -type d -name 'run-*' | sort | tail -n 1)"
+          if [ -z "$ANALYSIS_DIR" ]; then
+            echo "No analysis run found under $ROOT" >&2
+            exit 1
+          fi
+          echo "analysis_dir=$ANALYSIS_DIR" >> "$GITHUB_OUTPUT"
+          echo "Analysis dir: $ANALYSIS_DIR"
+
+      - name: Export notebook without interpretation
+        run: |
+          ./middens/target/release/middens export \
+            --analysis-dir "${{ steps.latest.outputs.analysis_dir }}" \
+            --no-interpretation \
+            --output ".tmp/reports/${{ matrix.id }}.ipynb" \
+            --force
+
+      - name: Validate analysis manifest shape
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, sys
+          analysis_dir = pathlib.Path(os.environ["ANALYSIS_DIR"])
+          manifest = json.loads((analysis_dir / "manifest.json").read_text())
+          techniques = manifest.get("techniques", [])
+          if len(techniques) != 23:
+              raise SystemExit(f"expected 23 techniques, got {len(techniques)}")
+          missing = [t.get("name") for t in techniques if "summary" not in t]
+          if missing:
+              raise SystemExit(f"technique entries missing summary: {missing}")
+          print(f"validated {len(techniques)} techniques for {os.environ['MIDDENS_CORPUS_ID']}")
+          PY
+        env:
+          ANALYSIS_DIR: ${{ steps.latest.outputs.analysis_dir }}
+
+      - name: Upload analysis artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hf-corpus-analysis-${{ matrix.id }}
+          path: |
+            .tmp/middens-results/${{ matrix.id }}/
+            .tmp/reports/${{ matrix.id }}.ipynb
+            ${{ steps.latest.outputs.analysis_dir }}/manifest.json
+          if-no-files-found: warn
