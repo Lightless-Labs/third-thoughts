@@ -15,6 +15,14 @@ on:
         description: "Specific corpus id, or all"
         type: string
         default: all
+      registry_repo:
+        description: "Optional HF dataset repo containing corpora.json. Empty uses repo-local registry."
+        type: string
+        default: ""
+      registry_revision:
+        description: "HF registry dataset revision/branch when registry_repo is set."
+        type: string
+        default: main
   schedule:
     # Weekly full public-corpus validation. Manual dispatch can run it sooner.
     - cron: "17 3 * * 1"
@@ -23,6 +31,7 @@ on:
       - ".github/workflows/hf-corpus-analysis.yml"
       - "docs/corpora/public-hf-analysis-corpora.json"
       - "middens/**"
+      - "scripts/fetch_hf_corpus_registry.py"
       - "scripts/hf_corpus_matrix.py"
       - "scripts/materialize_hf_analysis_corpus.py"
 
@@ -42,6 +51,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve registry
+        id: registry
+        run: |
+          mkdir -p .tmp/registry
+          REGISTRY="docs/corpora/public-hf-analysis-corpora.json"
+          HF_REPO=""
+          HF_REVISION="main"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            HF_REPO="${{ inputs.registry_repo }}"
+            HF_REVISION="${{ inputs.registry_revision }}"
+          elif [ -n "${{ vars.HF_CORPUS_REGISTRY_REPO }}" ]; then
+            HF_REPO="${{ vars.HF_CORPUS_REGISTRY_REPO }}"
+            HF_REVISION="${{ vars.HF_CORPUS_REGISTRY_REVISION }}"
+            if [ -z "$HF_REVISION" ]; then
+              HF_REVISION="main"
+            fi
+          fi
+          if [ -n "$HF_REPO" ]; then
+            python3 -m pip install --upgrade pip
+            python3 -m pip install huggingface_hub
+            python3 scripts/fetch_hf_corpus_registry.py \
+              --repo-id "$HF_REPO" \
+              --revision "$HF_REVISION" \
+              --output .tmp/registry/corpora.json
+            REGISTRY=".tmp/registry/corpora.json"
+          else
+            cp "$REGISTRY" .tmp/registry/corpora.json
+            REGISTRY=".tmp/registry/corpora.json"
+          fi
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
+
       - name: Build matrix
         id: matrix
         run: |
@@ -55,9 +95,16 @@ jobs:
             TIER="${{ inputs.tier }}"
             CORPUS="${{ inputs.corpus }}"
           fi
-          MATRIX="$(python3 scripts/hf_corpus_matrix.py --tier "$TIER" --corpus "$CORPUS")"
+          MATRIX="$(python3 scripts/hf_corpus_matrix.py --registry "${{ steps.registry.outputs.registry }}" --tier "$TIER" --corpus "$CORPUS")"
           echo "$MATRIX"
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+      - name: Upload resolved registry
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-corpus-registry
+          path: .tmp/registry/corpora.json
+          if-no-files-found: error
 
   analyze:
     name: Analyze ${{ matrix.id }}
@@ -92,6 +139,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install huggingface_hub
 
+      - name: Download resolved registry
+        uses: actions/download-artifact@v4
+        with:
+          name: hf-corpus-registry
+          path: .tmp/registry
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
@@ -102,6 +155,7 @@ jobs:
       - name: Materialize pinned HF corpus
         run: |
           python scripts/materialize_hf_analysis_corpus.py \
+            --registry ".tmp/registry/corpora.json" \
             --corpus "${{ matrix.id }}" \
             --output ".tmp/hf-corpora/${{ matrix.id }}" \
             --cache-dir ".tmp/hf-cache" \

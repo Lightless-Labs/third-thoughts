@@ -25,6 +25,9 @@ The key distinction is deliberate: candidate public datasets should not be poole
 ## Files
 
 - Registry: `docs/corpora/public-hf-analysis-corpora.json`
+- HF dataset builder: `scripts/build_hf_corpus_registry_dataset.py`
+- HF registry publisher: `scripts/publish_hf_corpus_registry.py`
+- HF registry fetcher: `scripts/fetch_hf_corpus_registry.py`
 - Matrix helper: `scripts/hf_corpus_matrix.py`
 - Materializer: `scripts/materialize_hf_analysis_corpus.py`
 - Workflow: `.github/workflows/hf-corpus-analysis.yml`
@@ -65,7 +68,7 @@ Triggers:
 
 - PRs touching workflow, registry, `middens/**`, or the helper scripts run the `smoke` tier.
 - Weekly scheduled runs execute the `full` tier.
-- Manual dispatch supports `tier={smoke,representative,full}` and `corpus=<id>|all`.
+- Manual dispatch supports `tier={smoke,representative,full}`, `corpus=<id>|all`, and optional `registry_repo` / `registry_revision` inputs. If `registry_repo` is empty, CI uses the repo-local registry. If set, CI fetches `corpora.json` from that HF dataset repo and uses the resolved registry artifact for all matrix jobs. Scheduled runs can also use repository variables `HF_CORPUS_REGISTRY_REPO` and `HF_CORPUS_REGISTRY_REVISION`.
 
 For each selected corpus, CI:
 
@@ -88,6 +91,30 @@ For each selected corpus, CI:
 7. uploads the flat technique output, notebook, and manifest as CI artifacts.
 
 No `middens interpret` or `middens run --model ...` step is used.
+
+## Publishing the registry to Hugging Face
+
+Build a dataset folder locally:
+
+```bash
+python3 scripts/build_hf_corpus_registry_dataset.py \
+  --output .tmp/hf-corpus-registry-dataset
+```
+
+Publish it once authenticated:
+
+```bash
+HF_TOKEN=... python3 scripts/publish_hf_corpus_registry.py \
+  --repo-id Lightless-Labs/third-thoughts-public-corpora
+```
+
+This uploads:
+
+- `README.md` — HF dataset card;
+- `corpora.json` — canonical registry JSON;
+- `corpora.jsonl` — one corpus entry per row for the HF dataset preview.
+
+Current local environment note: no Hugging Face token was present, so the publish command correctly failed early with a token-specific error. The tooling is ready; actual publication needs an authenticated token / org access.
 
 ## Local validation
 
@@ -116,7 +143,7 @@ Smoke result: 7 sessions parsed, 23/23 techniques completed, export succeeded, m
 
 ## Caveats / next steps
 
-- The registry is repo-local for now. If we want a first-class Hugging Face *dataset of corpus definitions*, publish this JSON registry (and optionally derived manifests) to HF and have CI download the registry from there.
+- The registry can now be published as a first-class Hugging Face dataset, but actual publication requires an HF token. Once published, set `HF_CORPUS_REGISTRY_REPO` / `HF_CORPUS_REGISTRY_REVISION` repository variables or use the manual workflow inputs.
 - Several public candidate datasets are duplicate-shaped (`*-pi-mono`). Keep them separate for CI coverage, but do not count them as independent scientific replication without deduplication.
 - Parquet trace datasets need a real streaming/schema-aware normalizer before joining the full-analysis CI path.
 - Weekly `full` runs may hit HF unauthenticated rate limits; add `HF_TOKEN` as a repo secret if that becomes noisy.
