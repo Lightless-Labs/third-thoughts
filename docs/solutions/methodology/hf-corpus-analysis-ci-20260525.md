@@ -18,7 +18,7 @@ tags:
 
 ## What changed
 
-We now have a pinned public Hugging Face corpus registry and a CI workflow that can run the full `middens analyze --all` battery against each selected corpus, then export a notebook **without** invoking the LLM interpretation layer.
+We now have a pinned public Hugging Face corpus registry and a CI workflow that can run the full `middens analyze --all` battery against each selected corpus, then export a notebook **without** invoking the LLM interpretation layer. The workflow also runs a lightweight `middens analyze --split --no-python` smoke on the same materialized HF corpus so session-type stratification regressions are tested against public data rather than stale private Claude Code symlinks.
 
 The key distinction is deliberate: candidate public datasets should not be pooled into one shiny headline by default, but they absolutely can be analyzed independently. The previous framing skipped that middle path. Whoops, etc.
 
@@ -88,7 +88,14 @@ For each selected corpus, CI:
    ```
 
 6. validates that the manifest contains all 23 technique entries;
-7. uploads the flat technique output, notebook, and manifest as CI artifacts.
+7. runs a split-stratification smoke:
+
+   ```bash
+   middens analyze .tmp/hf-corpora/<id> --split --no-python
+   ```
+
+   and validates that the top-level split manifest references `interactive`, `subagent`, and `autonomous` stratum manifests;
+8. uploads the flat technique output, split smoke output, notebook, and manifest as CI artifacts.
 
 No `middens interpret` or `middens run --model ...` step is used.
 
@@ -139,7 +146,7 @@ XDG_DATA_HOME=$PWD/.tmp/xdg-ci-smoke \
   --force
 ```
 
-Smoke result: 7 sessions parsed, 23/23 techniques completed, export succeeded, manifest had 23 technique entries.
+Smoke result: 7 sessions parsed, 23/23 techniques completed, export succeeded, manifest had 23 technique entries. The split smoke on the same HF corpus parsed 7 sessions and produced three strata: 5 interactive, 2 subagent, 0 autonomous.
 
 ## Caveats / next steps
 

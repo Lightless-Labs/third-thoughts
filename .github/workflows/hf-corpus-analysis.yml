@@ -193,7 +193,7 @@ jobs:
       - name: Validate analysis manifest shape
         run: |
           python - <<'PY'
-          import json, os, pathlib, sys
+          import json, os, pathlib
           analysis_dir = pathlib.Path(os.environ["ANALYSIS_DIR"])
           manifest = json.loads((analysis_dir / "manifest.json").read_text())
           techniques = manifest.get("techniques", [])
@@ -207,6 +207,42 @@ jobs:
         env:
           ANALYSIS_DIR: ${{ steps.latest.outputs.analysis_dir }}
 
+      - name: Run HF split stratification smoke
+        run: |
+          set -euo pipefail
+          export XDG_DATA_HOME="${{ github.workspace }}/.tmp/xdg-split/${{ matrix.id }}"
+          ./middens/target/release/middens analyze \
+            ".tmp/hf-corpora/${{ matrix.id }}" \
+            --split \
+            --no-python \
+            --output ".tmp/middens-split-results/${{ matrix.id }}"
+          python - <<'PY'
+          import json, os, pathlib
+          corpus_id = os.environ["MIDDENS_CORPUS_ID"]
+          output = pathlib.Path(".tmp/middens-split-results") / corpus_id
+          for name in ["interactive", "subagent", "autonomous"]:
+              if not (output / name).is_dir():
+                  raise SystemExit(f"missing split output directory: {output / name}")
+          root = pathlib.Path(os.environ["XDG_DATA_HOME"]) / "com.lightless-labs.third-thoughts" / "analysis"
+          runs = sorted(root.glob("run-*"))
+          if not runs:
+              raise SystemExit(f"no split analysis run found under {root}")
+          split_dir = runs[-1]
+          manifest = json.loads((split_dir / "manifest.json").read_text())
+          strata = manifest.get("strata") or []
+          names = sorted(s.get("name") for s in strata)
+          expected = ["autonomous", "interactive", "subagent"]
+          if names != expected:
+              raise SystemExit(f"expected strata {expected}, got {names}")
+          for stratum in strata:
+              ref = split_dir / stratum["manifest_ref"]
+              if not ref.exists():
+                  raise SystemExit(f"missing stratum manifest: {ref}")
+              if not isinstance(stratum.get("session_count"), int) or stratum["session_count"] < 0:
+                  raise SystemExit(f"invalid session_count in {stratum}")
+          print(f"validated split strata for {corpus_id}: {strata}")
+          PY
+
       - name: Upload analysis artifacts
         uses: actions/upload-artifact@v4
         if: always()
@@ -214,6 +250,7 @@ jobs:
           name: hf-corpus-analysis-${{ matrix.id }}
           path: |
             .tmp/middens-results/${{ matrix.id }}/
+            .tmp/middens-split-results/${{ matrix.id }}/
             .tmp/reports/${{ matrix.id }}.ipynb
             ${{ steps.latest.outputs.analysis_dir }}/manifest.json
           if-no-files-found: warn
