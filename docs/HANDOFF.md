@@ -117,9 +117,12 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 - ~~**HSMM re-run with Boucle excluded**~~ **DONE** (2026-05-24): Current middens HSMM on fixed public cohort: baseline 3.55×, Boucle-excluded 5.61×, cross-check 6.04×. Legacy HSMM on fixed raw symlink cohorts with legacy sampling/filtering: baseline 24.72×, Boucle-excluded 41.32×, cross-check 25.56×. Direction replicates; magnitude is implementation-sensitive, so the finding remains downgraded/provisional. (`todos/hsmm-rerun-boucle-excluded.md`)
 - **Autonomous session stratum**: `SessionType::Autonomous` classifier + `corpus-split/autonomous/` bucket. Full plan at `todos/autonomous-session-stratum.md`. Required for the 4-axis compound scoping rule. Phase 2: run 23-technique battery on the new stratum.
 - **Multilingual remediation**: implement language detection + refusal on `thinking-divergence`, `correction-rate` lexical layer, `user_signal_analysis`. Adds `whatlang` (or equivalent). Populates `Session::language`. Then re-run risk-suppression replications under `language=en` gate. (`todos/multilingual-text-techniques.md`)
+- **Public HF Parquet trace normalizers**: add schema-aware, streaming-safe normalizers so public Claude Code Parquet trace datasets can join the full `middens analyze --all` CI path. (`todos/public-hf-parquet-trace-normalizers.md`)
 
 ### P2 — Tech debt
 
+- **Publish public HF corpus registry**: optional, token-gated step to publish the repo-local corpus registry as a Hugging Face dataset and configure CI to fetch it via repo variables/manual inputs. (`todos/public-hf-registry-publish.md`)
+- **Deduplicate public HF corpora**: quantify duplicate/subset relationships among duplicate-shaped `*-pi-mono` datasets before treating them as independent replication evidence. (`todos/public-hf-corpus-deduplication.md`)
 - **CLI version at message level**: `Message::version` + `SessionMetadata::versions: Vec<String>` — enables corpus stratification by Claude Code CLI version. (`todos/message-level-version-field.md`)
 - **Frustration classifier recalibration**: 90% of user signals pile up at intensity 2. Needs rescaling or model change. (`user_signal_analysis.py`)
 - Deferred PR review items: `todos/batch4-coderabbit-deferred.md`, `todos/batch3-coderabbit-deferred.md`
@@ -131,7 +134,6 @@ From the codex xhigh pre-tag review (two rounds). None were beta-tag blockers; t
 
 - `todos/middens-hide-unimplemented-subcommands.md` — `report`/`fingerprint` print `[not yet implemented]`; hide or implement
 - `todos/middens-export-dir-mismatch-validation.md` — `export --analysis-dir A --interpretation-dir B` silently accepts mismatched dirs
-- `todos/repo-root-readme-stale-findings.md` — repo-root README quotes pre-stratification finding magnitudes
 - `todos/middens-privacy-flags-inconsistent-across-verbs.md` — `--include-project-names` is a partial no-op on `interpret`/`export` because parquet is frozen at analyze time
 - `todos/middens-scrub-test-coverage-weakness.md` — cucumber assertions check key presence, not value shape; regression that leaks raw path would still pass
 
@@ -176,17 +178,17 @@ Full Opus 4.6 interpretation at `~/middens-analysis-2026-04-14/interpretation.{m
 
 | Branch | Status |
 |--------|--------|
-| `main` | Local `main` includes session archive work, archive automation plugins, Codex 5.5 xhigh review fixes, archive-plugin regression tests, and beta.4 release docs/plan. `origin/main` includes beta.4 prep commit `3b9cf56`; tag `v0.0.1-beta.4` is pushed and released. |
+| `main` | Local `main` includes session archive work, archive automation plugins, beta.4 release docs, fixed public HF HSMM replication, independent public-HF HSMM summaries, HF corpus analysis CI, optional HF registry publication tooling, and public-HF 23-technique findings. `origin/main` status not rechecked after local commits `df8838e`..`004b868`; tag `v0.0.1-beta.4` is pushed and released. |
 
 No open PRs. No feature branches.
 
 ### Local working tree
 
-- Current session has tracked doc/workflow/script changes for HF public corpus registry publication tooling. Expected tracked changes before commit: `.github/workflows/hf-corpus-analysis.yml`, `scripts/build_hf_corpus_registry_dataset.py`, `scripts/fetch_hf_corpus_registry.py`, `scripts/publish_hf_corpus_registry.py`, `docs/solutions/methodology/hf-corpus-analysis-ci-20260525.md`, `todos/hf-public-corpus-analysis-ci.md`, and this handoff update.
+- No tracked working-tree changes expected after the public-HF todo/handoff cleanup commit.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap formula was updated to `v0.0.1-beta.4` and pushed to `Lightless-Labs/homebrew-tap` as `7d488f8`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
-- Gitignored fixed-cohort artifacts: `experiments/hsmm-public-hf-fixed/` (raw public HF snapshots, manifest, normalized sessions, legacy symlink cohorts, HSMM result logs/JSON). Do not force-add.
+- Gitignored fixed-cohort/public-HF artifacts: `experiments/hsmm-public-hf-fixed/`, `experiments/hsmm-public-hf-independent/`, `.tmp/hf-*`, `.tmp/middens-*`, `.tmp/xdg-*`, `.tmp/reports-*`. Do not force-add raw/normalized transcript artifacts.
 - Homebrew side effect: `middens` is currently installed from `lightless-labs/tap` at `0.0.1-beta.4`; `uv` is installed because the default install path was validated.
 
 ---
