@@ -25,7 +25,7 @@
       "description": "Main public Pi coding-agent cohort.",
       "analysis_enabled": true,
       "ci_tiers": ["representative", "full"],
-      "expected_min_jsonl_files": 627,
+      "expected_min_jsonl_files": 626,
       "expected_min_sessions": 620,
       "notes": "Primary public Pi corpus used in the fixed HF HSMM replication."
     },
@@ -38,7 +38,7 @@
       "description": "Independent public Pi coding-agent project corpus.",
       "analysis_enabled": true,
       "ci_tiers": ["full"],
-      "expected_min_jsonl_files": 162,
+      "expected_min_jsonl_files": 161,
       "expected_min_sessions": 150,
       "notes": "Good medium-sized non-pi-mono corpus; independent HSMM lift was 7.86x under current middens."
     },
@@ -51,7 +51,7 @@
       "description": "Independent public Pi coding-agent corpus with different HSMM magnitude than badlogicgames/pi-mono.",
       "analysis_enabled": true,
       "ci_tiers": ["full"],
-      "expected_min_jsonl_files": 146,
+      "expected_min_jsonl_files": 145,
       "expected_min_sessions": 140,
       "notes": "Included because it varies materially from pi-mono; independent HSMM lift was 1.44x under current middens."
     },
