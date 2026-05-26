@@ -121,8 +121,8 @@ All three commands use sane defaults — no flags required. They discover the la
 # Full analytical battery on a corpus
 middens analyze ~/.claude/projects/ -o results/
 
-# Stratified by session type (interactive vs subagent)
-# Unknown/autonomous sessions are excluded from both strata.
+# Stratified by session type (interactive / subagent / autonomous)
+# Unknown sessions are excluded from all strata.
 middens analyze path/ --split
 
 # Run a subset of techniques
@@ -165,7 +165,7 @@ Each plugin requires an explicit `MIDDENS_ARCHIVE_ROOT` and stores raw transcrip
 
 Middens enforces a few rules the authors learned the hard way:
 
-1. **Always stratify by session type.** Mixing interactive and subagent sessions produced statistics that moved from p=10⁻⁴² to p=0.40 on the same finding. Use `--split`. (Autonomous sessions are a third stratum under development — currently excluded from both `--split` populations rather than silently mixed in.)
+1. **Always stratify by session type.** Mixing interactive and subagent sessions produced statistics that moved from p=10⁻⁴² to p=0.40 on the same finding. Use `--split`; it now writes `interactive/`, `subagent/`, and `autonomous/` strata. Unknown sessions are excluded rather than silently mixed in.
 2. **Thinking visibility matters.** The `redact-thinking-2026-02-12` header is UI-only — thinking still happens, it just isn't written to the transcript. Techniques that measure thinking content must be scoped to `thinking_visibility=Visible`.
 3. **Language-invariant techniques only, unless explicitly scoped.** A handful of techniques (`thinking-divergence`, `correction-rate` priority-3, `user-signal-analysis`) are English-only and will emit a `skipped_non_english_messages` finding.
 

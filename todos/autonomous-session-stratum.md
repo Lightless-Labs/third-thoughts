@@ -1,7 +1,7 @@
 # Autonomous Session Stratum — Phase 1 + Phase 2
 
 **Created:** 2026-04-06
-**Status:** Open (Phase 1 not yet started)
+**Status:** In progress (Phase 1 code complete; real-corpus rerun blocked locally by broken `corpus-split` symlinks)
 **Priority:** P1 — this is the NEXT concrete move after PR triage
 **Source:** Pivot from PR #6 (corpus composition anomaly investigation) — user chose to promote Boucle contamination to a first-class session-type stratum rather than filter it out
 **Follow-up on:** PR #6 (`feat/corpus-anomaly-w10-w12`). Land commits on that branch, don't open a new PR.
@@ -63,14 +63,14 @@ A real interactive session where the user only ever produces short `Unclassified
 
 ### Phase 1 Done definition
 
-- [ ] `SessionType::Autonomous` variant exists
-- [ ] Classifier rule implemented and documented (including the "no Human* ∧ ≥1 user" edge case)
-- [ ] `--split` produces `corpus-split/autonomous/` bucket (or equivalent)
-- [ ] Cucumber: 5+ new scenarios covering the classification rules pass
-- [ ] All 270+ existing scenarios still pass
-- [ ] Re-run numbers on the real corpus added as an addendum to `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md`
-- [ ] Commits pushed to `feat/corpus-anomaly-w10-w12`
-- [ ] PR #6 description updated to reflect it now contains code + classifier, not just a report
+- [x] `SessionType::Autonomous` variant exists
+- [x] Classifier rule implemented and documented (including the "no Human* ∧ ≥1 user" edge case)
+- [x] `--split` produces `corpus-split/autonomous/` bucket (or equivalent)
+- [x] Cucumber: 5+ new scenarios covering the classification rules pass
+- [x] All 270+ existing scenarios still pass (`cd middens && cargo test` → 380/380 scenarios, 2103/2103 steps, 2026-05-26)
+- [ ] Re-run numbers on the real corpus added as an addendum to `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md` (blocked locally: `corpus-split/interactive/02151.jsonl` and many sibling symlinks point to absent private-corpus targets)
+- [ ] Commits pushed to `feat/corpus-anomaly-w10-w12` (outdated branch note; current work is on `main` pending user direction)
+- [ ] PR #6 description updated to reflect it now contains code + classifier, not just a report (outdated; PR #6 is no longer open)
 
 ## Phase 2 — Comparative battery run (research)
 

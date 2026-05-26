@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-26 (public HF 23-technique full-battery findings added)
+**Last updated:** 2026-05-26 (autonomous stratum Phase 1 code complete; real-corpus rerun blocked by broken local symlinks)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -39,6 +39,8 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 **HF public corpus analysis CI is implemented** (2026-05-25). Registry: `docs/corpora/public-hf-analysis-corpora.json`. Helpers: `scripts/hf_corpus_matrix.py`, `scripts/materialize_hf_analysis_corpus.py`, `scripts/build_hf_corpus_registry_dataset.py`, `scripts/publish_hf_corpus_registry.py`, and `scripts/fetch_hf_corpus_registry.py`. Workflow: `.github/workflows/hf-corpus-analysis.yml`. Methodology note: `docs/solutions/methodology/hf-corpus-analysis-ci-20260525.md`. Todo: `todos/hf-public-corpus-analysis-ci.md` done. CI tiers: PRs run smoke (`agent-sessions-list-mixed`); weekly schedule runs full; manual dispatch supports `tier={smoke,representative,full}`, `corpus=<id>|all`, and optional `registry_repo`/`registry_revision`. Scheduled runs can use repo variables `HF_CORPUS_REGISTRY_REPO` and `HF_CORPUS_REGISTRY_REVISION` to fetch `corpora.json` from a published HF dataset. Each matrix job builds middens, materializes the pinned HF JSONL corpus, runs `middens analyze --all --timeout 1800 --force`, exports with `middens export --no-interpretation`, validates the manifest has 23 technique entries, and uploads artifacts. No LLM interpretation layer is invoked. Local smoke validation passed: 7 sessions parsed, 23/23 techniques completed, export succeeded. Publishing the registry to HF is blocked only by local auth: no HF token was present, and `scripts/publish_hf_corpus_registry.py --repo-id Lightless-Labs/third-thoughts-public-corpora` failed early with the expected token-specific message.
 
 **Public HF 23-technique full-battery findings are documented** (2026-05-26) after user pointed out that we have 23 tools, not just HSMM. Write-up: `docs/solutions/methodology/public-hf-23-technique-analysis-findings-20260526.md`. Local/gitignored artifacts: `.tmp/hf-full/`, `.tmp/middens-full/`, `.tmp/xdg-full/`, `.tmp/reports-full/`, plus smoke artifacts. Full `middens analyze --all` and `export --no-interpretation` passed on all CI-selected corpora: `agent-sessions-list-mixed` (7 sessions), `badlogicgames-pi-mono` (626), `thomasmustier-pi-for-excel` (161), `aaaaliou-pi-mono` (145), and `kimi-claude-code-traces-jsonl` (36). Findings beyond HSMM: public Pi corpora show high thinking risk suppression (91–95% in the selected runs), MVT compliance is 0% across all selected corpora, corrections front-load on larger Pi corpora, Kimi/Claude-style traces differ sharply (low correction rate, higher tool entropy, ENA top code `SELF_CORRECT`), Granger relationships vary by corpus, change-point detection finds zero shifts, and cross-project graph remains mostly unusable on these selected corpora. Registry expected JSONL counts were corrected to materialized transcript counts (excluding dataset-side manifest JSONL): badlogicgames 626, pi-for-excel 161, aaaaliou 145.
+
+**Autonomous session stratum Phase 1 is code-complete but not fully closed** (2026-05-26). `SessionType::Autonomous` exists; the session classifier now uses precedence `Subagent` (explicit parser/path/tool-result signal) → `Interactive` (any `Human*`, including `HumanQuestion`) → `Autonomous` (≥1 user message and zero `Human*`) → `Unknown`. `middens analyze --split` now writes `interactive/`, `subagent/`, and `autonomous/` strata and reports all three counts. Validation: `cd middens && cargo test` → 380/380 scenarios, 2103/2103 steps; `cd middens && cargo build --release --locked` → pass. Real-corpus rerun/addendum is still pending because local `corpus-split/` symlinks are broken (`corpus-split/interactive/02151.jsonl` and many sibling symlinks point to absent private-corpus targets), so there are no defensible W10–W12 three-way counts yet. Todo `todos/autonomous-session-stratum.md` is updated accordingly.
 
 Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was refreshed again for beta.4 with `brew reinstall`, `middens --version`, `brew test`, and `brew audit --strict --online`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
 
@@ -80,7 +82,7 @@ middens list-techniques                                # 23 registered technique
 | `export` command | Done | Jupyter notebook; works without interpretation |
 | `run` command | Done | Chains analyze → interpret → export; hard-fails on any stage error |
 | CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
-| Test suite | **375/375 passing** | 2081 steps (`cd middens && cargo test`, after archive command, 2026-05-21) |
+| Test suite | **380/380 passing** | 2103 steps (`cd middens && cargo test`, after autonomous stratum Phase 1 code, 2026-05-26) |
 
 ---
 
@@ -115,7 +117,7 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 - ~~**Fixed public HF cohort for HSMM replication**~~ **DONE** (2026-05-24): `scripts/build_public_hf_hsmm_cohort.py` materializes pinned public HF datasets under gitignored `experiments/hsmm-public-hf-fixed/`, records SHA-256/object metadata/normalization status/contamination flags/inclusion flags, and writes normalized `Session[]` plus legacy symlink cohorts. Sanitized write-up: `docs/solutions/methodology/fixed-public-hf-hsmm-rerun-20260524.md`. (`todos/fixed-public-hf-agent-session-cohort.md`)
 - ~~**HSMM re-run with Boucle excluded**~~ **DONE** (2026-05-24): Current middens HSMM on fixed public cohort: baseline 3.55×, Boucle-excluded 5.61×, cross-check 6.04×. Legacy HSMM on fixed raw symlink cohorts with legacy sampling/filtering: baseline 24.72×, Boucle-excluded 41.32×, cross-check 25.56×. Direction replicates; magnitude is implementation-sensitive, so the finding remains downgraded/provisional. (`todos/hsmm-rerun-boucle-excluded.md`)
-- **Autonomous session stratum**: `SessionType::Autonomous` classifier + `corpus-split/autonomous/` bucket. Full plan at `todos/autonomous-session-stratum.md`. Required for the 4-axis compound scoping rule. Phase 2: run 23-technique battery on the new stratum.
+- **Autonomous session stratum**: Phase 1 code is complete (`SessionType::Autonomous`, classifier, three-way `--split`) but the real-corpus rerun/addendum is pending because local `corpus-split/` symlinks are broken. Full plan at `todos/autonomous-session-stratum.md`. Required for the 4-axis compound scoping rule. Phase 2: run 23-technique battery on the new stratum after defensible real-corpus materialization.
 - **Multilingual remediation**: implement language detection + refusal on `thinking-divergence`, `correction-rate` lexical layer, `user_signal_analysis`. Adds `whatlang` (or equivalent). Populates `Session::language`. Then re-run risk-suppression replications under `language=en` gate. (`todos/multilingual-text-techniques.md`)
 - **Public HF Parquet trace normalizers**: add schema-aware, streaming-safe normalizers so public Claude Code Parquet trace datasets can join the full `middens analyze --all` CI path. (`todos/public-hf-parquet-trace-normalizers.md`)
 
@@ -184,7 +186,7 @@ No open PRs. No feature branches.
 
 ### Local working tree
 
-- No tracked working-tree changes expected after the public-HF todo/handoff cleanup commit.
+- Tracked working-tree changes currently expected if this handoff is read mid-session: autonomous stratum Phase 1 code/docs/tests in `middens/src/{session.rs,classifier/session_type.rs,pipeline.rs,main.rs}`, `middens/tests/...`, `middens/README.md`, `docs/nlspecs/2026-04-02-split-stratification-nlspec.md`, `todos/autonomous-session-stratum.md`, and this handoff. Commit once reviewed.
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap formula was updated to `v0.0.1-beta.4` and pushed to `Lightless-Labs/homebrew-tap` as `7d488f8`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)
@@ -195,9 +197,9 @@ No open PRs. No feature branches.
 
 ## Test suite
 
-**375/375 Cucumber scenarios, 2081 steps — all passing.**
+**380/380 Cucumber scenarios, 2103 steps — all passing.**
 
-Last Rust run: 2026-05-23, before `v0.0.1-beta.4` tag.
+Last Rust run: 2026-05-26, after autonomous stratum Phase 1 code.
 
 Run: `cd middens && cargo test`
 

@@ -31,6 +31,7 @@ fn parse_session_type(s: &str) -> SessionType {
     match s {
         "Interactive" => SessionType::Interactive,
         "Subagent" => SessionType::Subagent,
+        "Autonomous" => SessionType::Autonomous,
         "Unknown" => SessionType::Unknown,
         other => panic!("Unknown SessionType variant: {other}"),
     }
@@ -159,6 +160,16 @@ fn given_session_from_path(world: &mut MiddensWorld, path: String) {
 fn given_session_has_user_message(world: &mut MiddensWorld, classification: String) {
     let cls = parse_classification(&classification);
     let msg = make_message(MessageRole::User, cls);
+    world.sessions[0].messages.push(msg);
+}
+
+/// Append a user message with a tool_result block and a given classification.
+#[given(
+    expr = "the session has a user message with a tool_result content block classified as {string}"
+)]
+fn given_session_has_tool_result_user_message(world: &mut MiddensWorld, classification: String) {
+    let mut msg = user_msg_with_tool_result("");
+    msg.classification = parse_classification(&classification);
     world.sessions[0].messages.push(msg);
 }
 

@@ -15,7 +15,7 @@ pub struct Session {
     pub source_path: PathBuf,
     /// Which agent tool produced this session.
     pub source_tool: SourceTool,
-    /// Session type: interactive (human-in-the-loop) or subagent (automated).
+    /// Session type: interactive, subagent, autonomous, or unknown.
     pub session_type: SessionType,
     /// All messages in chronological order.
     pub messages: Vec<Message>,
@@ -123,8 +123,14 @@ pub enum SessionReasoningObservability {
 pub enum SessionType {
     /// Human-in-the-loop: real user corrections and steering.
     Interactive,
-    /// Automated: subagent or autonomous loop with minimal/no human contact.
+    /// Delegated sidechain/subagent work, usually indicated by tool-result
+    /// user messages or explicit parser/path metadata.
     Subagent,
+    /// Autonomous agent loop with user-role messages but no observed human
+    /// participation. Ambiguous user-only `Unclassified` sessions land here
+    /// deliberately: overcounting Autonomous is safer than contaminating the
+    /// Interactive stratum.
+    Autonomous,
     /// Could not determine.
     Unknown,
 }

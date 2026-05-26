@@ -45,6 +45,7 @@ pub struct PipelineResult {
     pub sessions_parsed: usize,
     pub interactive_sessions: usize,
     pub subagent_sessions: usize,
+    pub autonomous_sessions: usize,
     pub parse_errors: usize,
     pub techniques_run: usize,
     pub technique_errors: usize,
@@ -212,14 +213,16 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
     let mut technique_errors = 0;
     let mut interactive_sessions = 0;
     let mut subagent_sessions = 0;
+    let mut autonomous_sessions = 0;
 
     let corpus_fp = compute_corpus_fingerprint(&files, sessions_parsed, config.redaction);
     let storage_dir;
 
     if config.split {
         use crate::session::SessionType;
-        // Unknown sessions are excluded from both strata to avoid
-        // contaminating either population. See CLAUDE.md compound scoping rule.
+        // Unknown sessions are excluded from all strata to avoid contaminating
+        // any population. The first-class buckets are the compound scoping
+        // rule's session-type axis: Interactive / Subagent / Autonomous.
         let interactive: Vec<_> = all_sessions
             .iter()
             .filter(|s| s.session_type == SessionType::Interactive)
@@ -230,16 +233,26 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
             .filter(|s| s.session_type == SessionType::Subagent)
             .cloned()
             .collect();
+        let autonomous: Vec<_> = all_sessions
+            .iter()
+            .filter(|s| s.session_type == SessionType::Autonomous)
+            .cloned()
+            .collect();
 
         interactive_sessions = interactive.len();
         subagent_sessions = subagent.len();
+        autonomous_sessions = autonomous.len();
 
         let run_id = format!("run-{}", uuid7::uuid7());
         let run_dir = xdg_app_root().join("analysis").join(&run_id);
         fs::create_dir_all(&run_dir)?;
 
         let mut strata_refs = Vec::new();
-        let populations = vec![("interactive", interactive), ("subagent", subagent)];
+        let populations = vec![
+            ("interactive", interactive),
+            ("subagent", subagent),
+            ("autonomous", autonomous),
+        ];
 
         for (pop_name, pop_sessions) in populations {
             let pop_dir = config.output_dir.join(pop_name);
@@ -325,6 +338,7 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
         sessions_parsed,
         interactive_sessions,
         subagent_sessions,
+        autonomous_sessions,
         parse_errors,
         techniques_run,
         technique_errors,

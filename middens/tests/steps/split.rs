@@ -121,27 +121,28 @@ fn run_analyze(world: &mut MiddensWorld, split: bool) {
     world.cli_exit_code = output.status.code();
 }
 
-#[given("a temporary mixed interactive and subagent corpus")]
-fn given_temporary_mixed_interactive_and_subagent_corpus(world: &mut MiddensWorld) {
+#[given("a temporary mixed interactive, subagent, and autonomous corpus")]
+fn given_temporary_mixed_interactive_subagent_and_autonomous_corpus(world: &mut MiddensWorld) {
     let root = temp_root(world);
     let corpus_dir = root.join("mixed-corpus");
     let interactive_dir = corpus_dir.join("interactive");
     let subagent_dir = corpus_dir.join("subagent");
+    let autonomous_dir = corpus_dir.join("autonomous");
 
-    fs::create_dir_all(&interactive_dir).unwrap_or_else(|error| {
-        panic!(
-            "failed to create interactive corpus directory {}: {}",
-            interactive_dir.display(),
-            error
-        )
-    });
-    fs::create_dir_all(&subagent_dir).unwrap_or_else(|error| {
-        panic!(
-            "failed to create subagent corpus directory {}: {}",
-            subagent_dir.display(),
-            error
-        )
-    });
+    for (name, dir) in [
+        ("interactive", &interactive_dir),
+        ("subagent", &subagent_dir),
+        ("autonomous", &autonomous_dir),
+    ] {
+        fs::create_dir_all(dir).unwrap_or_else(|error| {
+            panic!(
+                "failed to create {} corpus directory {}: {}",
+                name,
+                dir.display(),
+                error
+            )
+        });
+    }
 
     let fixtures = fixtures_dir();
     let copies = [
@@ -170,6 +171,15 @@ fn given_temporary_mixed_interactive_and_subagent_corpus(world: &mut MiddensWorl
         });
     }
 
+    let autonomous_fixture = r#"{"type":"user","sessionId":"autonomous-fixture","timestamp":"2026-03-19T14:30:02Z","message":{"role":"user","content":"<system-reminder>queued autonomous loop tick</system-reminder>"}}
+{"type":"assistant","sessionId":"autonomous-fixture","timestamp":"2026-03-19T14:30:03Z","message":{"role":"assistant","content":"Acknowledged."}}
+"#;
+    fs::write(
+        autonomous_dir.join("autonomous_sample.jsonl"),
+        autonomous_fixture,
+    )
+    .expect("failed to write autonomous fixture");
+
     world.file_path = Some(corpus_dir);
 }
 
@@ -183,11 +193,14 @@ fn when_run_middens_analyze_without_split_on_the_mixed_corpus(world: &mut Midden
     run_analyze(world, false);
 }
 
-#[then("the analyze output should be partitioned into interactive and subagent subdirectories")]
+#[then(
+    "the analyze output should be partitioned into interactive, subagent, and autonomous subdirectories"
+)]
 fn then_analyze_output_partitioned(world: &mut MiddensWorld) {
     let output_dir = output_dir(world);
     let interactive = output_dir.join("interactive");
     let subagent = output_dir.join("subagent");
+    let autonomous = output_dir.join("autonomous");
 
     assert!(
         interactive.is_dir(),
@@ -199,6 +212,11 @@ fn then_analyze_output_partitioned(world: &mut MiddensWorld) {
         "missing subagent subdirectory at {}",
         subagent.display()
     );
+    assert!(
+        autonomous.is_dir(),
+        "missing autonomous subdirectory at {}",
+        autonomous.display()
+    );
 }
 
 #[then("the analyze output should be flat with no population subdirectories")]
@@ -206,6 +224,7 @@ fn then_analyze_output_flat(world: &mut MiddensWorld) {
     let output_dir = output_dir(world);
     let interactive = output_dir.join("interactive");
     let subagent = output_dir.join("subagent");
+    let autonomous = output_dir.join("autonomous");
 
     assert!(
         !interactive.exists(),
@@ -216,6 +235,11 @@ fn then_analyze_output_flat(world: &mut MiddensWorld) {
         !subagent.exists(),
         "subagent subdirectory should not exist at {}",
         subagent.display()
+    );
+    assert!(
+        !autonomous.exists(),
+        "autonomous subdirectory should not exist at {}",
+        autonomous.display()
     );
 }
 
@@ -236,18 +260,38 @@ fn then_population_subdirectory_contains_outputs(world: &mut MiddensWorld, popul
 }
 
 #[then(
-    expr = "the split summary should report {int} interactive sessions and {int} subagent session"
+    expr = "the split summary should report {int} interactive session, {int} subagent session, and {int} autonomous session"
 )]
 #[then(
-    expr = "the split summary should report {int} interactive sessions and {int} subagent sessions"
+    expr = "the split summary should report {int} interactive session, {int} subagent sessions, and {int} autonomous session"
+)]
+#[then(
+    expr = "the split summary should report {int} interactive session, {int} subagent session, and {int} autonomous sessions"
+)]
+#[then(
+    expr = "the split summary should report {int} interactive session, {int} subagent sessions, and {int} autonomous sessions"
+)]
+#[then(
+    expr = "the split summary should report {int} interactive sessions, {int} subagent session, and {int} autonomous session"
+)]
+#[then(
+    expr = "the split summary should report {int} interactive sessions, {int} subagent sessions, and {int} autonomous session"
+)]
+#[then(
+    expr = "the split summary should report {int} interactive sessions, {int} subagent session, and {int} autonomous sessions"
+)]
+#[then(
+    expr = "the split summary should report {int} interactive sessions, {int} subagent sessions, and {int} autonomous sessions"
 )]
 fn then_split_summary_reports_population_counts(
     world: &mut MiddensWorld,
     interactive_count: i32,
     subagent_count: i32,
+    autonomous_count: i32,
 ) {
     let interactive_line = format!("interactive sessions: {}", interactive_count);
     let subagent_line = format!("subagent sessions: {}", subagent_count);
+    let autonomous_line = format!("autonomous sessions: {}", autonomous_count);
 
     assert!(
         world.cli_stderr.contains(&interactive_line),
@@ -259,6 +303,12 @@ fn then_split_summary_reports_population_counts(
         world.cli_stderr.contains(&subagent_line),
         "stderr did not contain {:?}\nactual stderr:\n{}",
         subagent_line,
+        world.cli_stderr
+    );
+    assert!(
+        world.cli_stderr.contains(&autonomous_line),
+        "stderr did not contain {:?}\nactual stderr:\n{}",
+        autonomous_line,
         world.cli_stderr
     );
 }

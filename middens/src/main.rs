@@ -35,7 +35,7 @@ enum Commands {
         #[arg(long)]
         all: bool,
 
-        /// Stratify results by interactive vs subagent sessions.
+        /// Stratify results by interactive, subagent, and autonomous sessions.
         #[arg(long)]
         split: bool,
 
@@ -291,6 +291,7 @@ fn print_analysis_summary(result: &PipelineResult, split: bool) {
     if split {
         eprintln!("  interactive sessions: {}", result.interactive_sessions);
         eprintln!("  subagent sessions: {}", result.subagent_sessions);
+        eprintln!("  autonomous sessions: {}", result.autonomous_sessions);
     }
     eprintln!("  parse errors: {}", result.parse_errors);
     eprintln!("  techniques run: {}", result.techniques_run);
