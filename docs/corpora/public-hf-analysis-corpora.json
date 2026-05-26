@@ -92,7 +92,7 @@
       "ci_tiers": [],
       "expected_min_jsonl_files": 5800,
       "expected_min_sessions": 5800,
-      "notes": "Excellent candidate for public-HF regression/analysis once access is granted, but the dataset is gated (`gated=auto`). Unauthenticated download of `transcripts/*.jsonl` returns 401, so keep disabled until CI has an HF token accepted for the dataset and the transcript format is smoke-validated. API listing at pinned revision shows 5,850 transcript JSONL files; README reports 5,851. README says user prompts and assistant text responses were PII-redacted with Microsoft Presidio plus TruffleHog; still validate transcript/tool/thinking fields before treating outputs as privacy-safe."
+      "notes": "Excellent candidate for public-HF regression/analysis once access is granted, but the dataset is gated (`gated=auto`). Unauthenticated download of `transcripts/*.jsonl` returns 401, so keep disabled until CI has an HF token accepted for the dataset and a durable secrets/trigger strategy. API listing at pinned revision shows 5,850 transcript JSONL files; README reports 5,851. One-off token smoke on 2026-05-26 downloaded three transcripts and middens parsed all three with `--split --no-python`. README says user prompts and assistant text responses were PII-redacted with Microsoft Presidio plus TruffleHog; still validate transcript/tool/thinking fields before treating outputs as privacy-safe."
     }
   ]
 }

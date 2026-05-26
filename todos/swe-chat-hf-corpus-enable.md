@@ -10,7 +10,7 @@ source: user-shared-hf-dataset-2026-05-26
 
 `SALT-NLP/SWE-chat` looks like a very strong public corpus for middens regression and research runs: real-world coding-agent sessions, 5.8k-ish raw transcript JSONL files, and companion Parquet tables for sessions, repositories, checkpoints, commits, and conversations.
 
-It is also gated. Unauthenticated transcript download at pinned revision `f66cca95b14caaa4177f7ed5eaa424608dadcffa` fails with HTTP 401 / `GatedRepoError`, so it cannot be added to normal public PR CI yet.
+It is also gated. Unauthenticated transcript download at pinned revision `f66cca95b14caaa4177f7ed5eaa424608dadcffa` fails with HTTP 401 / `GatedRepoError`, so it cannot be added to normal public PR CI yet. A one-off user-provided token smoke on 2026-05-26 confirmed gated access works, three transcript JSONL files download, and current middens parses/analyzes them with `--split --no-python`; the temporary raw/cache/output artifacts were deleted after the smoke.
 
 The README's privacy note is promising: user prompts and assistant text responses were redacted with Microsoft Presidio for named entities and TruffleHog for secrets. Treat that as useful provenance, not blanket clearance: the dataset also advertises thinking traces, tool results, code changes, repository metadata, and commits, so we should still schema-audit what fields land in middens outputs before calling derived artifacts privacy-safe.
 
@@ -31,9 +31,9 @@ Promote `docs/corpora/public-hf-analysis-corpora.json` entry `salt-nlp-swe-chat`
 
 ## Done
 
-- [ ] Access/token available for dataset download in trusted CI contexts.
-- [ ] Materialization succeeds without raw snippets committed.
-- [ ] Parser or normalizer support is validated.
+- [ ] Access/token available for dataset download in trusted CI contexts. (One-off local token smoke succeeded; durable CI secret strategy still pending.)
+- [x] Materialization smoke succeeds without raw snippets committed.
+- [x] Parser support is smoke-validated on three transcript JSONL files (`middens analyze --split --no-python`: 3 parsed, 0 interactive, 3 subagent, 0 autonomous).
 - [ ] PII-redaction scope is documented for fields middens consumes/emits.
 - [ ] Registry entry is `analysis_enabled=true` with an explicit CI tier.
 - [ ] Full 23-technique analysis completes.
