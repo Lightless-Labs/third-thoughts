@@ -80,6 +80,19 @@
       "expected_min_jsonl_files": 0,
       "expected_min_sessions": 0,
       "notes": "Kept in registry as a known public corpus candidate, but excluded from analyze CI until the Parquet-to-session normalizer is promoted into the analyze path."
+    },
+    {
+      "id": "salt-nlp-swe-chat",
+      "dataset_repo": "SALT-NLP/SWE-chat",
+      "dataset_revision": "f66cca95b14caaa4177f7ed5eaa424608dadcffa",
+      "source": "user-shared/gated",
+      "storage_format": "jsonl",
+      "description": "SWE-chat real-world coding-agent corpus with transcripts plus session/repository/commit Parquet tables.",
+      "analysis_enabled": false,
+      "ci_tiers": [],
+      "expected_min_jsonl_files": 5800,
+      "expected_min_sessions": 5800,
+      "notes": "Excellent candidate for public-HF regression/analysis once access is granted, but the dataset is gated (`gated=auto`). Unauthenticated download of `transcripts/*.jsonl` returns 401, so keep disabled until CI has an HF token accepted for the dataset and the transcript format is smoke-validated. API listing at pinned revision shows 5,850 transcript JSONL files; README reports 5,851."
     }
   ]
 }

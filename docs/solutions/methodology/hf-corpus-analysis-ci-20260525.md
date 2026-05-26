@@ -59,6 +59,7 @@ Known but not yet analysis-enabled:
 | Corpus id | Reason |
 |---|---|
 | `archit11-claude-code-traces-parquet` | Parquet request/response rows need a promoted normalizer before raw `middens analyze` can consume them as a corpus directory. |
+| `salt-nlp-swe-chat` | Strong candidate with 5.8k-ish transcript JSONL files, but the dataset is gated. Unauthenticated transcript download returns 401, so CI needs accepted HF-token access before enabling it. |
 
 ## CI behavior
 
@@ -153,4 +154,5 @@ Smoke result: 7 sessions parsed, 23/23 techniques completed, export succeeded, m
 - The registry can now be published as a first-class Hugging Face dataset, but actual publication requires an HF token. Once published, set `HF_CORPUS_REGISTRY_REPO` / `HF_CORPUS_REGISTRY_REVISION` repository variables or use the manual workflow inputs.
 - Several public candidate datasets are duplicate-shaped (`*-pi-mono`). Keep them separate for CI coverage, but do not count them as independent scientific replication without deduplication.
 - Parquet trace datasets need a real streaming/schema-aware normalizer before joining the full-analysis CI path.
+- `SALT-NLP/SWE-chat` should be promoted once a trusted CI HF token has accepted gated access and we smoke-validate the transcript schema. Keep it out of unauthenticated PR CI until then.
 - Weekly `full` runs may hit HF unauthenticated rate limits; add `HF_TOKEN` as a repo secret if that becomes noisy.
