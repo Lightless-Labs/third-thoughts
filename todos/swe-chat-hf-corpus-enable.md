@@ -29,6 +29,10 @@ Promote `docs/corpora/public-hf-analysis-corpora.json` entry `salt-nlp-swe-chat`
 7. Enable the registry entry with an appropriate tier, probably `full` only at first.
 7. Run `middens analyze --all` and `middens analyze --split --no-python` on it.
 
+## Progress notes
+
+- 2026-05-26: Metadata-only full per-user aggregate analysis completed with `scripts/analyze_swe_chat_per_user.py`. Outputs are gitignored under `experiments/swe-chat-per-user/`; sanitized method note is `docs/solutions/methodology/swe-chat-per-user-analysis-20260526.md`. Result: 5,851 sessions, 190 user groups, 1,943 sessions with missing `user_id`.
+
 ## Done
 
 - [ ] Access/token available for dataset download in trusted CI contexts. (One-off local token smoke succeeded; durable CI secret strategy still pending.)
