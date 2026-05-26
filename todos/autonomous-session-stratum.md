@@ -1,7 +1,7 @@
 # Autonomous Session Stratum — Phase 1 + Phase 2
 
 **Created:** 2026-04-06
-**Status:** In progress (Phase 1 code complete; real-corpus rerun blocked locally by broken `corpus-split` symlinks)
+**Status:** In progress (Phase 1 code complete; real-corpus rerun blocked locally by stale `corpus-split` symlinks whose Claude Code live targets have mostly been pruned)
 **Priority:** P1 — this is the NEXT concrete move after PR triage
 **Source:** Pivot from PR #6 (corpus composition anomaly investigation) — user chose to promote Boucle contamination to a first-class session-type stratum rather than filter it out
 **Follow-up on:** PR #6 (`feat/corpus-anomaly-w10-w12`). Land commits on that branch, don't open a new PR.
@@ -68,7 +68,7 @@ A real interactive session where the user only ever produces short `Unclassified
 - [x] `--split` produces `corpus-split/autonomous/` bucket (or equivalent)
 - [x] Cucumber: 5+ new scenarios covering the classification rules pass
 - [x] All 270+ existing scenarios still pass (`cd middens && cargo test` → 380/380 scenarios, 2103/2103 steps, 2026-05-26)
-- [ ] Re-run numbers on the real corpus added as an addendum to `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md` (blocked locally: `corpus-split/interactive/02151.jsonl` and many sibling symlinks point to absent private-corpus targets)
+- [ ] Re-run numbers on the real corpus added as an addendum to `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md` (blocked locally: `corpus-split/` is a stale absolute-symlink split over Claude Code live storage. After correcting the old repo path prefix, only 46/2,594 interactive and 4,757/5,348 subagent targets still exist; Claude Code appears to have pruned most of the original interactive files.)
 - [ ] Commits pushed to `feat/corpus-anomaly-w10-w12` (outdated branch note; current work is on `main` pending user direction)
 - [ ] PR #6 description updated to reflect it now contains code + classifier, not just a report (outdated; PR #6 is no longer open)
 
