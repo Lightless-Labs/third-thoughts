@@ -32,12 +32,14 @@ Promote `docs/corpora/public-hf-analysis-corpora.json` entry `salt-nlp-swe-chat`
 ## Progress notes
 
 - 2026-05-26: Metadata-only full per-user aggregate analysis completed with `scripts/analyze_swe_chat_per_user.py`. Outputs are gitignored under `experiments/swe-chat-per-user/`; sanitized method note is `docs/solutions/methodology/swe-chat-per-user-analysis-20260526.md`. Result: 5,851 sessions, 190 user groups, 1,943 sessions with missing `user_id`.
+- 2026-05-26: Full middens per-user battery attempted with `scripts/run_swe_chat_per_user_middens.py` for currently supported/likely-supported agents (`Claude Code`, `claude-code`, `Codex`). Result: 175 selected user groups / 5,066 sessions; 165 groups / 4,999 selected sessions completed with 23/23 technique entries and zero technique errors. Ten groups failed: seven no supported parser matched, three storage PII column-name blocklist failures from MCP tool names containing `content`.
 
 ## Done
 
 - [ ] Access/token available for dataset download in trusted CI contexts. (One-off local token smoke succeeded; durable CI secret strategy still pending.)
 - [x] Materialization smoke succeeds without raw snippets committed.
 - [x] Parser support is smoke-validated on three transcript JSONL files (`middens analyze --split --no-python`: 3 parsed, 0 interactive, 3 subagent, 0 autonomous).
+- [x] Full per-user middens batch runner exists and mostly completed for currently supported/likely-supported agents.
 - [ ] PII-redaction scope is documented for fields middens consumes/emits.
 - [ ] Registry entry is `analysis_enabled=true` with an explicit CI tier.
 - [ ] Full 23-technique analysis completes.
