@@ -10,7 +10,6 @@ transcript snippets are never written.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -21,13 +20,11 @@ from typing import Any
 
 try:
     import pandas as pd
-    from huggingface_hub import HfApi, hf_hub_download
 except ImportError as exc:  # pragma: no cover
-    print(
-        "Missing dependencies. Install with: python3 -m pip install pandas pyarrow huggingface_hub",
-        file=sys.stderr,
-    )
+    print("Missing pandas. Install with: python3 -m pip install pandas pyarrow", file=sys.stderr)
     raise SystemExit(2) from exc
+
+from hf_dataset_adapters import SweChatAdapter, stable_hash
 
 
 DEFAULT_REPO = "SALT-NLP/SWE-chat"
@@ -48,13 +45,6 @@ def parse_args() -> argparse.Namespace:
 def fail(message: str) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
     raise SystemExit(2)
-
-
-def stable_hash(value: Any, prefix: str) -> str:
-    if value is None or pd.isna(value):
-        return f"missing_{prefix}"
-    digest = hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:16]
-    return f"{prefix}_{digest}"
 
 
 def top_counts(values: pd.Series, limit: int = 5) -> list[dict[str, Any]]:
@@ -82,19 +72,6 @@ def reset_output(path: Path, force: bool) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def download_table(repo_id: str, revision: str, filename: str, cache_dir: Path, token: str | None) -> Path:
-    return Path(
-        hf_hub_download(
-            repo_id,
-            filename,
-            repo_type="dataset",
-            revision=revision,
-            cache_dir=cache_dir,
-            token=token,
-        )
-    )
-
-
 def main() -> int:
     args = parse_args()
     token = os.environ.get(args.token_env)
@@ -107,10 +84,8 @@ def main() -> int:
     reset_output(args.output, args.force)
     args.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    info = HfApi(token=token).dataset_info(args.repo_id, revision=args.revision)
-    revision = info.sha or args.revision
-    sessions_path = download_table(args.repo_id, revision, "sessions.parquet", args.cache_dir, token)
-    repositories_path = download_table(args.repo_id, revision, "repositories.parquet", args.cache_dir, token)
+    adapter = SweChatAdapter(args.repo_id, args.revision, args.cache_dir, token)
+    revision = adapter.pinned_revision
 
     session_columns = [
         "session_id",
@@ -145,10 +120,10 @@ def main() -> int:
         "session_success",
         "transcript_path",
     ]
-    sessions = pd.read_parquet(sessions_path, columns=session_columns)
-    repos = pd.read_parquet(
-        repositories_path,
+    sessions = adapter.load_sessions(columns=session_columns, revision=revision)
+    repos = adapter.load_repositories(
         columns=["repo_id", "repo_type_domain", "repo_type_audience", "license_type"],
+        revision=revision,
     )
     sessions = sessions.merge(repos, on="repo_id", how="left")
     sessions["user_key"] = sessions["user_id"].map(lambda value: stable_hash(value, "user"))
@@ -202,7 +177,7 @@ def main() -> int:
     summary = {
         "repo_id": args.repo_id,
         "revision": revision,
-        "gated": getattr(info, "gated", None),
+        "gated": "auto",
         "sessions": int(len(sessions)),
         "users": int(len(per_user)),
         "users_with_missing_user_id": int((sessions["user_key"] == "missing_user").any()),

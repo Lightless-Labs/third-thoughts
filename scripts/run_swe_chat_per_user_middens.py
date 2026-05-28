@@ -13,7 +13,6 @@ looks like the raw work directory is inside git without being under `.tmp/`.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -26,13 +25,11 @@ from typing import Any
 
 try:
     import pandas as pd
-    from huggingface_hub import HfApi, hf_hub_download
 except ImportError as exc:  # pragma: no cover
-    print(
-        "Missing dependencies. Install with: python3 -m pip install pandas pyarrow huggingface_hub",
-        file=sys.stderr,
-    )
+    print("Missing pandas. Install with: python3 -m pip install pandas pyarrow", file=sys.stderr)
     raise SystemExit(2) from exc
+
+from hf_dataset_adapters import SweChatAdapter, stable_hash
 
 
 DEFAULT_REPO = "SALT-NLP/SWE-chat"
@@ -83,13 +80,6 @@ def fail(message: str) -> None:
     raise SystemExit(2)
 
 
-def stable_hash(value: Any, prefix: str) -> str:
-    if value is None or pd.isna(value):
-        return f"missing_{prefix}"
-    digest = hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:16]
-    return f"{prefix}_{digest}"
-
-
 def safe_reset(path: Path, force: bool, resume: bool) -> None:
     if path.exists() and force and not resume:
         shutil.rmtree(path)
@@ -107,22 +97,11 @@ def guard_raw_work_dir(work_dir: Path) -> None:
         fail(f"raw work dir must be outside the repo or under .tmp/: {work_dir}")
 
 
-def download_sessions_table(repo_id: str, revision: str, cache_dir: Path, token: str) -> tuple[pd.DataFrame, str]:
-    info = HfApi(token=token).dataset_info(repo_id, revision=revision)
-    pinned_revision = info.sha or revision
-    sessions_path = Path(
-        hf_hub_download(
-            repo_id,
-            "sessions.parquet",
-            repo_type="dataset",
-            revision=pinned_revision,
-            cache_dir=cache_dir,
-            token=token,
-        )
-    )
+def download_sessions_table(adapter: SweChatAdapter) -> tuple[pd.DataFrame, str]:
+    pinned_revision = adapter.pinned_revision
     columns = ["session_id", "user_id", "transcript_path", "agent", "repo_id", "created_at"]
-    sessions = pd.read_parquet(sessions_path, columns=columns)
-    sessions = sessions.dropna(subset=["transcript_path"])
+    sessions = adapter.load_sessions(columns=columns, revision=pinned_revision)
+    sessions = sessions.dropna(subset=["session_id"])
     return sessions, pinned_revision
 
 
@@ -160,42 +139,9 @@ def save_state(path: Path, state: dict[str, Any]) -> None:
     tmp.replace(path)
 
 
-def download_transcript(repo_id: str, revision: str, cache_dir: Path, token: str, session_id: str, transcript_path: str) -> Path:
-    """Download a SWE-chat transcript.
-
-    `sessions.transcript_path` is often the original agent-local path (for
-    example `.claude/projects/...`) rather than the HF repository path. The
-    README says repository transcripts live at `transcripts/{session_id}.jsonl`,
-    so try that canonical path first and keep the raw path only as a fallback
-    for future schema variants.
-    """
-
-    candidates = [f"transcripts/{session_id}.jsonl"]
-    if transcript_path and transcript_path not in candidates:
-        candidates.append(transcript_path)
-    last_error: Exception | None = None
-    for candidate in candidates:
-        try:
-            return Path(
-                hf_hub_download(
-                    repo_id,
-                    candidate,
-                    repo_type="dataset",
-                    revision=revision,
-                    cache_dir=cache_dir,
-                    token=token,
-                )
-            )
-        except Exception as exc:  # noqa: BLE001 - try fallback path, then report all failed
-            last_error = exc
-    raise RuntimeError(f"could not download transcript for session {session_id}: {last_error}")
-
-
 def materialize_group(
-    repo_id: str,
+    adapter: SweChatAdapter,
     revision: str,
-    cache_dir: Path,
-    token: str,
     group: UserGroup,
     dest: Path,
     skip_missing: bool,
@@ -212,7 +158,7 @@ def materialize_group(
             skipped += 1
             continue
         try:
-            src = download_transcript(repo_id, revision, cache_dir, token, session_id, transcript_path)
+            src = adapter.download_transcript(session_id, transcript_path, revision=revision)
         except Exception:
             if skip_missing:
                 skipped += 1
@@ -306,7 +252,8 @@ def main() -> int:
     args.cache_dir.mkdir(parents=True, exist_ok=True)
     args.work_dir.mkdir(parents=True, exist_ok=True)
 
-    sessions, revision = download_sessions_table(args.repo_id, args.revision, args.cache_dir, token or "")
+    adapter = SweChatAdapter(args.repo_id, args.revision, args.cache_dir, token)
+    sessions, revision = download_sessions_table(adapter)
     groups = select_groups(sessions, args)
     plan = {
         "repo_id": args.repo_id,
@@ -349,10 +296,8 @@ def main() -> int:
         save_state(state_path, state)
         try:
             copied, skipped = materialize_group(
-                args.repo_id,
+                adapter,
                 revision,
-                args.cache_dir,
-                token or "",
                 group,
                 corpus_dir,
                 args.skip_missing_transcripts,

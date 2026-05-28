@@ -47,6 +47,10 @@ Raw gated downloads/caches from smoke tests were deleted after use. The local an
 
 ## Implementation
 
+Dataset-specific adapter:
+
+- `scripts/hf_dataset_adapters.py` (`SweChatAdapter`) owns the SWE-chat contract: metadata tables come from Parquet, raw transcripts live at `transcripts/{session_id}.jsonl`, and `sessions.transcript_path` is treated as provenance/fallback rather than generic truth.
+
 Metadata script:
 
 ```bash
