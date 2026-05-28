@@ -186,7 +186,8 @@ No open PRs. No feature branches.
 
 ### Local working tree
 
-- Tracked working-tree changes currently expected if this handoff is read mid-session: SWE-chat adapter refactor in `scripts/hf_dataset_adapters.py`, `scripts/run_swe_chat_per_user_middens.py`, `scripts/analyze_swe_chat_per_user.py`, `docs/solutions/methodology/swe-chat-per-user-analysis-20260526.md`, and this handoff. Commit and push once reviewed.
+- No tracked working-tree changes expected after the SWE-chat adapter/per-user batch commits. `main` is pushed to `origin/main`.
+- Untracked local noise: `middens-results/` (pre-existing local run artifacts; do not commit blindly).
 - `www` branch landing-page Linux tarball copy was pushed as `0188acc`; mobile code-block wrapping fix was pushed as `f01c672`.
 - Tap formula was updated to `v0.0.1-beta.4` and pushed to `Lightless-Labs/homebrew-tap` as `7d488f8`.
 - Untracked analysis output: `middens-results/` (local run artifacts; do not commit blindly)

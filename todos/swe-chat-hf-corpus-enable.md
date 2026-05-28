@@ -33,6 +33,7 @@ Promote `docs/corpora/public-hf-analysis-corpora.json` entry `salt-nlp-swe-chat`
 
 - 2026-05-26: Metadata-only full per-user aggregate analysis completed with `scripts/analyze_swe_chat_per_user.py`. Outputs are gitignored under `experiments/swe-chat-per-user/`; sanitized method note is `docs/solutions/methodology/swe-chat-per-user-analysis-20260526.md`. Result: 5,851 sessions, 190 user groups, 1,943 sessions with missing `user_id`.
 - 2026-05-26: Full middens per-user battery attempted with `scripts/run_swe_chat_per_user_middens.py` for currently supported/likely-supported agents (`Claude Code`, `claude-code`, `Codex`). Result: 175 selected user groups / 5,066 sessions; 165 groups / 4,999 selected sessions completed with 23/23 technique entries and zero technique errors. Ten groups failed: seven no supported parser matched, three storage PII column-name blocklist failures from MCP tool names containing `content`.
+- 2026-05-26: Dataset-specific SWE-chat mechanics were moved into `scripts/hf_dataset_adapters.py` (`SweChatAdapter`) so analysis runners do not guess HF paths inline. The adapter owns the contract: metadata tables are Parquet, raw transcripts live at `transcripts/{session_id}.jsonl`, and `sessions.transcript_path` is provenance/fallback.
 
 ## Done
 
