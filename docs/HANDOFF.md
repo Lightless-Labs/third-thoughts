@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-26 (SWE-chat adapter extracted for dataset-specific parsing/materialization)
+**Last updated:** 2026-05-28 (public-HF autonomous-stratum Phase 2 pass; split Python cache fix)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -40,7 +40,7 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 
 **Public HF 23-technique full-battery findings are documented** (2026-05-26) after user pointed out that we have 23 tools, not just HSMM. Write-up: `docs/solutions/methodology/public-hf-23-technique-analysis-findings-20260526.md`. Local/gitignored artifacts: `.tmp/hf-full/`, `.tmp/middens-full/`, `.tmp/xdg-full/`, `.tmp/reports-full/`, plus smoke artifacts. Full `middens analyze --all` and `export --no-interpretation` passed on all CI-selected corpora: `agent-sessions-list-mixed` (7 sessions), `badlogicgames-pi-mono` (626), `thomasmustier-pi-for-excel` (161), `aaaaliou-pi-mono` (145), and `kimi-claude-code-traces-jsonl` (36). Findings beyond HSMM: public Pi corpora show high thinking risk suppression (91–95% in the selected runs), MVT compliance is 0% across all selected corpora, corrections front-load on larger Pi corpora, Kimi/Claude-style traces differ sharply (low correction rate, higher tool entropy, ENA top code `SELF_CORRECT`), Granger relationships vary by corpus, change-point detection finds zero shifts, and cross-project graph remains mostly unusable on these selected corpora. Registry expected JSONL counts were corrected to materialized transcript counts (excluding dataset-side manifest JSONL): badlogicgames 626, pi-for-excel 161, aaaaliou 145.
 
-**Autonomous session stratum Phase 1 is code-complete; regression coverage now relies on public HF corpora** (2026-05-26). `SessionType::Autonomous` exists; the session classifier now uses precedence `Subagent` (explicit parser/path/tool-result signal) → `Interactive` (any `Human*`, including `HumanQuestion`) → `Autonomous` (≥1 user message and zero `Human*`) → `Unknown`. `middens analyze --split` now writes `interactive/`, `subagent/`, and `autonomous/` strata and reports all three counts. Validation: `cd middens && cargo test` → 380/380 scenarios, 2103/2103 steps; `cd middens && cargo build --release --locked` → pass; local HF split smoke on `agent-sessions-list-mixed` → 5 interactive, 2 subagent, 0 autonomous. Old private-corpus rerun/addendum remains blocked because local `corpus-split/` is a stale absolute-symlink split over Claude Code live storage: after correcting the old repo path prefix, only 46/2,594 interactive and 4,757/5,348 subagent targets still exist, consistent with Claude Code pruning old session files. Use HF datasets for ongoing tests rather than this stale split. Todo `todos/autonomous-session-stratum.md` is updated accordingly.
+**Autonomous session stratum Phase 1 is code-complete; public-HF Phase 2 pass is complete but found zero supported autonomous sessions** (Phase 1 2026-05-26; Phase 2 public-HF pass 2026-05-28). `SessionType::Autonomous` exists; the session classifier now uses precedence `Subagent` (explicit parser/path/tool-result signal) → `Interactive` (any `Human*`, including `HumanQuestion`) → `Autonomous` (≥1 user message and zero `Human*`) → `Unknown`. `middens analyze --split` writes `interactive/`, `subagent/`, and `autonomous/` strata and reports all three counts. Important correctness fix during Phase 2: the shared Python session cache is now disabled in split mode, because otherwise Python techniques receive all sessions for every stratum while Rust metadata reports stratum sizes. Validation after fix: `cd middens && cargo test` → 381/381 scenarios, 2108/2108 steps plus doctest; `cd middens && cargo build --release --locked` → pass. Full public-HF split battery: five CI-selected public-HF JSONL corpora, 975 sessions, 345 technique executions, zero technique errors; split counts 939 interactive / 36 subagent / 0 autonomous. Report: `docs/solutions/methodology/autonomous-stratum-public-hf-comparative-analysis-20260528.md`; local artifacts under `experiments/autonomous-stratum-public-hf/` and `.tmp/*autonomous-split*`. Conclusion: current supported public-HF JSONL replications are not autonomous-contaminated, but autonomous-loop behavior remains unmeasured. One unsupported Parquet-normalized candidate (`archit11__claude-code-traces`, 25/25 apparent autonomous candidates) should be revisited after public-HF Parquet trace normalizers enter the normal analyze path. Old private-corpus rerun/addendum remains blocked because local `corpus-split/` is a stale absolute-symlink split over Claude Code live storage: after correcting the old repo path prefix, only 46/2,594 interactive and 4,757/5,348 subagent targets still exist, consistent with Claude Code pruning old session files.
 
 Distribution Step D remains complete: source-built `middens 0.0.1-beta.3` and Homebrew-installed `middens 0.0.1-beta.3` were run against the same 10-session public `badlogicgames/pi-mono` slice with `--all`; manifests/parquet/notebook structure matched after normalizing expected run IDs/timestamps and allowing tiny floating-point tolerance. Apple Silicon Homebrew was refreshed again for beta.4 with `brew reinstall`, `middens --version`, `brew test`, and `brew audit --strict --online`. The default install pulls `uv` as a recommended dependency; `--without-uv` was validated previously for beta.0.
 
@@ -82,7 +82,7 @@ middens list-techniques                                # 23 registered technique
 | `export` command | Done | Jupyter notebook; works without interpretation |
 | `run` command | Done | Chains analyze → interpret → export; hard-fails on any stage error |
 | CLI validation | Done | `--force` requires `--timeout`; timeout skipped when `--no-python` |
-| Test suite | **380/380 passing** | 2103 steps (`cd middens && cargo test`, after autonomous stratum Phase 1 code, 2026-05-26) |
+| Test suite | **381/381 passing** | 2108 steps (`cd middens && cargo test`, after split-mode Python cache regression, 2026-05-28) |
 
 ---
 
@@ -117,7 +117,7 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 
 - ~~**Fixed public HF cohort for HSMM replication**~~ **DONE** (2026-05-24): `scripts/build_public_hf_hsmm_cohort.py` materializes pinned public HF datasets under gitignored `experiments/hsmm-public-hf-fixed/`, records SHA-256/object metadata/normalization status/contamination flags/inclusion flags, and writes normalized `Session[]` plus legacy symlink cohorts. Sanitized write-up: `docs/solutions/methodology/fixed-public-hf-hsmm-rerun-20260524.md`. (`todos/fixed-public-hf-agent-session-cohort.md`)
 - ~~**HSMM re-run with Boucle excluded**~~ **DONE** (2026-05-24): Current middens HSMM on fixed public cohort: baseline 3.55×, Boucle-excluded 5.61×, cross-check 6.04×. Legacy HSMM on fixed raw symlink cohorts with legacy sampling/filtering: baseline 24.72×, Boucle-excluded 41.32×, cross-check 25.56×. Direction replicates; magnitude is implementation-sensitive, so the finding remains downgraded/provisional. (`todos/hsmm-rerun-boucle-excluded.md`)
-- **Autonomous session stratum**: Phase 1 code is complete (`SessionType::Autonomous`, classifier, three-way `--split`) but the real-corpus rerun/addendum is pending because local `corpus-split/` symlinks are broken. Full plan at `todos/autonomous-session-stratum.md`. Required for the 4-axis compound scoping rule. Phase 2: run 23-technique battery on the new stratum after defensible real-corpus materialization.
+- **Autonomous session stratum**: Phase 1 code is complete (`SessionType::Autonomous`, classifier, three-way `--split`). Public-HF Phase 2 pass is complete on the five CI-selected JSONL corpora (975 sessions, 345 technique executions, zero errors) and found 0 supported autonomous sessions; report at `docs/solutions/methodology/autonomous-stratum-public-hf-comparative-analysis-20260528.md`. Remaining work is a true non-empty autonomous cohort: recover old Boucle raw/archive data, promote public-HF Parquet trace normalizers (notably `archit11__claude-code-traces`, 25 apparent autonomous candidates), or curate a public autonomous JSONL corpus. Full plan at `todos/autonomous-session-stratum.md`.
 - **Multilingual remediation**: implement language detection + refusal on `thinking-divergence`, `correction-rate` lexical layer, `user_signal_analysis`. Adds `whatlang` (or equivalent). Populates `Session::language`. Then re-run risk-suppression replications under `language=en` gate. (`todos/multilingual-text-techniques.md`)
 - **Public HF Parquet trace normalizers**: add schema-aware, streaming-safe normalizers so public Claude Code Parquet trace datasets can join the full `middens analyze --all` CI path. (`todos/public-hf-parquet-trace-normalizers.md`)
 
@@ -198,9 +198,9 @@ No open PRs. No feature branches.
 
 ## Test suite
 
-**380/380 Cucumber scenarios, 2103 steps — all passing.**
+**381/381 Cucumber scenarios, 2108 steps — all passing.**
 
-Last Rust run: 2026-05-26, after autonomous stratum Phase 1 code.
+Last Rust run: 2026-05-28, after split-mode Python cache correctness fix for public-HF autonomous Phase 2 and regression coverage for Python per-stratum inputs.
 
 Run: `cd middens && cargo test`
 

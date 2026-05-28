@@ -191,9 +191,13 @@ pub fn run(config: PipelineConfig) -> Result<PipelineResult> {
 
     // Step 3b: Write shared session cache for Python techniques.
     // Serializes sessions to JSON once instead of 17× (once per Python technique).
+    // In split mode this optimization is deliberately disabled: each stratum
+    // must receive only its own sessions, and a corpus-wide cache would make
+    // Python techniques report identical all-corpus findings for interactive,
+    // subagent, and autonomous buckets.
     let _session_cache_owner;
     let has_python = techniques.iter().any(|t| t.requires_python());
-    if has_python {
+    if has_python && !config.split {
         let mut cache_file =
             tempfile::NamedTempFile::new().context("creating session cache temp file")?;
         serde_json::to_writer(&mut cache_file, &all_sessions)
