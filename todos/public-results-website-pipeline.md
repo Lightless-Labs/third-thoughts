@@ -29,7 +29,7 @@ Build an end-to-end public results pipeline:
 
 ## Proposed phases
 
-1. Deterministic public result bundles (`todos/public-results-metrics-extraction.md`).
+1. ~~Deterministic public result bundles (`todos/public-results-metrics-extraction.md`).~~ Done 2026-05-29.
 2. Static site generation and deploy (`todos/public-results-static-site-generation.md`).
 3. Per-corpus interpretation (`todos/public-results-per-corpus-interpretation.md`).
 4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`).
@@ -46,7 +46,7 @@ Build an end-to-end public results pipeline:
 ## Done
 
 - [ ] Registry supports publish/interpret controls per corpus.
-- [ ] Selected corpora produce public-safe result bundles.
+- [x] Selected corpora produce public-safe result bundles.
 - [ ] Website shows corpus cards and comparative deterministic metrics.
 - [ ] Per-corpus interpretation is available for trusted runs.
 - [ ] Comparative interpretation is available for trusted runs.

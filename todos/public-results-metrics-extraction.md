@@ -1,6 +1,6 @@
 ---
 title: "Extract public-safe corpus result metrics"
-status: todo
+status: done
 priority: P1
 tags: [website, public-results, metrics, privacy]
 source: public-results-website-pipeline
@@ -52,9 +52,15 @@ site-data/corpora/<id>/
 
 ## Done
 
-- [ ] Script produces deterministic `metrics.json` for every analysis-enabled public HF corpus.
-- [ ] No raw transcript text, tool payloads, raw paths, or raw per-session tables are emitted.
-- [ ] Missing/undefined metrics are represented distinctly from numeric zero.
-- [ ] Split counts and technique status are included.
-- [ ] Fixture tests cover at least one JSONL corpus and one Parquet-derived corpus.
-- [ ] Methodology docs describe the public-safe metric allowlist.
+- [x] Script produces deterministic `metrics.json` for every analysis-enabled public HF corpus.
+- [x] No raw transcript text, tool payloads, raw paths, or raw per-session tables are emitted.
+- [x] Missing/undefined metrics are represented distinctly from numeric zero.
+- [x] Split counts and technique status are included.
+- [x] Fixture tests cover at least one JSONL corpus and one Parquet-derived corpus.
+- [x] Methodology docs describe the public-safe metric allowlist.
+
+## Completion notes
+
+Completed 2026-05-29. Implementation: `scripts/extract_public_corpus_metrics.py`; tests: `tests/test_extract_public_corpus_metrics.py`; methodology: `docs/solutions/methodology/public-results-metrics-allowlist-20260529.md`; plan: `docs/plans/2026-05-29-001-feat-public-results-metrics-extraction-plan.md`.
+
+Local smoke generated `.tmp/site-data-all/corpora/<id>/` bundles for all six currently analysis-enabled public HF corpora (five JSONL plus `archit11-claude-code-traces-parquet`) and passed a privacy grep for `source_paths`, raw-session fixture strings, transcript/tool-result markers, and local absolute paths. These smoke bundles are local artifacts, not committed website data.
