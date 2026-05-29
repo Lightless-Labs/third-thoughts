@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Last updated:** 2026-05-28 (Parquet trace normalizer promoted into public-HF materialization)
+**Last updated:** 2026-05-28 (public results website pipeline todos documented)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
@@ -23,6 +23,8 @@ Full-corpus validation result (2026-04-14, 13,423 sessions, `--all`):
 **v0.0.1-beta.4 is now out.** The release matrix remains the narrowed 3-target set after the Intel-Mac runner starvation incident: `macos-14` (darwin-arm64), `ubuntu-latest` (linux-x86_64), and `ubuntu-24.04-arm` (linux-arm64). beta.1 added Pi coding-agent parser support; beta.2/beta.3 fixed two validation-discovered nondeterminism bugs (`information_foraging.py` set iteration and `tpattern_detection.py` unseeded permutation test). beta.4 is the archive-support release: it advertises `middens archive` and the self-contained Pi / Claude Code / Codex archive plugins in release-facing docs. Release workflow `26325365657` completed successfully and emitted only GitHub's Node.js 20 deprecation warnings for v4 actions / `softprops/action-gh-release@v2`. Homebrew tap was updated to beta.4 at `Lightless-Labs/homebrew-tap@7d488f8` and validated locally (`brew reinstall`, `middens --version`, `brew test`, `brew audit --strict --online`). The rationale doc at `docs/solutions/best-practices/github-actions-rust-cross-platform-release-matrix-20260417.md` records the queue-starvation lesson as failure mode #6.
 
 **GitHub Pages initial cut is also live** at <https://lightless-labs.github.io/third-thoughts/>. The `www` orphan branch is serving three static pages (`index.html`, `findings.html`, `report.html`). Mobile code blocks now preserve preformatted text and scroll horizontally instead of wrapping into soup (`www` commit `f01c672`). Follow-up polish is tracked in `todos/distribution-github-pages.md` and is no longer a release blocker.
+
+**Public corpus results website pipeline is planned, not implemented** (todos filed 2026-05-28). Goal: publish selected public-HF corpus results to the website, with deterministic per-corpus metrics, optional per-corpus interpretation, comparative metrics/interpretation, and fingerprint-based rerun/reuse when corpus/process/prompt/model inputs change. Umbrella todo: `todos/public-results-website-pipeline.md`; sub-todos: `public-results-metrics-extraction.md`, `public-results-static-site-generation.md`, `public-results-per-corpus-interpretation.md`, `public-results-comparative-interpretation.md`, and `public-results-fingerprint-invalidation.md`. First implementation step should be deterministic public-safe `metrics.json` extraction; do not start with LLM interpretation or raw artifact publishing.
 
 **PR #2 status (2026-04-25):** merged to `main` as `4afbc19` (`Handle adaptive Codex reasoning observability (#2)`). Automated review cycle was run repeatedly (Codex, Gemini, CodeRabbit); CodeRabbit approved, Codex reported no major issues on the final pass, and the CodeRabbit status check was green before merge. Last local validation before merge: `cd middens && cargo test` → 341/341 scenarios, 1856/1856 steps; `cd middens && cargo build --release` → pass. Deferred follow-ups filed: `todos/codex-standalone-reasoning-response-items.md` and `todos/codex-typed-unknown-content-blocks.md`. Post-merge compounding landed in `e36f1a3`, creating `docs/solutions/methodology/codex-adaptive-reasoning-observability-20260425.md` and refreshing related parser/thinking-visibility docs.
 
@@ -112,6 +114,15 @@ Remaining blocking steps. See individual `todos/distribution-*.md` for detail.
 - ~~**Pi extension for automatic archives**~~ **DONE** (2026-05-21): package lives at `integrations/pi/middens-archive/`; registers `/middens-archive-now` and `/middens-archive-status`; uses explicit `MIDDENS_ARCHIVE_ROOT`; debounces periodic/shutdown runs and blocks overlap; now uses a bundled self-contained archiver rather than shelling out to `middens`. Typechecked and smoke-tested with temp `HOME` fixture. (`todos/archive-pi-extension-auto-backup.md`)
 - ~~**Claude Code hook/plugin for automatic archives**~~ **DONE** (2026-05-21): package lives at `integrations/claude-code/middens-archive/`; Claude marketplace at `integrations/claude-code/.claude-plugin/marketplace.json`; hooks on `SessionStart`, `UserPromptSubmit`, and `Stop`; manual `/middens-archive-now`; bundled archiver, explicit `MIDDENS_ARCHIVE_ROOT`. (`todos/archive-claude-code-plugin-auto-backup.md`)
 - ~~**Codex hook/plugin for automatic archives**~~ **DONE** (2026-05-21): package lives at `integrations/codex/middens-archive/`; Codex local marketplace at `integrations/codex/.agents/plugins/marketplace.json`; lifecycle hooks plus `middens-archive-now` / `middens-archive-status` skills; bundled archiver, explicit `MIDDENS_ARCHIVE_ROOT`. (`todos/archive-codex-plugin-auto-backup.md`)
+
+### P1 — Public results website pipeline
+
+- **Umbrella:** build a selected-public-corpus results pipeline for the website, rerunning/reusing results based on corpus/process/interpretation fingerprints. Start with deterministic outputs, then add LLM interpretation. (`todos/public-results-website-pipeline.md`)
+- **Phase 1:** extract public-safe deterministic corpus metrics into `site-data/corpora/<id>/metrics.json`; no raw transcripts/tool payloads/per-session tables by default. (`todos/public-results-metrics-extraction.md`)
+- **Phase 2:** generate/deploy static GitHub Pages from `site-data`, using existing `www` branch unless there is a strong reason to migrate. (`todos/public-results-static-site-generation.md`)
+- **Phase 3:** per-corpus public interpretation from curated metrics only; trusted events only, pinned prompt/model, no fork PR secrets. (`todos/public-results-per-corpus-interpretation.md`)
+- **Phase 4:** comparative deterministic metrics + optional comparative interpretation; explicitly flag duplicate-shaped corpora and missing axes. (`todos/public-results-comparative-interpretation.md`)
+- **Phase 5:** fingerprint-based invalidation/reuse so unchanged corpora/processes/prompts/models skip expensive reruns. (`todos/public-results-fingerprint-invalidation.md`)
 
 ### P1 — Research follow-ups
 
