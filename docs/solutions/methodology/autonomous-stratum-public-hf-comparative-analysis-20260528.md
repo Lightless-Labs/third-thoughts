@@ -19,7 +19,7 @@ The annoying-but-useful result: **none of the supported public-HF JSONL corpora 
 
 > With the supported public-HF JSONL corpora available today, `middens analyze --split --all` can validate that autonomous sessions do not contaminate these public analyses, but it cannot yet estimate autonomous-loop behavior.
 
-One unsupported public candidate does exist: the Parquet-normalized `archit11/claude-code-traces` materialization from the independent HSMM pass has **25/25 apparent autonomous candidates** by the structural rule (`>=1` user message and zero `Human*` classifications). It is not yet in the normal `middens analyze` path because Parquet trace normalizers remain a separate todo. That is now the obvious next source for a real autonomous stratum run.
+Follow-up later the same day promoted the first Parquet trace normalizer into the public-HF materialization path. That changed this caveat: `archit11/claude-code-traces` is now analyzable through generated JSONL, and the normal middens classifier yields **5 interactive / 19 subagent / 1 autonomous**, not the earlier HSMM-only artifact's 25/25 apparent autonomous candidates. The original public JSONL conclusion still holds; the Parquet follow-up gives us a tiny non-empty autonomous smoke, not a real autonomous-loop cohort.
 
 ## Why this pass was needed
 
@@ -216,15 +216,21 @@ MVT compliance remains `0.0` in every selected public stratum where the techniqu
 
 Autonomous MVT remains untested.
 
-## Unsupported autonomous candidate found
+## Parquet follow-up corrected the unsupported-candidate caveat
 
-A metadata-only audit of the independent public-HF normalized artifacts found one unsupported candidate:
+The initial public-HF Phase 2 pass noted a metadata-only candidate from the independent-HSMM normalized artifacts:
 
 | Normalized dataset | Sessions | Interactive | Subagent | Autonomous candidates | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `archit11__claude-code-traces` | 25 | 0 | 0 | 25 | 0 |
 
-These are Parquet request/response traces normalized by `scripts/build_public_hf_hsmm_cohort.py` / independent-HSMM tooling, not raw JSONL logs currently accepted by `middens analyze`. They have user messages but no `Human*` user classifications, so they satisfy the structural autonomous rule. They should be analyzed only after the public-HF Parquet trace normalizer is promoted into the normal analysis path, or after a clearly documented one-off adapter writes valid `Session[]` into a supported pipeline shape.
+That was based on pre-normalized `Session[]` objects whose user-message classifications had not gone through the normal middens parse/classify path. After promoting the Parquet trace-row materializer, the same dataset now runs as generated Claude-Code-compatible JSONL and classifies as:
+
+| Corpus | Sessions | Interactive | Subagent | Autonomous |
+| --- | ---: | ---: | ---: | ---: |
+| `archit11-claude-code-traces-parquet` | 25 | 5 | 19 | 1 |
+
+So the useful correction is: the Parquet dataset gives us a **tiny non-empty autonomous smoke**, but not 25 autonomous sessions and not enough data to characterize autonomous-loop behavior.
 
 ## Effect on current findings
 
@@ -241,7 +247,7 @@ These are Parquet request/response traces normalized by `scripts/build_public_hf
 The next concrete move is **not** another run over the same JSONL CI corpora. They have zero autonomous sessions. The next useful move is one of:
 
 1. recover a durable raw/archive copy of the old private W10-W12 Boucle corpus and rerun `middens analyze --split --all`; or
-2. implement/promote the public-HF Parquet trace normalizer so `archit11/claude-code-traces` can enter the normal `middens analyze --all` path; or
+2. expand Parquet trace normalizer coverage beyond the tiny `archit11/claude-code-traces` smoke cohort; or
 3. add a deliberately curated public autonomous-loop JSONL corpus to `docs/corpora/public-hf-analysis-corpora.json`.
 
-Until then, the honest Phase 2 conclusion is: **the public supported corpora validate the split machinery, but they do not contain the autonomous population we need to characterize autonomous behavior.**
+Until then, the honest Phase 2 conclusion is: **the public supported corpora validate the split machinery, and the first Parquet trace cohort gives one autonomous smoke session, but they still do not contain the autonomous population we need to characterize autonomous behavior.**
