@@ -30,7 +30,7 @@ Build an end-to-end public results pipeline:
 ## Proposed phases
 
 1. ~~Deterministic public result bundles (`todos/public-results-metrics-extraction.md`).~~ Done 2026-05-29.
-2. Static site generation and deploy (`todos/public-results-static-site-generation.md`).
+2. ~~Static site generation and deploy (`todos/public-results-static-site-generation.md`).~~ Done 2026-05-29.
 3. Per-corpus interpretation (`todos/public-results-per-corpus-interpretation.md`).
 4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`).
 5. Fingerprint-based invalidation/reuse (`todos/public-results-fingerprint-invalidation.md`).
@@ -47,9 +47,9 @@ Build an end-to-end public results pipeline:
 
 - [ ] Registry supports publish/interpret controls per corpus.
 - [x] Selected corpora produce public-safe result bundles.
-- [ ] Website shows corpus cards and comparative deterministic metrics.
+- [x] Website shows corpus cards and comparative deterministic metrics.
 - [ ] Per-corpus interpretation is available for trusted runs.
 - [ ] Comparative interpretation is available for trusted runs.
 - [ ] Fingerprints skip unchanged reruns.
-- [ ] GitHub Pages deploy is automated.
+- [x] GitHub Pages deploy is automated.
 - [ ] `docs/HANDOFF.md` records the current workflow, outputs, and caveats.

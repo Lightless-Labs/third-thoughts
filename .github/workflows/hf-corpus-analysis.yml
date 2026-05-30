@@ -34,9 +34,14 @@ on:
       - "scripts/fetch_hf_corpus_registry.py"
       - "scripts/hf_corpus_matrix.py"
       - "scripts/materialize_hf_analysis_corpus.py"
+      - "scripts/extract_public_corpus_metrics.py"
+      - "scripts/build_public_results_site.py"
+      - "tests/test_extract_public_corpus_metrics.py"
+      - "tests/test_build_public_results_site.py"
+      - "todos/public-results-*.md"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: hf-corpus-analysis-${{ github.ref }}
@@ -208,6 +213,7 @@ jobs:
           ANALYSIS_DIR: ${{ steps.latest.outputs.analysis_dir }}
 
       - name: Run HF split stratification smoke
+        id: split_latest
         run: |
           set -euo pipefail
           export XDG_DATA_HOME="${{ github.workspace }}/.tmp/xdg-split/${{ matrix.id }}"
@@ -241,7 +247,21 @@ jobs:
               if not isinstance(stratum.get("session_count"), int) or stratum["session_count"] < 0:
                   raise SystemExit(f"invalid session_count in {stratum}")
           print(f"validated split strata for {corpus_id}: {strata}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              print(f"split_dir={split_dir}", file=fh)
           PY
+
+      - name: Extract public-safe site data
+        run: |
+          python scripts/extract_public_corpus_metrics.py \
+            --corpus-id "${{ matrix.id }}" \
+            --registry ".tmp/registry/corpora.json" \
+            --analysis-output ".tmp/middens-results/${{ matrix.id }}" \
+            --split-output ".tmp/middens-split-results/${{ matrix.id }}" \
+            --analysis-dir "${{ steps.latest.outputs.analysis_dir }}" \
+            --split-analysis-dir "${{ steps.split_latest.outputs.split_dir }}" \
+            --materialized-corpus ".tmp/hf-corpora/${{ matrix.id }}" \
+            --output ".tmp/site-data/corpora/${{ matrix.id }}"
 
       - name: Upload analysis artifacts
         uses: actions/upload-artifact@v4
@@ -251,6 +271,72 @@ jobs:
           path: |
             .tmp/middens-results/${{ matrix.id }}/
             .tmp/middens-split-results/${{ matrix.id }}/
+            .tmp/site-data/corpora/${{ matrix.id }}/
             .tmp/reports/${{ matrix.id }}.ipynb
             ${{ steps.latest.outputs.analysis_dir }}/manifest.json
           if-no-files-found: warn
+
+  build-site:
+    name: Build public results site
+    needs: analyze
+    runs-on: ubuntu-latest
+    if: ${{ needs.analyze.result == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download per-corpus analysis artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: hf-corpus-analysis-*
+          path: .tmp/public-results-artifacts
+
+      - name: Collect public-safe site data
+        run: |
+          set -euo pipefail
+          mkdir -p site-data/corpora
+          found=0
+          while IFS= read -r metrics; do
+            corpus_dir="$(dirname "$metrics")"
+            corpus_id="$(basename "$corpus_dir")"
+            rm -rf "site-data/corpora/$corpus_id"
+            mkdir -p "site-data/corpora/$corpus_id"
+            cp "$corpus_dir"/*.json "site-data/corpora/$corpus_id/"
+            if [ -f "$corpus_dir/interpretation.md" ]; then
+              cp "$corpus_dir/interpretation.md" "site-data/corpora/$corpus_id/"
+            fi
+            found=$((found + 1))
+          done < <(find .tmp/public-results-artifacts -path '*/.tmp/site-data/corpora/*/metrics.json' | sort)
+          if [ "$found" -eq 0 ]; then
+            echo "No public-safe site-data bundles found in downloaded artifacts" >&2
+            exit 1
+          fi
+          echo "Collected $found corpus bundles"
+
+      - name: Build public results site
+        run: |
+          python scripts/build_public_results_site.py \
+            --site-data site-data \
+            --output site-out
+
+      - name: Upload generated site
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-results-site
+          path: site-out/
+          if-no-files-found: error
+
+      - name: Deploy generated site to www branch
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd site-out
+          touch .nojekyll
+          git init
+          git checkout -b www
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update public results site"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" www

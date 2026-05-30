@@ -1,6 +1,6 @@
 ---
 title: "Generate and deploy public corpus results website"
-status: todo
+status: done
 priority: P1
 tags: [website, github-pages, public-results, ci]
 source: public-results-website-pipeline
@@ -61,8 +61,14 @@ Use the existing `www` branch for the first cut unless there is a strong reason 
 
 ## Done
 
-- [ ] Site generator builds pages from `site-data` without network access.
-- [ ] Generated site includes corpus index, per-corpus pages, comparative page, and methodology/provenance page.
-- [ ] GitHub Actions deploys generated output to Pages on trusted runs.
-- [ ] PR runs can build the site without deploying.
-- [ ] No raw analysis artifacts are published unless explicitly allowlisted.
+- [x] Site generator builds pages from `site-data` without network access.
+- [x] Generated site includes corpus index, per-corpus pages, comparative page, and methodology/provenance page.
+- [x] GitHub Actions deploys generated output to Pages on trusted runs.
+- [x] PR runs can build the site without deploying.
+- [x] No raw analysis artifacts are published unless explicitly allowlisted.
+
+## Completion notes
+
+Completed 2026-05-29. Implementation: `scripts/build_public_results_site.py`; tests: `tests/test_build_public_results_site.py`; CI wiring: `.github/workflows/hf-corpus-analysis.yml`; plan: `docs/plans/2026-05-29-002-feat-public-results-static-site-generation-plan.md`.
+
+The workflow now extracts Phase 1 public-safe site-data in each corpus matrix job, uploads it with the analysis artifact, collects those bundles in a `build-site` job, builds `site-out`, uploads the generated site artifact for PR/trusted runs, and force-pushes generated output to the existing `www` branch only on non-PR trusted runs for `Lightless-Labs/third-thoughts`.
