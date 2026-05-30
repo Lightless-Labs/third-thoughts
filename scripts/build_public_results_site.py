@@ -24,6 +24,12 @@ SAFE_DOWNLOAD_FILES = (
     "status.json",
     "interpretation.md",
 )
+SAFE_COMPARATIVE_DOWNLOAD_FILES = (
+    "corpus-index.json",
+    "comparative-metrics.json",
+    "technique-status-matrix.json",
+    "finding-replication-matrix.json",
+)
 
 KEY_METRICS: tuple[tuple[str, str, str, str], ...] = (
     ("Risk suppression", "thinking-divergence", "suppression_rate", "percent"),
@@ -96,6 +102,21 @@ def load_bundles(site_data: Path) -> list[CorpusBundle]:
     if not bundles:
         fail(f"no corpus metric bundles found under {corpora_dir}")
     return bundles
+
+
+def load_comparative(site_data: Path) -> dict[str, Any] | None:
+    comparative_dir = site_data / "comparative"
+    if not comparative_dir.exists():
+        return None
+    if not comparative_dir.is_dir():
+        fail(f"site-data comparative path exists but is not a directory: {comparative_dir}")
+    files = {
+        "corpus_index": comparative_dir / "corpus-index.json",
+        "comparative_metrics": comparative_dir / "comparative-metrics.json",
+        "technique_status_matrix": comparative_dir / "technique-status-matrix.json",
+        "finding_replication_matrix": comparative_dir / "finding-replication-matrix.json",
+    }
+    return {key: load_json(path, key.replace("_", " ")) for key, path in files.items()}
 
 
 def e(value: Any) -> str:
@@ -332,7 +353,76 @@ def render_corpus_page(bundle: CorpusBundle) -> str:
     return page_shell(f"{bundle.corpus_id} — Third Thoughts", f"Public-safe metrics for {bundle.corpus_id}.", "corpora", f"corpora/{bundle.corpus_id}", body)
 
 
-def render_comparative(bundles: list[CorpusBundle]) -> str:
+def render_axis_coverage(comparative: dict[str, Any] | None) -> str:
+    if not comparative:
+        return ""
+    replication = comparative.get("finding_replication_matrix", {})
+    coverage = replication.get("axis_coverage", {}) if isinstance(replication, dict) else {}
+    session_type = coverage.get("session_type", {}) if isinstance(coverage, dict) else {}
+    language = coverage.get("language", {}) if isinstance(coverage, dict) else {}
+    thinking = coverage.get("thinking_visibility", {}) if isinstance(coverage, dict) else {}
+    duplicate_families = replication.get("duplicate_families", {}) if isinstance(replication, dict) else {}
+    duplicate_text = "none flagged"
+    if duplicate_families:
+        duplicate_text = "; ".join(f"{family}: {', '.join(ids)}" for family, ids in sorted(duplicate_families.items()))
+    return f"""
+      <section class="section two-col">
+        <article class="panel">
+          <h2>Axis coverage</h2>
+          <dl class="kv">
+            <div><dt>Interactive corpora</dt><dd>{e(fmt_value(session_type.get('interactive_corpora')))}</dd></div>
+            <div><dt>Subagent corpora</dt><dd>{e(fmt_value(session_type.get('subagent_corpora')))}</dd></div>
+            <div><dt>Autonomous corpora</dt><dd>{e(fmt_value(session_type.get('autonomous_corpora')))}</dd></div>
+            <div><dt>Language axis</dt><dd>{e('available' if language.get('available') else language.get('reason', 'unavailable'))}</dd></div>
+            <div><dt>Thinking visibility axis</dt><dd>{e('available' if thinking.get('available') else thinking.get('reason', 'unavailable'))}</dd></div>
+          </dl>
+        </article>
+        <article class="panel">
+          <h2>Duplicate-family warnings</h2>
+          <p>{e(duplicate_text)}</p>
+        </article>
+      </section>
+    """
+
+
+def render_comparative_metric_matrix(comparative: dict[str, Any] | None) -> str:
+    if not comparative:
+        return ""
+    metrics_doc = comparative.get("comparative_metrics", {})
+    metrics = metrics_doc.get("metrics", {}) if isinstance(metrics_doc, dict) else {}
+    rows = []
+    for metric_id in sorted(metrics):
+        metric = metrics[metric_id]
+        aggregate = metric.get("aggregate", {}) if isinstance(metric, dict) else {}
+        numeric = aggregate.get("numeric", {}) if isinstance(aggregate, dict) else {}
+        classification = (
+            comparative.get("finding_replication_matrix", {})
+            .get("findings", {})
+            .get(metric_id, {})
+            .get("classification", {})
+        )
+        rows.append(
+            "<tr>"
+            f"<th>{e(metric.get('label', metric_id))}</th>"
+            f"<td>{e(fmt_value(aggregate.get('defined_count')))}</td>"
+            f"<td>{e(fmt_value(aggregate.get('undefined_count')))}</td>"
+            f"<td>{e(fmt_value(numeric.get('min'), metric.get('kind', 'auto')))}</td>"
+            f"<td>{e(fmt_value(numeric.get('max'), metric.get('kind', 'auto')))}</td>"
+            f"<td>{e(classification.get('classification_input', 'descriptive'))}</td>"
+            "</tr>"
+        )
+    return f"""
+      <section class="section table-wrap">
+        <h2>Finding replication inputs</h2>
+        <table class="metric-table">
+          <thead><tr><th>Metric</th><th>Defined corpora</th><th>Undefined corpora</th><th>Min</th><th>Max</th><th>Classification input</th></tr></thead>
+          <tbody>{''.join(rows)}</tbody>
+        </table>
+      </section>
+    """
+
+
+def render_comparative(bundles: list[CorpusBundle], comparative: dict[str, Any] | None = None) -> str:
     rows = []
     for bundle in bundles:
         counts = bundle.metrics.get("session_counts", {})
@@ -349,11 +439,12 @@ def render_comparative(bundles: list[CorpusBundle]) -> str:
             f"<td>{e(fmt_value(metric_value(bundle, 'hsmm', 'pre_correction_lift'), 'multiplier'))}</td>"
             "</tr>"
         )
+    comparative_note = "Comparative JSON is present and rendered below." if comparative else "Comparative JSON is not present; showing the per-corpus fallback table."
     body = f"""
       <section class="hero compact">
         <div class="eyebrow">Comparative metrics</div>
         <h1>Side-by-side, with several warning labels attached.</h1>
-        <p class="lede">This table compares deterministic aggregate metrics. It does not deduplicate duplicate-shaped corpora, pool them into a headline, or pretend empty autonomous strata mean anything deep.</p>
+        <p class="lede">This table compares deterministic aggregate metrics. It does not deduplicate duplicate-shaped corpora, pool them into a headline, or pretend empty autonomous strata mean anything deep. {e(comparative_note)}</p>
       </section>
       <section class="section table-wrap">
         <table class="metric-table">
@@ -361,6 +452,8 @@ def render_comparative(bundles: list[CorpusBundle]) -> str:
           <tbody>{''.join(rows)}</tbody>
         </table>
       </section>
+      {render_axis_coverage(comparative)}
+      {render_comparative_metric_matrix(comparative)}
     """
     return page_shell("Comparative metrics — Third Thoughts", "Comparative public-safe metrics across selected corpora.", "comparative", "comparative", body)
 
@@ -401,7 +494,7 @@ def render_methodology(bundles: list[CorpusBundle]) -> str:
     return page_shell("Methodology — Third Thoughts", "How the public corpus results site is generated safely.", "methodology", "methodology", body)
 
 
-def render_downloads(bundles: list[CorpusBundle]) -> str:
+def render_downloads(bundles: list[CorpusBundle], comparative: dict[str, Any] | None = None) -> str:
     rows = []
     for bundle in bundles:
         links = []
@@ -409,6 +502,15 @@ def render_downloads(bundles: list[CorpusBundle]) -> str:
             if (bundle.path / filename).exists():
                 links.append(f'<a href="corpora/{e(bundle.corpus_id)}/{e(filename)}">{e(filename)}</a>')
         rows.append(f"<tr><th>{e(bundle.corpus_id)}</th><td>{' · '.join(links)}</td></tr>")
+    comparative_links = ""
+    if comparative:
+        links = [f'<a href="comparative/{e(filename)}">{e(filename)}</a>' for filename in SAFE_COMPARATIVE_DOWNLOAD_FILES]
+        comparative_links = f"""
+      <section class="section table-wrap">
+        <h2>Comparative bundles</h2>
+        <table class="metric-table"><thead><tr><th>Bundle</th><th>Files</th></tr></thead><tbody><tr><th>comparative</th><td>{' · '.join(links)}</td></tr></tbody></table>
+      </section>
+        """
     body = f"""
       <section class="hero compact">
         <div class="eyebrow">Downloads</div>
@@ -416,8 +518,10 @@ def render_downloads(bundles: list[CorpusBundle]) -> str:
         <p class="lede">These are the curated site-data files used to build the pages. Raw transcript artifacts are not copied here.</p>
       </section>
       <section class="section table-wrap">
+        <h2>Per-corpus bundles</h2>
         <table class="metric-table"><thead><tr><th>Corpus</th><th>Files</th></tr></thead><tbody>{''.join(rows)}</tbody></table>
       </section>
+      {comparative_links}
     """
     return page_shell("Downloads — Third Thoughts", "Download public-safe corpus metrics bundles.", "downloads", "downloads", body)
 
@@ -507,7 +611,7 @@ def remove_output(path: Path, site_data: Path) -> None:
         shutil.rmtree(path)
 
 
-def copy_downloads(bundles: list[CorpusBundle], output: Path) -> None:
+def copy_downloads(bundles: list[CorpusBundle], output: Path, site_data: Path, comparative: dict[str, Any] | None = None) -> None:
     for bundle in bundles:
         target_dir = output / "downloads" / "corpora" / bundle.corpus_id
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -515,10 +619,18 @@ def copy_downloads(bundles: list[CorpusBundle], output: Path) -> None:
             source = bundle.path / filename
             if source.exists():
                 shutil.copyfile(source, target_dir / filename)
+    if comparative:
+        target_dir = output / "downloads" / "comparative"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        for filename in SAFE_COMPARATIVE_DOWNLOAD_FILES:
+            source = site_data / "comparative" / filename
+            if source.exists():
+                shutil.copyfile(source, target_dir / filename)
 
 
 def build(site_data: Path, output: Path) -> None:
     bundles = load_bundles(site_data)
+    comparative = load_comparative(site_data)
     remove_output(output, site_data)
     output.mkdir(parents=True, exist_ok=True)
     write(output / "assets" / "style.css", stylesheet())
@@ -526,10 +638,10 @@ def build(site_data: Path, output: Path) -> None:
     write(output / "corpora" / "index.html", render_corpora_index(bundles))
     for bundle in bundles:
         write(output / "corpora" / bundle.corpus_id / "index.html", render_corpus_page(bundle))
-    write(output / "comparative" / "index.html", render_comparative(bundles))
+    write(output / "comparative" / "index.html", render_comparative(bundles, comparative))
     write(output / "methodology" / "index.html", render_methodology(bundles))
-    write(output / "downloads" / "index.html", render_downloads(bundles))
-    copy_downloads(bundles, output)
+    write(output / "downloads" / "index.html", render_downloads(bundles, comparative))
+    copy_downloads(bundles, output, site_data, comparative)
 
 
 def main() -> int:

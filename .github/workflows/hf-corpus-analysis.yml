@@ -36,8 +36,10 @@ on:
       - "scripts/materialize_hf_analysis_corpus.py"
       - "scripts/extract_public_corpus_metrics.py"
       - "scripts/build_public_results_site.py"
+      - "scripts/build_public_comparative_metrics.py"
       - "tests/test_extract_public_corpus_metrics.py"
       - "tests/test_build_public_results_site.py"
+      - "tests/test_build_public_comparative_metrics.py"
       - "todos/public-results-*.md"
 
 permissions:
@@ -311,6 +313,12 @@ jobs:
             exit 1
           fi
           echo "Collected $found corpus bundles"
+
+      - name: Build comparative public metrics
+        run: |
+          python scripts/build_public_comparative_metrics.py \
+            --corpora-dir site-data/corpora \
+            --output site-data/comparative
 
       - name: Build public results site
         run: |

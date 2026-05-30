@@ -32,7 +32,7 @@ Build an end-to-end public results pipeline:
 1. ~~Deterministic public result bundles (`todos/public-results-metrics-extraction.md`).~~ Done 2026-05-29.
 2. ~~Static site generation and deploy (`todos/public-results-static-site-generation.md`).~~ Done 2026-05-29.
 3. Per-corpus interpretation (`todos/public-results-per-corpus-interpretation.md`).
-4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`).
+4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`). Deterministic metrics half done 2026-05-29; LLM interpretation pending.
 5. Fingerprint-based invalidation/reuse (`todos/public-results-fingerprint-invalidation.md`).
 
 ## Non-goals for the first cut

@@ -93,6 +93,36 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
         site_data = temp / "site-data"
         write_bundle(site_data, "fixture-a", sessions=12, autonomous=0)
         write_bundle(site_data, "fixture-b", sessions=31, autonomous=1, unsafe_marker='<script>alert("nope")</script>')
+        comparative = site_data / "comparative"
+        write_json(
+            comparative / "comparative-metrics.json",
+            {
+                "schema_version": 1,
+                "corpora": ["fixture-a", "fixture-b"],
+                "metrics": {
+                    "risk_suppression": {
+                        "label": "Risk suppression",
+                        "kind": "percent",
+                        "aggregate": {"defined_count": 2, "undefined_count": 0, "numeric": {"min": 0.95, "max": 0.95}},
+                    }
+                },
+            },
+        )
+        write_json(comparative / "corpus-index.json", {"schema_version": 1, "duplicate_families": {}, "stratum_totals": {"interactive": 42, "subagent": 0, "autonomous": 1}})
+        write_json(comparative / "technique-status-matrix.json", {"schema_version": 1, "matrix": {}})
+        write_json(
+            comparative / "finding-replication-matrix.json",
+            {
+                "schema_version": 1,
+                "duplicate_families": {},
+                "axis_coverage": {
+                    "session_type": {"interactive_corpora": 2, "subagent_corpora": 0, "autonomous_corpora": 1},
+                    "language": {"available": False, "reason": "fixture language unavailable"},
+                    "thinking_visibility": {"available": False, "reason": "fixture thinking unavailable"},
+                },
+                "findings": {"risk_suppression": {"classification": {"classification_input": "direction_consistent_high"}}},
+            },
+        )
         output = temp / "site-out"
         subprocess.run(
             [sys.executable, str(SCRIPT), "--site-data", str(site_data), "--output", str(output)],
@@ -118,6 +148,7 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
             "downloads/corpora/fixture-a/metrics.json",
             "downloads/corpora/fixture-a/corpus.json",
             "downloads/corpora/fixture-a/status.json",
+            "downloads/comparative/comparative-metrics.json",
         ]
         for relative in required:
             self.assertTrue((output / relative).exists(), relative)
@@ -127,6 +158,9 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
         self.assertIn('href="corpora/fixture-a/index.html"', home)
         self.assertIn("95.00%", (output / "corpora" / "fixture-a" / "index.html").read_text(encoding="utf-8"))
         self.assertIn("—", (output / "corpora" / "fixture-a" / "index.html").read_text(encoding="utf-8"))
+        comparative = (output / "comparative" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Comparative JSON is present", comparative)
+        self.assertIn("direction_consistent_high", comparative)
 
     def test_html_escapes_data_values(self) -> None:
         output = self.run_site()
