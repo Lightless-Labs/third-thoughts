@@ -136,6 +136,8 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
                 "findings": {"risk_suppression": {"classification": {"classification_input": "direction_consistent_high"}}},
             },
         )
+        (comparative / "interpretation.md").write_text("## Cross-corpus summary\nFixture comparative interpretation.\n", encoding="utf-8")
+        write_json(comparative / "interpretation.json", {"schema_version": 1, "status": "completed", "fingerprint": "d" * 64})
         output = temp / "site-out"
         subprocess.run(
             [sys.executable, str(SCRIPT), "--site-data", str(site_data), "--output", str(output)],
@@ -164,6 +166,8 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
             "downloads/corpora/fixture-a/fingerprints.json",
             "downloads/corpora/fixture-a/interpretation.json",
             "downloads/comparative/comparative-metrics.json",
+            "downloads/comparative/interpretation.md",
+            "downloads/comparative/interpretation.json",
         ]
         for relative in required:
             self.assertTrue((output / relative).exists(), relative)
@@ -176,6 +180,7 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
         comparative = (output / "comparative" / "index.html").read_text(encoding="utf-8")
         self.assertIn("Comparative JSON is present", comparative)
         self.assertIn("direction_consistent_high", comparative)
+        self.assertIn("Fixture comparative interpretation", comparative)
         methodology = (output / "methodology" / "index.html").read_text(encoding="utf-8")
         self.assertIn("Reuse fingerprints", methodology)
         self.assertIn("aaaaaaaaaaaa", methodology)

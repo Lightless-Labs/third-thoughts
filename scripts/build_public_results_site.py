@@ -31,6 +31,8 @@ SAFE_COMPARATIVE_DOWNLOAD_FILES = (
     "comparative-metrics.json",
     "technique-status-matrix.json",
     "finding-replication-matrix.json",
+    "interpretation.md",
+    "interpretation.json",
 )
 
 KEY_METRICS: tuple[tuple[str, str, str, str], ...] = (
@@ -120,7 +122,14 @@ def load_comparative(site_data: Path) -> dict[str, Any] | None:
         "technique_status_matrix": comparative_dir / "technique-status-matrix.json",
         "finding_replication_matrix": comparative_dir / "finding-replication-matrix.json",
     }
-    return {key: load_json(path, key.replace("_", " ")) for key, path in files.items()}
+    loaded = {key: load_json(path, key.replace("_", " ")) for key, path in files.items()}
+    interpretation_path = comparative_dir / "interpretation.md"
+    if interpretation_path.exists():
+        loaded["interpretation"] = interpretation_path.read_text(encoding="utf-8")
+    interpretation_meta_path = comparative_dir / "interpretation.json"
+    if interpretation_meta_path.exists():
+        loaded["interpretation_metadata"] = load_json(interpretation_meta_path, "comparative interpretation metadata")
+    return loaded
 
 
 def e(value: Any) -> str:
@@ -426,6 +435,25 @@ def render_comparative_metric_matrix(comparative: dict[str, Any] | None) -> str:
     """
 
 
+def render_comparative_interpretation(comparative: dict[str, Any] | None) -> str:
+    if not comparative or not comparative.get("interpretation"):
+        return ""
+    metadata = comparative.get("interpretation_metadata", {})
+    status = metadata.get("status") if isinstance(metadata, dict) else None
+    fingerprint = metadata.get("fingerprint") if isinstance(metadata, dict) else None
+    meta = ""
+    if status or fingerprint:
+        short = str(fingerprint)[:12] if isinstance(fingerprint, str) else "—"
+        meta = f'<p class="muted">Interpretation status: {e(status or "unknown")} · fingerprint <code>{e(short)}</code></p>'
+    return f"""
+      <section class="section">
+        <h2>Comparative interpretation</h2>
+        {meta}
+        <div class="prose"><pre>{e(comparative.get('interpretation'))}</pre></div>
+      </section>
+    """
+
+
 def render_comparative(bundles: list[CorpusBundle], comparative: dict[str, Any] | None = None) -> str:
     rows = []
     for bundle in bundles:
@@ -458,6 +486,7 @@ def render_comparative(bundles: list[CorpusBundle], comparative: dict[str, Any] 
       </section>
       {render_axis_coverage(comparative)}
       {render_comparative_metric_matrix(comparative)}
+      {render_comparative_interpretation(comparative)}
     """
     return page_shell("Comparative metrics — Third Thoughts", "Comparative public-safe metrics across selected corpora.", "comparative", "comparative", body)
 

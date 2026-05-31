@@ -49,7 +49,7 @@ Build an end-to-end public results pipeline:
 - [x] Selected corpora produce public-safe result bundles.
 - [x] Website shows corpus cards and comparative deterministic metrics.
 - [x] Per-corpus interpretation is available for trusted runs. (Provider/live-run smoke and prompt review still pending in the per-corpus todo.)
-- [ ] Comparative interpretation is available for trusted runs.
-- [ ] Fingerprints skip unchanged reruns. (Analysis battery and per-corpus interpretation skips are wired; comparative interpretation skip is still pending.)
+- [x] Comparative interpretation is available for trusted runs. (Provider/live-run smoke and prompt review still pending in the comparative todo.)
+- [x] Fingerprints skip unchanged reruns.
 - [x] GitHub Pages deploy is automated.
 - [ ] `docs/HANDOFF.md` records the current workflow, outputs, and caveats.

@@ -44,12 +44,15 @@ on:
       - "scripts/public_results_fingerprint.py"
       - "scripts/public_results_changed.py"
       - "scripts/interpret_public_corpus.py"
+      - "scripts/interpret_public_comparison.py"
       - "docs/prompts/public-corpus-interpretation-v1.md"
+      - "docs/prompts/public-comparative-interpretation-v1.md"
       - "tests/test_extract_public_corpus_metrics.py"
       - "tests/test_build_public_results_site.py"
       - "tests/test_build_public_comparative_metrics.py"
       - "tests/test_public_results_fingerprint.py"
       - "tests/test_interpret_public_corpus.py"
+      - "tests/test_interpret_public_comparison.py"
       - "todos/public-results-*.md"
 
 permissions:
@@ -400,6 +403,15 @@ jobs:
           python scripts/build_public_comparative_metrics.py \
             --corpora-dir site-data/corpora \
             --output site-data/comparative
+
+      - name: Interpret comparative public-safe metrics
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' && vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND != '' && vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL != '' }}
+        run: |
+          python scripts/interpret_public_comparison.py \
+            --comparative-dir "site-data/comparative" \
+            --prompt "docs/prompts/public-comparative-interpretation-v1.md" \
+            --model "${{ vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL }}" \
+            --runner-command "${{ vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND }}"
 
       - name: Build public results site
         run: |

@@ -65,12 +65,14 @@ The LLM layer should produce categories like:
 - [x] Deterministic comparative metrics script exists.
 - [x] Comparative output never pools duplicate-shaped corpora as independent evidence without a warning.
 - [x] Missing autonomous/language/thinking-visibility axes are explicit.
-- [ ] Comparative interpretation prompt exists and is reviewed.
-- [x] Website renders comparative metrics. Interpretation remains pending.
-- [ ] Comparative interpretation reruns only when input/process fingerprints change.
+- [ ] Comparative interpretation prompt exists and is reviewed. (Template exists; review pending.)
+- [x] Website renders comparative metrics and optional comparative interpretation.
+- [x] Comparative interpretation reruns only when input/process fingerprints change.
 
 ## Progress notes
 
 2026-05-29 deterministic half complete. Implementation: `scripts/build_public_comparative_metrics.py`; tests: `tests/test_build_public_comparative_metrics.py`; methodology: `docs/solutions/methodology/public-comparative-metrics-20260529.md`; plan: `docs/plans/2026-05-29-003-feat-public-comparative-metrics-plan.md`.
 
-The script writes `corpus-index.json`, `comparative-metrics.json`, `technique-status-matrix.json`, and `finding-replication-matrix.json` under `site-data/comparative/`. `scripts/build_public_results_site.py` renders the comparative JSON when present, and the HF CI workflow builds comparative metrics before building/deploying the site. LLM comparative interpretation is intentionally still pending until prompt/fingerprint work lands.
+The script writes `corpus-index.json`, `comparative-metrics.json`, `technique-status-matrix.json`, and `finding-replication-matrix.json` under `site-data/comparative/`. `scripts/build_public_results_site.py` renders the comparative JSON when present, and the HF CI workflow builds comparative metrics before building/deploying the site.
+
+2026-05-31 LLM comparative interpretation first cut complete. Plan: `docs/plans/2026-05-31-public-results-comparative-interpretation-plan.md`; prompt: `docs/prompts/public-comparative-interpretation-v1.md`; script: `scripts/interpret_public_comparison.py`; tests: `tests/test_interpret_public_comparison.py`. CI can run it on trusted non-PR events when `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL` and `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND` repo variables are set. Remaining caveat: prompt still needs human/external review and a provider-backed smoke run.

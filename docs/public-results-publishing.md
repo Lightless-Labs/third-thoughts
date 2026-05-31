@@ -32,6 +32,8 @@ site-data/comparative/
   comparative-metrics.json
   technique-status-matrix.json
   finding-replication-matrix.json
+  interpretation.md      # optional, trusted comparative interpretation only
+  interpretation.json    # optional comparative interpretation metadata/fingerprint
 ```
 
 The generated site is written to `site-out/` in CI and force-pushed to the `www` branch root when deployment is allowed.
@@ -148,6 +150,13 @@ python3 scripts/interpret_public_corpus.py \
 ```
 
 The script reads only curated `metrics.json`, `analysis-manifest.json`, and `split-manifest.json`; writes `interpretation.md` and `interpretation.json`; updates the interpretation section of `fingerprints.json`; and skips the model call when the interpretation fingerprint is unchanged. Pull requests do not run interpretation.
+
+Comparative interpretation is similarly optional and uses separate variables:
+
+- `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL`;
+- `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND`.
+
+When both are set, CI runs `scripts/interpret_public_comparison.py` after deterministic comparative JSON is built and before the site is rendered. It reads only `site-data/comparative/*.json` allowlist files, writes `site-data/comparative/interpretation.{md,json}`, and skips unchanged comparative interpretation fingerprints.
 
 ## Deploy policy
 
