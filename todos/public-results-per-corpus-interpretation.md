@@ -1,6 +1,6 @@
 ---
 title: "Per-corpus public results interpretation"
-status: todo
+status: in_progress
 priority: P1
 tags: [interpretation, public-results, llm, prompts]
 source: public-results-website-pipeline
@@ -48,11 +48,17 @@ The prompt must require:
 - Store model id, prompt hash, input metrics hash, and output hash.
 - Prefer skipping if the interpretation fingerprint is unchanged.
 
+## Progress
+
+**Started:** 2026-05-31. Dedicated plan: `docs/plans/2026-05-31-public-results-per-corpus-interpretation-plan.md`.
+
+Implemented the first optional per-corpus interpretation path: `docs/prompts/public-corpus-interpretation-v1.md`, `scripts/interpret_public_corpus.py`, metadata/fingerprint output, unchanged-fingerprint skip, unsafe marker checks, site download support for `interpretation.json`, and trusted CI wiring via repo variables `PUBLIC_RESULTS_INTERPRET_MODEL` + `PUBLIC_RESULTS_INTERPRET_COMMAND`. Still needs a live trusted-run/provider smoke and human prompt review before calling the prompt “reviewed” with a straight face.
+
 ## Done
 
-- [ ] Prompt template exists and is reviewed.
-- [ ] Script produces `interpretation.md` and `interpretation.json` metadata.
-- [ ] Interpreter consumes only curated public-safe inputs.
-- [ ] CI can run interpretation on trusted events.
-- [ ] Website renders per-corpus interpretation when available.
-- [ ] Unchanged fingerprints skip LLM calls.
+- [ ] Prompt template exists and is reviewed. (Template exists; review pending.)
+- [x] Script produces `interpretation.md` and `interpretation.json` metadata.
+- [x] Interpreter consumes only curated public-safe inputs.
+- [x] CI can run interpretation on trusted events.
+- [x] Website renders per-corpus interpretation when available.
+- [x] Unchanged fingerprints skip LLM calls.

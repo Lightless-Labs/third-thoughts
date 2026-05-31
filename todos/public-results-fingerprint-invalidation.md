@@ -57,13 +57,13 @@ First cut can read previous fingerprints from the generated `www` branch/site da
 
 **Started:** 2026-05-31. Dedicated plan: `docs/plans/2026-05-31-public-results-fingerprint-invalidation-plan.md`.
 
-Implemented the deterministic analysis-reuse layer: `scripts/public_results_fingerprint.py`, `scripts/public_results_changed.py`, extractor/site integration, `fingerprints.json` downloads, methodology display, prior-`www` reuse in `.github/workflows/hf-corpus-analysis.yml`, and workflow `force` input. Interpretation fingerprints are present but no LLM interpretation skip is wired yet because the interpretation phase itself is still pending.
+Implemented the deterministic analysis-reuse layer: `scripts/public_results_fingerprint.py`, `scripts/public_results_changed.py`, extractor/site integration, `fingerprints.json` downloads, methodology display, prior-`www` reuse in `.github/workflows/hf-corpus-analysis.yml`, and workflow `force` input. Per-corpus interpretation fingerprint skip is now wired through `scripts/interpret_public_corpus.py`; comparative interpretation skip remains pending because comparative interpretation itself is not implemented yet.
 
 ## Done
 
 - [x] Each corpus result bundle records corpus/process/interpretation fingerprints.
 - [x] CI can skip unchanged per-corpus analysis when fingerprints match a previous published bundle.
-- [ ] CI can skip unchanged per-corpus interpretation when metrics/prompt/model fingerprints match.
+- [x] CI can skip unchanged per-corpus interpretation when metrics/prompt/model fingerprints match.
 - [ ] CI can skip unchanged comparative interpretation when all comparative inputs match.
 - [x] Manual dispatch supports `force=true` to rerun everything.
 - [x] Website methodology page displays relevant fingerprints.

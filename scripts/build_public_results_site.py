@@ -24,6 +24,7 @@ SAFE_DOWNLOAD_FILES = (
     "status.json",
     "fingerprints.json",
     "interpretation.md",
+    "interpretation.json",
 )
 SAFE_COMPARATIVE_DOWNLOAD_FILES = (
     "corpus-index.json",

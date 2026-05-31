@@ -95,6 +95,7 @@ def write_bundle(site_data: Path, corpus_id: str, sessions: int, autonomous: int
             },
         },
     )
+    write_json(bundle / "interpretation.json", {"schema_version": 1, "corpus_id": corpus_id, "status": "completed"})
     write_json(bundle / "analysis-manifest.json", {"run_id": "run-fixture", "techniques": []})
     write_json(bundle / "split-manifest.json", {"run_id": "run-split", "strata": []})
 
@@ -161,6 +162,7 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
             "downloads/corpora/fixture-a/corpus.json",
             "downloads/corpora/fixture-a/status.json",
             "downloads/corpora/fixture-a/fingerprints.json",
+            "downloads/corpora/fixture-a/interpretation.json",
             "downloads/comparative/comparative-metrics.json",
         ]
         for relative in required:

@@ -20,6 +20,8 @@ site-data/corpora/<id>/
   metrics.json
   fingerprints.json
   status.json
+  interpretation.md      # optional, trusted interpretation runs only
+  interpretation.json    # optional interpretation metadata/fingerprint
 ```
 
 Comparative outputs:
@@ -127,6 +129,25 @@ Each published corpus bundle includes `fingerprints.json` with:
 - `interpretation`: currently records disabled/not-configured inputs until the LLM interpretation phase lands.
 
 The fingerprint file hashes raw object details but does not publish raw transcript paths, session ids, prompts, tool payloads, or per-session rows.
+
+## Optional per-corpus interpretation
+
+Per-corpus interpretation is off unless repository variables configure it for trusted non-PR runs:
+
+- `PUBLIC_RESULTS_INTERPRET_MODEL`: model/provider label to record in metadata;
+- `PUBLIC_RESULTS_INTERPRET_COMMAND`: command that reads the rendered prompt from stdin and writes Markdown to stdout.
+
+When both are set, CI runs:
+
+```bash
+python3 scripts/interpret_public_corpus.py \
+  --corpus-dir site-data/corpora/<id> \
+  --prompt docs/prompts/public-corpus-interpretation-v1.md \
+  --model "$PUBLIC_RESULTS_INTERPRET_MODEL" \
+  --runner-command "$PUBLIC_RESULTS_INTERPRET_COMMAND"
+```
+
+The script reads only curated `metrics.json`, `analysis-manifest.json`, and `split-manifest.json`; writes `interpretation.md` and `interpretation.json`; updates the interpretation section of `fingerprints.json`; and skips the model call when the interpretation fingerprint is unchanged. Pull requests do not run interpretation.
 
 ## Deploy policy
 
