@@ -83,6 +83,18 @@ def write_bundle(site_data: Path, corpus_id: str, sessions: int, autonomous: int
         },
     )
     write_json(bundle / "status.json", {"schema_version": 1, "corpus_id": corpus_id, "status": "ok", "warnings": ["tiny_n"]})
+    write_json(
+        bundle / "fingerprints.json",
+        {
+            "schema_version": 1,
+            "corpus_id": corpus_id,
+            "fingerprints": {
+                "corpus": {"fingerprint": "a" * 64},
+                "process": {"fingerprint": "b" * 64},
+                "interpretation": {"fingerprint": "c" * 64},
+            },
+        },
+    )
     write_json(bundle / "analysis-manifest.json", {"run_id": "run-fixture", "techniques": []})
     write_json(bundle / "split-manifest.json", {"run_id": "run-split", "strata": []})
 
@@ -148,6 +160,7 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
             "downloads/corpora/fixture-a/metrics.json",
             "downloads/corpora/fixture-a/corpus.json",
             "downloads/corpora/fixture-a/status.json",
+            "downloads/corpora/fixture-a/fingerprints.json",
             "downloads/comparative/comparative-metrics.json",
         ]
         for relative in required:
@@ -161,6 +174,9 @@ class BuildPublicResultsSiteTest(unittest.TestCase):
         comparative = (output / "comparative" / "index.html").read_text(encoding="utf-8")
         self.assertIn("Comparative JSON is present", comparative)
         self.assertIn("direction_consistent_high", comparative)
+        methodology = (output / "methodology" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Reuse fingerprints", methodology)
+        self.assertIn("aaaaaaaaaaaa", methodology)
 
     def test_html_escapes_data_values(self) -> None:
         output = self.run_site()

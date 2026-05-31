@@ -1,6 +1,6 @@
 ---
 title: "Fingerprint-based rerun and reuse for public results"
-status: todo
+status: in_progress
 priority: P2
 tags: [ci, caching, reproducibility, public-results]
 source: public-results-website-pipeline
@@ -53,11 +53,17 @@ Compute at least three fingerprint families.
 
 First cut can read previous fingerprints from the generated `www` branch/site data. Later versions may use GitHub Actions cache or a release/artifact bucket.
 
+## Progress
+
+**Started:** 2026-05-31. Dedicated plan: `docs/plans/2026-05-31-public-results-fingerprint-invalidation-plan.md`.
+
+Implemented the deterministic analysis-reuse layer: `scripts/public_results_fingerprint.py`, `scripts/public_results_changed.py`, extractor/site integration, `fingerprints.json` downloads, methodology display, prior-`www` reuse in `.github/workflows/hf-corpus-analysis.yml`, and workflow `force` input. Interpretation fingerprints are present but no LLM interpretation skip is wired yet because the interpretation phase itself is still pending.
+
 ## Done
 
-- [ ] Each corpus result bundle records corpus/process/interpretation fingerprints.
-- [ ] CI can skip unchanged per-corpus analysis when fingerprints match a previous published bundle.
+- [x] Each corpus result bundle records corpus/process/interpretation fingerprints.
+- [x] CI can skip unchanged per-corpus analysis when fingerprints match a previous published bundle.
 - [ ] CI can skip unchanged per-corpus interpretation when metrics/prompt/model fingerprints match.
 - [ ] CI can skip unchanged comparative interpretation when all comparative inputs match.
-- [ ] Manual dispatch supports `force=true` to rerun everything.
-- [ ] Website methodology page displays relevant fingerprints.
+- [x] Manual dispatch supports `force=true` to rerun everything.
+- [x] Website methodology page displays relevant fingerprints.

@@ -22,6 +22,7 @@ SAFE_DOWNLOAD_FILES = (
     "split-manifest.json",
     "metrics.json",
     "status.json",
+    "fingerprints.json",
     "interpretation.md",
 )
 SAFE_COMPARATIVE_DOWNLOAD_FILES = (
@@ -51,6 +52,7 @@ class CorpusBundle:
     metrics: dict[str, Any]
     corpus: dict[str, Any]
     status: dict[str, Any]
+    fingerprints: dict[str, Any] | None
     interpretation: str | None
 
 
@@ -96,9 +98,10 @@ def load_bundles(site_data: Path) -> list[CorpusBundle]:
         corpus_id = str(metrics.get("corpus", {}).get("id") or path.name)
         if corpus_id != path.name:
             fail(f"corpus directory name {path.name!r} does not match metrics corpus id {corpus_id!r}")
+        fingerprints = load_json(path / "fingerprints.json", f"fingerprints for {path.name}") if (path / "fingerprints.json").exists() else None
         interpretation_path = path / "interpretation.md"
         interpretation = interpretation_path.read_text(encoding="utf-8") if interpretation_path.exists() else None
-        bundles.append(CorpusBundle(corpus_id, path, metrics, corpus, status, interpretation))
+        bundles.append(CorpusBundle(corpus_id, path, metrics, corpus, status, fingerprints, interpretation))
     if not bundles:
         fail(f"no corpus metric bundles found under {corpora_dir}")
     return bundles
@@ -458,6 +461,36 @@ def render_comparative(bundles: list[CorpusBundle], comparative: dict[str, Any] 
     return page_shell("Comparative metrics — Third Thoughts", "Comparative public-safe metrics across selected corpora.", "comparative", "comparative", body)
 
 
+def short_fingerprint(bundle: CorpusBundle, name: str) -> str:
+    if not isinstance(bundle.fingerprints, dict):
+        return "—"
+    section = bundle.fingerprints.get("fingerprints", {}).get(name)
+    if not isinstance(section, dict) or not isinstance(section.get("fingerprint"), str):
+        return "—"
+    return section["fingerprint"][:12]
+
+
+def render_fingerprint_table(bundles: list[CorpusBundle]) -> str:
+    rows = []
+    for bundle in bundles:
+        rows.append(
+            "<tr>"
+            f"<th>{e(bundle.corpus_id)}</th>"
+            f"<td><code>{e(short_fingerprint(bundle, 'corpus'))}</code></td>"
+            f"<td><code>{e(short_fingerprint(bundle, 'process'))}</code></td>"
+            f"<td><code>{e(short_fingerprint(bundle, 'interpretation'))}</code></td>"
+            "</tr>"
+        )
+    return (
+        '<section class="section table-wrap">'
+        '<h2>Reuse fingerprints</h2>'
+        '<p>Each corpus bundle records corpus, process, and interpretation fingerprints. CI can reuse a previous public-safe bundle when the corpus and process fingerprints match; manual force runs can still rerun the whole thing when humans are feeling suspicious.</p>'
+        '<table class="metric-table"><thead><tr><th>Corpus</th><th>Corpus</th><th>Process</th><th>Interpretation</th></tr></thead>'
+        f"<tbody>{''.join(rows)}</tbody></table>"
+        '</section>'
+    )
+
+
 def render_methodology(bundles: list[CorpusBundle]) -> str:
     technique_count = max((int(b.metrics.get("technique_status", {}).get("counts", {}).get("total") or 0) for b in bundles), default=0)
     body = f"""
@@ -490,6 +523,7 @@ def render_methodology(bundles: list[CorpusBundle]) -> str:
         <h2>Current caveats</h2>
         <p>The compound scoping rule still applies: findings should be scoped by session type, thinking visibility, language, and time window. This first generated site shows deterministic corpus-level metrics; it is not yet the LLM interpretation layer and it is not a substitute for methodology review.</p>
       </section>
+      {render_fingerprint_table(bundles)}
     """
     return page_shell("Methodology — Third Thoughts", "How the public corpus results site is generated safely.", "methodology", "methodology", body)
 

@@ -33,7 +33,7 @@ Build an end-to-end public results pipeline:
 2. ~~Static site generation and deploy (`todos/public-results-static-site-generation.md`).~~ Done 2026-05-29.
 3. Per-corpus interpretation (`todos/public-results-per-corpus-interpretation.md`).
 4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`). Deterministic metrics half done 2026-05-29; LLM interpretation pending.
-5. Fingerprint-based invalidation/reuse (`todos/public-results-fingerprint-invalidation.md`).
+5. Fingerprint-based invalidation/reuse (`todos/public-results-fingerprint-invalidation.md`). Analysis-reuse half started 2026-05-31: per-corpus fingerprints, previous-`www` reuse, and manual `force` are wired; LLM interpretation reuse remains pending.
 
 ## Non-goals for the first cut
 
@@ -50,6 +50,6 @@ Build an end-to-end public results pipeline:
 - [x] Website shows corpus cards and comparative deterministic metrics.
 - [ ] Per-corpus interpretation is available for trusted runs.
 - [ ] Comparative interpretation is available for trusted runs.
-- [ ] Fingerprints skip unchanged reruns.
+- [ ] Fingerprints skip unchanged reruns. (Analysis battery skip is wired; interpretation skip is still pending.)
 - [x] GitHub Pages deploy is automated.
 - [ ] `docs/HANDOFF.md` records the current workflow, outputs, and caveats.

@@ -18,6 +18,7 @@ site-data/corpora/<id>/
   analysis-manifest.json
   split-manifest.json
   metrics.json
+  fingerprints.json
   status.json
 ```
 
@@ -61,7 +62,8 @@ Workflow: `.github/workflows/hf-corpus-analysis.yml`
    - `tier`: `smoke`, `representative`, or `full`;
    - `corpus`: a specific corpus id or `all`;
    - `registry_repo`: usually blank unless using a published HF registry dataset;
-   - `registry_revision`: usually `main` when `registry_repo` is set.
+   - `registry_revision`: usually `main` when `registry_repo` is set;
+   - `force`: leave `false` to reuse unchanged published bundles, set `true` to rerun everything.
 4. Start the run.
 5. Wait for all matrix jobs and the `Build public results site` job.
 6. On success, the workflow pushes generated output to the `www` branch.
@@ -112,6 +114,20 @@ gh workflow run hf-corpus-analysis.yml \
   -f registry_revision=main
 ```
 
+## Fingerprint reuse
+
+Trusted non-PR runs fetch the prior generated `www` branch bundle from `downloads/corpora/<id>/`, materialize the pinned corpus, compute current corpus/process fingerprints, and reuse the previous public-safe bundle when those fingerprints match. This skips the full `middens analyze` battery for unchanged corpora while still rebuilding comparative metrics and the static site from collected bundles.
+
+Manual dispatch has a `force` input. Set `force=true` when you want to ignore fingerprints and rerun the analysis battery anyway (for example after suspecting a stale artifact, or because computers are doing computer things).
+
+Each published corpus bundle includes `fingerprints.json` with:
+
+- `corpus`: registry entry plus materialization count/hash summary;
+- `process`: repo SHA, middens version, source-tree hashes, workflow/script hashes, and analysis flags;
+- `interpretation`: currently records disabled/not-configured inputs until the LLM interpretation phase lands.
+
+The fingerprint file hashes raw object details but does not publish raw transcript paths, session ids, prompts, tool payloads, or per-session rows.
+
 ## Deploy policy
 
 The workflow deploys only when both are true:
@@ -147,6 +163,25 @@ python3 scripts/extract_public_corpus_metrics.py \
   --split-analysis-dir <xdg-split-run-dir> \
   --materialized-corpus .tmp/hf-corpora/<id> \
   --output .tmp/site-data/corpora/<id>
+```
+
+The extractor writes `fingerprints.json` automatically. To compute pre-analysis fingerprints for reuse decisions, use:
+
+```bash
+python3 scripts/public_results_fingerprint.py \
+  --corpus-id <id> \
+  --registry docs/corpora/public-hf-analysis-corpora.json \
+  --materialized-corpus .tmp/hf-corpora/<id> \
+  --output .tmp/current-fingerprints/<id>.json
+```
+
+Compare against a previous bundle with:
+
+```bash
+python3 scripts/public_results_changed.py \
+  --current .tmp/current-fingerprints/<id>.json \
+  --previous previous-site/downloads/corpora/<id>/fingerprints.json \
+  --scope analysis
 ```
 
 In normal operation CI does this for you after running `middens analyze`.

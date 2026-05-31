@@ -18,6 +18,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from public_results_fingerprint import build_fingerprints
+
 REGISTRY_SCHEMA_VERSION = 1
 METRICS_SCHEMA_VERSION = 1
 EXPECTED_STRATA = ("interactive", "subagent", "autonomous")
@@ -646,14 +648,6 @@ def main() -> int:
     split_stratum_statuses = load_stratum_statuses(args.split_analysis_dir, split_manifest)
     metrics, warnings = build_metrics(corpus, materialization, analysis_manifest, split_manifest, analysis_results, split_stratum_statuses)
 
-    status = {
-        "schema_version": METRICS_SCHEMA_VERSION,
-        "corpus_id": args.corpus_id,
-        "status": "ok",
-        "warnings": warnings,
-        "outputs": ["corpus.json", "analysis-manifest.json", "split-manifest.json", "metrics.json", "status.json"],
-    }
-
     remove_output_dir(args.output)
     args.output.mkdir(parents=True, exist_ok=True)
     write_json(args.output / "corpus.json", public_corpus_record(corpus, materialization))
@@ -662,6 +656,21 @@ def main() -> int:
     split_sanitized["stratum_statuses"] = split_stratum_statuses
     write_json(args.output / "split-manifest.json", split_sanitized)
     write_json(args.output / "metrics.json", metrics)
+    fingerprints = build_fingerprints(
+        corpus_id=args.corpus_id,
+        registry_path=args.registry,
+        materialized_corpus=args.materialized_corpus,
+        metrics_path=args.output / "metrics.json",
+    )
+    write_json(args.output / "fingerprints.json", fingerprints)
+    status = {
+        "schema_version": METRICS_SCHEMA_VERSION,
+        "corpus_id": args.corpus_id,
+        "status": "ok",
+        "warnings": warnings,
+        "outputs": ["corpus.json", "analysis-manifest.json", "split-manifest.json", "metrics.json", "fingerprints.json", "status.json"],
+        "fingerprints": {name: section.get("fingerprint") for name, section in fingerprints.get("fingerprints", {}).items()},
+    }
     write_json(args.output / "status.json", status)
     print(json.dumps({"status": "ok", "corpus_id": args.corpus_id, "output": str(args.output)}, sort_keys=True))
     return 0

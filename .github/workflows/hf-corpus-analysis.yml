@@ -23,6 +23,10 @@ on:
         description: "HF registry dataset revision/branch when registry_repo is set."
         type: string
         default: main
+      force:
+        description: "Rerun analysis even when published fingerprints match."
+        type: boolean
+        default: false
   schedule:
     # Weekly full public-corpus validation. Manual dispatch can run it sooner.
     - cron: "17 3 * * 1"
@@ -37,9 +41,12 @@ on:
       - "scripts/extract_public_corpus_metrics.py"
       - "scripts/build_public_results_site.py"
       - "scripts/build_public_comparative_metrics.py"
+      - "scripts/public_results_fingerprint.py"
+      - "scripts/public_results_changed.py"
       - "tests/test_extract_public_corpus_metrics.py"
       - "tests/test_build_public_results_site.py"
       - "tests/test_build_public_comparative_metrics.py"
+      - "tests/test_public_results_fingerprint.py"
       - "todos/public-results-*.md"
 
 permissions:
@@ -128,14 +135,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: middens
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -152,13 +151,6 @@ jobs:
           name: hf-corpus-registry
           path: .tmp/registry
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Build middens
-        working-directory: middens
-        run: cargo build --release --locked
-
       - name: Materialize pinned HF corpus
         run: |
           python scripts/materialize_hf_analysis_corpus.py \
@@ -168,7 +160,79 @@ jobs:
             --cache-dir ".tmp/hf-cache" \
             --force
 
+      - name: Fetch previous published public-safe bundle
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ".tmp/previous-site/corpora/${{ matrix.id }}"
+          if git ls-remote --exit-code origin refs/heads/www >/dev/null 2>&1; then
+            git fetch --depth=1 origin www
+            for file in corpus.json analysis-manifest.json split-manifest.json metrics.json status.json fingerprints.json interpretation.md; do
+              if git cat-file -e "FETCH_HEAD:downloads/corpora/${{ matrix.id }}/$file" 2>/dev/null; then
+                git show "FETCH_HEAD:downloads/corpora/${{ matrix.id }}/$file" > ".tmp/previous-site/corpora/${{ matrix.id }}/$file"
+              fi
+            done
+          fi
+
+      - name: Compute current public result fingerprints
+        run: |
+          python scripts/public_results_fingerprint.py \
+            --corpus-id "${{ matrix.id }}" \
+            --registry ".tmp/registry/corpora.json" \
+            --materialized-corpus ".tmp/hf-corpora/${{ matrix.id }}" \
+            --output ".tmp/current-fingerprints/${{ matrix.id }}.json"
+
+      - name: Decide whether previous bundle is reusable
+        id: reuse
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            FORCE="${{ inputs.force }}"
+          else
+            FORCE="false"
+          fi
+          if [ "$FORCE" = "true" ]; then
+            {
+              echo "changed=true"
+              echo "reusable=false"
+              echo "reason=force_requested"
+            } >> "$GITHUB_OUTPUT"
+          else
+            python scripts/public_results_changed.py \
+              --current ".tmp/current-fingerprints/${{ matrix.id }}.json" \
+              --previous ".tmp/previous-site/corpora/${{ matrix.id }}/fingerprints.json" \
+              --scope analysis \
+              --github-output "$GITHUB_OUTPUT"
+          fi
+          if grep -q '^reusable=true$' "$GITHUB_OUTPUT"; then
+            mkdir -p ".tmp/site-data/corpora"
+            cp -R ".tmp/previous-site/corpora/${{ matrix.id }}" ".tmp/site-data/corpora/${{ matrix.id }}"
+            echo "Reusing previous public-safe bundle for ${{ matrix.id }}"
+          else
+            echo "Previous bundle not reusable for ${{ matrix.id }}"
+          fi
+
+      - name: Install Rust toolchain
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: middens
+
+      - name: Install uv
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build middens
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        working-directory: middens
+        run: cargo build --release --locked
+
       - name: Run full analysis battery (no LLM interpretation)
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           ./middens/target/release/middens analyze \
             ".tmp/hf-corpora/${{ matrix.id }}" \
@@ -178,6 +242,7 @@ jobs:
             --output ".tmp/middens-results/${{ matrix.id }}"
 
       - name: Resolve latest analysis directory
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         id: latest
         run: |
           ROOT="$XDG_DATA_HOME/com.lightless-labs.third-thoughts/analysis"
@@ -190,6 +255,7 @@ jobs:
           echo "Analysis dir: $ANALYSIS_DIR"
 
       - name: Export notebook without interpretation
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           ./middens/target/release/middens export \
             --analysis-dir "${{ steps.latest.outputs.analysis_dir }}" \
@@ -198,6 +264,7 @@ jobs:
             --force
 
       - name: Validate analysis manifest shape
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           python - <<'PY'
           import json, os, pathlib
@@ -215,6 +282,7 @@ jobs:
           ANALYSIS_DIR: ${{ steps.latest.outputs.analysis_dir }}
 
       - name: Run HF split stratification smoke
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         id: split_latest
         run: |
           set -euo pipefail
@@ -254,6 +322,7 @@ jobs:
           PY
 
       - name: Extract public-safe site data
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           python scripts/extract_public_corpus_metrics.py \
             --corpus-id "${{ matrix.id }}" \
@@ -274,8 +343,8 @@ jobs:
             .tmp/middens-results/${{ matrix.id }}/
             .tmp/middens-split-results/${{ matrix.id }}/
             .tmp/site-data/corpora/${{ matrix.id }}/
+            .tmp/current-fingerprints/${{ matrix.id }}.json
             .tmp/reports/${{ matrix.id }}.ipynb
-            ${{ steps.latest.outputs.analysis_dir }}/manifest.json
           if-no-files-found: warn
 
   build-site:

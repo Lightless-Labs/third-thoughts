@@ -208,6 +208,11 @@ class ExtractPublicCorpusMetricsTest(unittest.TestCase):
         self.assertEqual(metrics["session_counts"]["by_stratum"], {"interactive": 1, "subagent": 1, "autonomous": 0})
         self.assertEqual(metrics["techniques"]["correction-rate"]["findings"]["overall_mean_rate"]["value"], 0.25)
         self.assertEqual(metrics["techniques"]["hsmm"]["findings"]["pre_correction_lift"]["status"], "undefined")
+        fingerprints = json.loads((output / "fingerprints.json").read_text(encoding="utf-8"))
+        status = json.loads((output / "status.json").read_text(encoding="utf-8"))
+        self.assertIn("corpus", fingerprints["fingerprints"])
+        self.assertIn("fingerprints.json", status["outputs"])
+        self.assertEqual(status["fingerprints"]["corpus"], fingerprints["fingerprints"]["corpus"]["fingerprint"])
         self.assert_public_safe(output)
 
     def test_parquet_fixture_records_normalizer_without_raw_objects(self) -> None:
