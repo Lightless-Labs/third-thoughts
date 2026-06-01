@@ -1,10 +1,16 @@
 # Session Handoff
 
-**Last updated:** 2026-05-26 (SWE-chat metadata per-user analysis completed)
+**Last updated:** 2026-06-01 (Buildkite/Tart CI PR prepared)
 
 Read this at the start of every session. Update before compaction or at natural milestones.
 
 ---
+
+## Current session update — 2026-06-01
+
+Started Buildkite/Tart CI migration on branch `chore/buildkite-tart-ci`. Added `.buildkite/pipeline.yml` with two non-credentialed PR jobs using `github.com/Bande-a-Bonnot/tart-ci#v0.1.1`: Linux ARM64 on local image `ci-linux-arm64-rust-bazel`, and macOS Apple Silicon on `ghcr.io/cirruslabs/macos-sequoia-base:latest` with Rust bootstrapped by rustup. The first slice intentionally covers only lightweight Middens checks: `cargo fmt --check`, `cargo test --locked`, `cargo build --release --locked`, and `middens analyze tests/fixtures --split --no-python` with checks for all three stratum outputs. HF corpus analysis, scheduled workflows, release artifacts, x86_64 targets, Hugging Face registry/secrets, and large network downloads remain on GitHub Actions/deferred.
+
+Local validation before PR: `cd middens && cargo test` passed (376 scenarios / 2082 steps plus 1 doctest), `cargo build --release --locked` passed, fixture split/no-python smoke passed, Buildkite YAML parsed with Ruby, `bash -n` passed over both embedded commands after Buildkite dollar escaping, and `git diff --check` passed. `cargo clippy --all-targets --locked -- -D warnings` was tried but is not included in the first CI slice because current `main` has many pre-existing clippy warnings under the local/newer toolchain. Remote `buildkite-agent pipeline upload --dry-run` on `big-cabbage` was attempted but blocked by intermittent SSH publickey auth from this session; no host/config/image changes were made.
 
 ## >>> Read this first <<<
 
