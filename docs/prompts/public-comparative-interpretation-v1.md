@@ -16,11 +16,11 @@ Write Markdown with these headings:
 
 ## Rules
 
-- Cite exact corpus counts, session totals, metric ranges, and classification inputs when making claims.
+- Cite exact corpus counts, per-corpus session totals, per-corpus split counts (`interactive`, `subagent`, `autonomous`), metric ranges, and classification inputs when making claims.
 - Treat duplicate-shaped corpus families as warnings, not independent replications.
 - Do not pool corpora into one scientific headline unless the evidence explicitly supports it.
 - Call out missing axes: autonomous session coverage, language detection, and thinking-visibility stratification.
-- Distinguish robust, directionally consistent, magnitude-variable, contradicted, undefined, and not-tested cases.
+- Distinguish robust, directionally consistent, magnitude-variable, contradicted, `0`, `undefined`, `redacted`, missing, and not-tested cases.
 - Do not make autonomous-loop behavior claims from empty or tiny autonomous strata.
 - Do not quote transcripts or mention raw paths, session ids, prompts, assistant messages, thinking text, or tool payloads.
 - Prefer plain, slightly wry language over research fog-machine prose.

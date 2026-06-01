@@ -52,11 +52,13 @@ The prompt must require:
 
 **Started:** 2026-05-31. Dedicated plan: `docs/plans/2026-05-31-public-results-per-corpus-interpretation-plan.md`.
 
-Implemented the first optional per-corpus interpretation path: `docs/prompts/public-corpus-interpretation-v1.md`, `scripts/interpret_public_corpus.py`, metadata/fingerprint output, unchanged-fingerprint skip, unsafe marker checks, site download support for `interpretation.json`, and trusted CI wiring via repo variables `PUBLIC_RESULTS_INTERPRET_MODEL` + `PUBLIC_RESULTS_INTERPRET_COMMAND`. Still needs a live trusted-run/provider smoke and human prompt review before calling the prompt “reviewed” with a straight face.
+Implemented the first optional per-corpus interpretation path: `docs/prompts/public-corpus-interpretation-v1.md`, `scripts/interpret_public_corpus.py`, metadata/fingerprint output, unchanged-fingerprint skip, unsafe marker checks, site download support for `interpretation.json`, and trusted CI wiring via repo variables `PUBLIC_RESULTS_INTERPRET_MODEL` + `PUBLIC_RESULTS_INTERPRET_COMMAND`.
+
+2026-06-01 Codex prompt review approved the per-corpus prompt with no P1/P2 findings after checking curated-evidence, metric-citation, split-count, privacy, missing-axis, duplicate-corpus, and tone requirements. Review note: `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`. Still needs a live trusted-run/provider smoke before calling the whole path boring in the good way.
 
 ## Done
 
-- [ ] Prompt template exists and is reviewed. (Template exists; review pending.)
+- [x] Prompt template exists and is reviewed.
 - [x] Script produces `interpretation.md` and `interpretation.json` metadata.
 - [x] Interpreter consumes only curated public-safe inputs.
 - [x] CI can run interpretation on trusted events.

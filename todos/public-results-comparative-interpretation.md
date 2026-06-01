@@ -65,7 +65,7 @@ The LLM layer should produce categories like:
 - [x] Deterministic comparative metrics script exists.
 - [x] Comparative output never pools duplicate-shaped corpora as independent evidence without a warning.
 - [x] Missing autonomous/language/thinking-visibility axes are explicit.
-- [ ] Comparative interpretation prompt exists and is reviewed. (Template exists; review pending.)
+- [x] Comparative interpretation prompt exists and is reviewed.
 - [x] Website renders comparative metrics and optional comparative interpretation.
 - [x] Comparative interpretation reruns only when input/process fingerprints change.
 
@@ -75,4 +75,6 @@ The LLM layer should produce categories like:
 
 The script writes `corpus-index.json`, `comparative-metrics.json`, `technique-status-matrix.json`, and `finding-replication-matrix.json` under `site-data/comparative/`. `scripts/build_public_results_site.py` renders the comparative JSON when present, and the HF CI workflow builds comparative metrics before building/deploying the site.
 
-2026-05-31 LLM comparative interpretation first cut complete. Plan: `docs/plans/2026-05-31-public-results-comparative-interpretation-plan.md`; prompt: `docs/prompts/public-comparative-interpretation-v1.md`; script: `scripts/interpret_public_comparison.py`; tests: `tests/test_interpret_public_comparison.py`. CI can run it on trusted non-PR events when `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL` and `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND` repo variables are set. Remaining caveat: prompt still needs human/external review and a provider-backed smoke run.
+2026-05-31 LLM comparative interpretation first cut complete. Plan: `docs/plans/2026-05-31-public-results-comparative-interpretation-plan.md`; prompt: `docs/prompts/public-comparative-interpretation-v1.md`; script: `scripts/interpret_public_comparison.py`; tests: `tests/test_interpret_public_comparison.py`. CI can run it on trusted non-PR events when `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL` and `PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND` repo variables are set.
+
+2026-06-01 Codex prompt review found two comparative prompt gaps: it did not explicitly require per-corpus split counts, and it did not keep `0`/missing/`redacted` distinct from undefined/not-tested. The prompt now requires both. Re-review returned APPROVE with no P1/P2 blockers. Review note: `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`. Remaining caveat: provider-backed smoke run still pending.

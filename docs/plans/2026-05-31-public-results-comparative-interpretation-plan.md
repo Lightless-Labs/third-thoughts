@@ -2,6 +2,7 @@
 
 **Created:** 2026-05-31
 **Enhanced:** 2026-05-31 (initial implementation)
+**Reviewed:** 2026-06-01 (Codex prompt review; see `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`)
 
 ## Goal
 
@@ -38,5 +39,5 @@ Add an optional comparative interpretation layer over deterministic public-safe 
 - [x] Website renders comparative interpretation when present.
 - [x] CI can invoke comparative interpretation on trusted non-PR runs when configured.
 - [x] Tests and actionlint pass.
-- [ ] Prompt has an external/human review note.
+- [x] Prompt has an external/human review note.
 - [ ] A trusted provider-backed workflow run has been smoke-tested.
