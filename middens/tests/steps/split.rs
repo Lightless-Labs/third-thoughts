@@ -206,7 +206,13 @@ fn when_run_middens_analyze_with_split_on_the_mixed_corpus_using_technique(
     run_analyze_with_args(
         world,
         true,
-        &["--techniques", technique.as_str(), "--timeout", "1800", "--force"],
+        &[
+            "--techniques",
+            technique.as_str(),
+            "--timeout",
+            "1800",
+            "--force",
+        ],
     );
 }
 
