@@ -1,7 +1,7 @@
 # Autonomous Session Stratum — Phase 1 + Phase 2
 
 **Created:** 2026-04-06
-**Status:** In progress (Phase 1 code complete; ongoing regression tests moved to public HF corpora because old `corpus-split` symlinks target pruned Claude Code live files)
+**Status:** In progress (Phase 1 code complete; public-HF Phase 2 pass complete with zero supported autonomous sessions; true autonomous behavior analysis remains blocked on recovered Boucle raw/archive data or Parquet trace normalizer support)
 **Priority:** P1 — this is the NEXT concrete move after PR triage
 **Source:** Pivot from PR #6 (corpus composition anomaly investigation) — user chose to promote Boucle contamination to a first-class session-type stratum rather than filter it out
 **Follow-up on:** PR #6 (`feat/corpus-anomaly-w10-w12`). Land commits on that branch, don't open a new PR.
@@ -67,7 +67,7 @@ A real interactive session where the user only ever produces short `Unclassified
 - [x] Classifier rule implemented and documented (including the "no Human* ∧ ≥1 user" edge case)
 - [x] `--split` produces `corpus-split/autonomous/` bucket (or equivalent)
 - [x] Cucumber: 5+ new scenarios covering the classification rules pass
-- [x] All 270+ existing scenarios still pass (`cd middens && cargo test` → 380/380 scenarios, 2103/2103 steps, 2026-05-26)
+- [x] All existing scenarios still pass (`cd middens && cargo test` → 381/381 scenarios, 2108/2108 steps, 2026-05-28; includes Python split-cache regression)
 - [x] Public HF split regression added to CI (`middens analyze --split --no-python` over each materialized HF corpus; local smoke on `agent-sessions-list-mixed` produced 5 interactive, 2 subagent, 0 autonomous)
 - [ ] Re-run numbers on the old private corpus added as an addendum to `docs/solutions/methodology/corpus-composition-anomaly-w10-w12-investigation-20260406.md` if a raw/archive copy is recovered. Current local `corpus-split/` is a stale absolute-symlink split over Claude Code live storage; after correcting the old repo path prefix, only 46/2,594 interactive and 4,757/5,348 subagent targets still exist, so use HF datasets for tests rather than this stale split.
 - [ ] Commits pushed to `feat/corpus-anomaly-w10-w12` (outdated branch note; current work is on `main` pending user direction)
@@ -75,7 +75,9 @@ A real interactive session where the user only ever produces short `Unclassified
 
 ## Phase 2 — Comparative battery run (research)
 
-Once Phase 1 is merged (or at least code-complete), run the full 23-technique middens battery on the new three-way split and write a comparative report.
+**Public-HF pass complete (2026-05-28):** `middens analyze --split --all` completed on the five CI-selected public-HF JSONL corpora (975 parsed sessions, 345 technique executions, zero technique errors). Result: 939 interactive, 36 subagent, **0 autonomous**. Report: `docs/solutions/methodology/autonomous-stratum-public-hf-comparative-analysis-20260528.md`. This validates that current public-HF JSONL replications are not autonomous-contaminated, but it cannot characterize autonomous-loop behavior. One unsupported Parquet-normalized candidate (`archit11__claude-code-traces`, 25/25 apparent autonomous candidates) should be revisited after public-HF Parquet trace normalizers are in the normal analyze path.
+
+Once a supported autonomous cohort exists, run the full 23-technique middens battery on the new three-way split and write/update a comparative report.
 
 ### Questions to answer
 
@@ -90,10 +92,11 @@ Once Phase 1 is merged (or at least code-complete), run the full 23-technique mi
 
 ### Deliverables
 
-- `docs/solutions/methodology/autonomous-stratum-comparative-analysis-20260406.md` (or later date)
-- Each of the 8 questions above addressed with actual numbers from `middens analyze --split`
-- Tables comparing Interactive / Subagent / Autonomous side by side for every technique that produces comparable findings
-- Explicit statements about which existing findings (thinking suppression, MVT violation, HSMM pre-failure, session degradation) survive on which strata
+- [x] Public-HF report: `docs/solutions/methodology/autonomous-stratum-public-hf-comparative-analysis-20260528.md`
+- [x] Each of the 8 questions addressed for supported public-HF strata; autonomous marked undefined because all supported public-HF JSONL corpora had `N=0` autonomous sessions.
+- [x] Tables comparing Interactive / Subagent / Autonomous side by side for public-HF strata.
+- [x] Explicit statements about which existing findings survive public-HF interactive/subagent strata and which remain untested on autonomous sessions.
+- [ ] Follow-up report/update once a supported non-empty autonomous cohort is available (recovered Boucle archive, promoted Parquet trace normalizer, or curated public autonomous JSONL corpus).
 
 ### Phase 2 stopping criteria
 

@@ -74,12 +74,12 @@
       "dataset_revision": "416248040ba2c706c475bba238782c3e334fd4d8",
       "source": "seed/claude-code-search",
       "storage_format": "parquet_trace_rows",
-      "description": "Claude API request/response trace rows; not yet suitable for middens analyze over raw JSONL corpus directories.",
-      "analysis_enabled": false,
-      "ci_tiers": [],
-      "expected_min_jsonl_files": 0,
-      "expected_min_sessions": 0,
-      "notes": "Kept in registry as a known public corpus candidate, but excluded from analyze CI until the Parquet-to-session normalizer is promoted into the analyze path."
+      "description": "Claude API request/response trace rows normalized into Claude-Code-compatible JSONL during materialization.",
+      "analysis_enabled": true,
+      "ci_tiers": ["full"],
+      "expected_min_jsonl_files": 25,
+      "expected_min_sessions": 25,
+      "notes": "First supported Parquet trace-row corpus. `scripts/materialize_hf_analysis_corpus.py` requires schema columns timestamp/request_id/conversation_json and writes one generated JSONL session per trace row using normalizer claude_trace_parquet_request_response_row_v1. Useful for non-Pi public coverage; interpret autonomous counts through the normal middens classifier, not the earlier HSMM-only normalized Session[] artifact."
     },
     {
       "id": "salt-nlp-swe-chat",

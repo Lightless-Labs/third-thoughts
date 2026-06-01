@@ -1,6 +1,6 @@
 ---
 title: "Add schema-aware normalizers for public HF Parquet trace datasets"
-status: todo
+status: done
 priority: P2
 tags: [huggingface, parquet, parser, normalizer, public-corpus]
 source: public-hf-23-technique-analysis-2026-05-26
@@ -37,8 +37,8 @@ Candidate datasets from the 2026-05-23/25 survey:
 
 ## Done
 
-- [ ] At least one Parquet trace dataset is normalized into a `middens analyze`-compatible corpus.
-- [ ] Large Parquet datasets are handled without loading multi-GB data into memory at once.
-- [ ] Unsupported schemas fail clearly with expected columns/examples.
-- [ ] CI includes at least one non-Pi Parquet-derived corpus.
-- [ ] Sanitized methodology note documents schema decisions and caveats.
+- [x] At least one Parquet trace dataset is normalized into a `middens analyze`-compatible corpus (`archit11-claude-code-traces-parquet`).
+- [x] Large Parquet datasets are handled without loading multi-GB data into memory at once (`pyarrow.parquet.ParquetFile.iter_batches`).
+- [x] Unsupported schemas fail clearly with expected columns/examples.
+- [x] CI includes at least one non-Pi Parquet-derived corpus (full tier).
+- [x] Sanitized methodology note documents schema decisions and caveats: `docs/solutions/methodology/public-hf-parquet-trace-normalizer-20260528.md`.

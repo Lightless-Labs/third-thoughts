@@ -101,6 +101,10 @@ fn assert_population_outputs(dir: &Path) {
 }
 
 fn run_analyze(world: &mut MiddensWorld, split: bool) {
+    run_analyze_with_args(world, split, &[]);
+}
+
+fn run_analyze_with_args(world: &mut MiddensWorld, split: bool, extra_args: &[&str]) {
     let xdg_data_home = xdg_data_home(world);
     let mut command = Command::new(middens_bin());
     command.arg("analyze").arg(input_dir(world));
@@ -109,6 +113,7 @@ fn run_analyze(world: &mut MiddensWorld, split: bool) {
         command.arg("--split");
     }
 
+    command.args(extra_args);
     command.arg("--output").arg(output_dir(world));
     command.env("XDG_DATA_HOME", &xdg_data_home);
 
@@ -191,6 +196,18 @@ fn when_run_middens_analyze_with_split_on_the_mixed_corpus(world: &mut MiddensWo
 #[when("I run middens analyze without split on the mixed corpus")]
 fn when_run_middens_analyze_without_split_on_the_mixed_corpus(world: &mut MiddensWorld) {
     run_analyze(world, false);
+}
+
+#[when(expr = "I run middens analyze with split on the mixed corpus using the {string} technique")]
+fn when_run_middens_analyze_with_split_on_the_mixed_corpus_using_technique(
+    world: &mut MiddensWorld,
+    technique: String,
+) {
+    run_analyze_with_args(
+        world,
+        true,
+        &["--techniques", technique.as_str(), "--timeout", "1800", "--force"],
+    );
 }
 
 #[then(
@@ -311,4 +328,38 @@ fn then_split_summary_reports_population_counts(
         autonomous_line,
         world.cli_stderr
     );
+}
+
+#[then(
+    expr = "the split hsmm summaries should report {int} interactive session, {int} subagent sessions, and {int} autonomous session"
+)]
+fn then_split_hsmm_summaries_report_per_stratum_sessions(
+    world: &mut MiddensWorld,
+    interactive_count: i32,
+    subagent_count: i32,
+    autonomous_count: i32,
+) {
+    for (stratum, expected) in [
+        ("interactive", interactive_count),
+        ("subagent", subagent_count),
+        ("autonomous", autonomous_count),
+    ] {
+        let path = output_dir(world).join(stratum).join("hsmm.json");
+        let raw = fs::read_to_string(&path)
+            .unwrap_or_else(|error| panic!("failed to read {}: {}", path.display(), error));
+        let value: serde_json::Value = serde_json::from_str(&raw)
+            .unwrap_or_else(|error| panic!("failed to parse {}: {}", path.display(), error));
+        let summary = value
+            .get("summary")
+            .and_then(|summary| summary.as_str())
+            .unwrap_or_else(|| panic!("{} did not contain a string summary", path.display()));
+        let expected_phrase = format!("only {} sessions provided", expected);
+        assert!(
+            summary.contains(&expected_phrase),
+            "{} summary should mention {:?}, got {:?}",
+            stratum,
+            expected_phrase,
+            summary
+        );
+    }
 }

@@ -23,6 +23,10 @@ on:
         description: "HF registry dataset revision/branch when registry_repo is set."
         type: string
         default: main
+      force:
+        description: "Rerun analysis even when published fingerprints match."
+        type: boolean
+        default: false
   schedule:
     # Weekly full public-corpus validation. Manual dispatch can run it sooner.
     - cron: "17 3 * * 1"
@@ -34,9 +38,25 @@ on:
       - "scripts/fetch_hf_corpus_registry.py"
       - "scripts/hf_corpus_matrix.py"
       - "scripts/materialize_hf_analysis_corpus.py"
+      - "scripts/extract_public_corpus_metrics.py"
+      - "scripts/build_public_results_site.py"
+      - "scripts/build_public_comparative_metrics.py"
+      - "scripts/public_results_fingerprint.py"
+      - "scripts/public_results_changed.py"
+      - "scripts/interpret_public_corpus.py"
+      - "scripts/interpret_public_comparison.py"
+      - "docs/prompts/public-corpus-interpretation-v1.md"
+      - "docs/prompts/public-comparative-interpretation-v1.md"
+      - "tests/test_extract_public_corpus_metrics.py"
+      - "tests/test_build_public_results_site.py"
+      - "tests/test_build_public_comparative_metrics.py"
+      - "tests/test_public_results_fingerprint.py"
+      - "tests/test_interpret_public_corpus.py"
+      - "tests/test_interpret_public_comparison.py"
+      - "todos/public-results-*.md"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: hf-corpus-analysis-${{ github.ref }}
@@ -121,14 +141,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: middens
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -137,20 +149,13 @@ jobs:
       - name: Install workflow Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install huggingface_hub
+          python -m pip install huggingface_hub pyarrow
 
       - name: Download resolved registry
         uses: actions/download-artifact@v4
         with:
           name: hf-corpus-registry
           path: .tmp/registry
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Build middens
-        working-directory: middens
-        run: cargo build --release --locked
 
       - name: Materialize pinned HF corpus
         run: |
@@ -161,7 +166,79 @@ jobs:
             --cache-dir ".tmp/hf-cache" \
             --force
 
+      - name: Fetch previous published public-safe bundle
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ".tmp/previous-site/corpora/${{ matrix.id }}"
+          if git ls-remote --exit-code origin refs/heads/www >/dev/null 2>&1; then
+            git fetch --depth=1 origin www
+            for file in corpus.json analysis-manifest.json split-manifest.json metrics.json status.json fingerprints.json interpretation.md; do
+              if git cat-file -e "FETCH_HEAD:downloads/corpora/${{ matrix.id }}/$file" 2>/dev/null; then
+                git show "FETCH_HEAD:downloads/corpora/${{ matrix.id }}/$file" > ".tmp/previous-site/corpora/${{ matrix.id }}/$file"
+              fi
+            done
+          fi
+
+      - name: Compute current public result fingerprints
+        run: |
+          python scripts/public_results_fingerprint.py \
+            --corpus-id "${{ matrix.id }}" \
+            --registry ".tmp/registry/corpora.json" \
+            --materialized-corpus ".tmp/hf-corpora/${{ matrix.id }}" \
+            --output ".tmp/current-fingerprints/${{ matrix.id }}.json"
+
+      - name: Decide whether previous bundle is reusable
+        id: reuse
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            FORCE="${{ inputs.force }}"
+          else
+            FORCE="false"
+          fi
+          if [ "$FORCE" = "true" ]; then
+            {
+              echo "changed=true"
+              echo "reusable=false"
+              echo "reason=force_requested"
+            } >> "$GITHUB_OUTPUT"
+          else
+            python scripts/public_results_changed.py \
+              --current ".tmp/current-fingerprints/${{ matrix.id }}.json" \
+              --previous ".tmp/previous-site/corpora/${{ matrix.id }}/fingerprints.json" \
+              --scope analysis \
+              --github-output "$GITHUB_OUTPUT"
+          fi
+          if grep -q '^reusable=true$' "$GITHUB_OUTPUT"; then
+            mkdir -p ".tmp/site-data/corpora"
+            cp -R ".tmp/previous-site/corpora/${{ matrix.id }}" ".tmp/site-data/corpora/${{ matrix.id }}"
+            echo "Reusing previous public-safe bundle for ${{ matrix.id }}"
+          else
+            echo "Previous bundle not reusable for ${{ matrix.id }}"
+          fi
+
+      - name: Install Rust toolchain
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: middens
+
+      - name: Install uv
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build middens
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        working-directory: middens
+        run: cargo build --release --locked
+
       - name: Run full analysis battery (no LLM interpretation)
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           ./middens/target/release/middens analyze \
             ".tmp/hf-corpora/${{ matrix.id }}" \
@@ -171,6 +248,7 @@ jobs:
             --output ".tmp/middens-results/${{ matrix.id }}"
 
       - name: Resolve latest analysis directory
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         id: latest
         run: |
           ROOT="$XDG_DATA_HOME/com.lightless-labs.third-thoughts/analysis"
@@ -183,6 +261,7 @@ jobs:
           echo "Analysis dir: $ANALYSIS_DIR"
 
       - name: Export notebook without interpretation
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           ./middens/target/release/middens export \
             --analysis-dir "${{ steps.latest.outputs.analysis_dir }}" \
@@ -191,6 +270,7 @@ jobs:
             --force
 
       - name: Validate analysis manifest shape
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
         run: |
           python - <<'PY'
           import json, os, pathlib
@@ -208,6 +288,8 @@ jobs:
           ANALYSIS_DIR: ${{ steps.latest.outputs.analysis_dir }}
 
       - name: Run HF split stratification smoke
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        id: split_latest
         run: |
           set -euo pipefail
           export XDG_DATA_HOME="${{ github.workspace }}/.tmp/xdg-split/${{ matrix.id }}"
@@ -241,7 +323,31 @@ jobs:
               if not isinstance(stratum.get("session_count"), int) or stratum["session_count"] < 0:
                   raise SystemExit(f"invalid session_count in {stratum}")
           print(f"validated split strata for {corpus_id}: {strata}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              print(f"split_dir={split_dir}", file=fh)
           PY
+
+      - name: Extract public-safe site data
+        if: ${{ steps.reuse.outputs.reusable != 'true' }}
+        run: |
+          python scripts/extract_public_corpus_metrics.py \
+            --corpus-id "${{ matrix.id }}" \
+            --registry ".tmp/registry/corpora.json" \
+            --analysis-output ".tmp/middens-results/${{ matrix.id }}" \
+            --split-output ".tmp/middens-split-results/${{ matrix.id }}" \
+            --analysis-dir "${{ steps.latest.outputs.analysis_dir }}" \
+            --split-analysis-dir "${{ steps.split_latest.outputs.split_dir }}" \
+            --materialized-corpus ".tmp/hf-corpora/${{ matrix.id }}" \
+            --output ".tmp/site-data/corpora/${{ matrix.id }}"
+
+      - name: Interpret public-safe corpus metrics
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' && vars.PUBLIC_RESULTS_INTERPRET_COMMAND != '' && vars.PUBLIC_RESULTS_INTERPRET_MODEL != '' }}
+        run: |
+          python scripts/interpret_public_corpus.py \
+            --corpus-dir ".tmp/site-data/corpora/${{ matrix.id }}" \
+            --prompt "docs/prompts/public-corpus-interpretation-v1.md" \
+            --model "${{ vars.PUBLIC_RESULTS_INTERPRET_MODEL }}" \
+            --runner-command "${{ vars.PUBLIC_RESULTS_INTERPRET_COMMAND }}"
 
       - name: Upload analysis artifacts
         uses: actions/upload-artifact@v4
@@ -251,6 +357,87 @@ jobs:
           path: |
             .tmp/middens-results/${{ matrix.id }}/
             .tmp/middens-split-results/${{ matrix.id }}/
+            .tmp/site-data/corpora/${{ matrix.id }}/
+            .tmp/current-fingerprints/${{ matrix.id }}.json
             .tmp/reports/${{ matrix.id }}.ipynb
-            ${{ steps.latest.outputs.analysis_dir }}/manifest.json
           if-no-files-found: warn
+
+  build-site:
+    name: Build public results site
+    needs: analyze
+    runs-on: ubuntu-latest
+    if: ${{ needs.analyze.result == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download per-corpus analysis artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: hf-corpus-analysis-*
+          path: .tmp/public-results-artifacts
+
+      - name: Collect public-safe site data
+        run: |
+          set -euo pipefail
+          mkdir -p site-data/corpora
+          found=0
+          while IFS= read -r metrics; do
+            corpus_dir="$(dirname "$metrics")"
+            corpus_id="$(basename "$corpus_dir")"
+            rm -rf "site-data/corpora/$corpus_id"
+            mkdir -p "site-data/corpora/$corpus_id"
+            cp "$corpus_dir"/*.json "site-data/corpora/$corpus_id/"
+            if [ -f "$corpus_dir/interpretation.md" ]; then
+              cp "$corpus_dir/interpretation.md" "site-data/corpora/$corpus_id/"
+            fi
+            found=$((found + 1))
+          done < <(find .tmp/public-results-artifacts -path '*/.tmp/site-data/corpora/*/metrics.json' | sort)
+          if [ "$found" -eq 0 ]; then
+            echo "No public-safe site-data bundles found in downloaded artifacts" >&2
+            exit 1
+          fi
+          echo "Collected $found corpus bundles"
+
+      - name: Build comparative public metrics
+        run: |
+          python scripts/build_public_comparative_metrics.py \
+            --corpora-dir site-data/corpora \
+            --output site-data/comparative
+
+      - name: Interpret comparative public-safe metrics
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' && vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND != '' && vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL != '' }}
+        run: |
+          python scripts/interpret_public_comparison.py \
+            --comparative-dir "site-data/comparative" \
+            --prompt "docs/prompts/public-comparative-interpretation-v1.md" \
+            --model "${{ vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_MODEL }}" \
+            --runner-command "${{ vars.PUBLIC_RESULTS_COMPARATIVE_INTERPRET_COMMAND }}"
+
+      - name: Build public results site
+        run: |
+          python scripts/build_public_results_site.py \
+            --site-data site-data \
+            --output site-out
+
+      - name: Upload generated site
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-results-site
+          path: site-out/
+          if-no-files-found: error
+
+      - name: Deploy generated site to www branch
+        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd site-out
+          touch .nojekyll
+          git init
+          git checkout -b www
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update public results site"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" www

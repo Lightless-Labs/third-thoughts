@@ -33,3 +33,10 @@ Feature: Analyze pipeline split stratification
     When I run middens analyze with split on the mixed corpus
     Then the exit code should be 0
     And the split summary should report 1 interactive session, 2 subagent sessions, and 1 autonomous session
+
+  Scenario: Python techniques receive per-stratum sessions in split mode
+    Given a temporary mixed interactive, subagent, and autonomous corpus
+    And a temporary analyze output directory
+    When I run middens analyze with split on the mixed corpus using the "hsmm" technique
+    Then the exit code should be 0
+    And the split hsmm summaries should report 1 interactive session, 2 subagent sessions, and 1 autonomous session

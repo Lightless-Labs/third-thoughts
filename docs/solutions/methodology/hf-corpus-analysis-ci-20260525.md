@@ -53,12 +53,12 @@ Initial analysis-enabled corpora:
 | `thomasmustier-pi-for-excel` | `thomasmustier/pi-for-excel-sessions@1b7218d2acf621e52bb5208435b1f80154342e3f` | full |
 | `aaaaliou-pi-mono` | `aaaaliou/pi-mono@61eee21d662f8736ace59507fc30555e1bff5c6e` | full |
 | `kimi-claude-code-traces-jsonl` | `armand0e/kimi-k2.6-claude-code-traces@1f02263eb3c1d41f9d7b264baf56a09063a67963` | full |
+| `archit11-claude-code-traces-parquet` | `archit11/claude-code-traces@416248040ba2c706c475bba238782c3e334fd4d8` | full |
 
 Known but not yet analysis-enabled:
 
 | Corpus id | Reason |
 |---|---|
-| `archit11-claude-code-traces-parquet` | Parquet request/response rows need a promoted normalizer before raw `middens analyze` can consume them as a corpus directory. |
 | `salt-nlp-swe-chat` | Strong candidate with 5.8k-ish transcript JSONL files, but the dataset is gated. Unauthenticated transcript download returns 401, so CI needs accepted HF-token access before enabling it. A one-off token smoke on 2026-05-26 downloaded three transcripts and `middens analyze --split --no-python` parsed all three. README says user prompts and assistant text responses were redacted with Microsoft Presidio + TruffleHog; still audit thinking/tool/code fields before calling outputs privacy-safe. |
 
 ## CI behavior
@@ -74,7 +74,7 @@ Triggers:
 For each selected corpus, CI:
 
 1. builds `middens` from source;
-2. materializes the pinned HF JSONL corpus into `.tmp/hf-corpora/<id>`;
+2. materializes the pinned HF corpus into `.tmp/hf-corpora/<id>` as analyze-compatible JSONL (raw JSONL copy for `storage_format=jsonl`; generated JSONL for supported `storage_format=parquet_trace_rows`);
 3. runs:
 
    ```bash
@@ -153,6 +153,6 @@ Smoke result: 7 sessions parsed, 23/23 techniques completed, export succeeded, m
 
 - The registry can now be published as a first-class Hugging Face dataset, but actual publication requires an HF token. Once published, set `HF_CORPUS_REGISTRY_REPO` / `HF_CORPUS_REGISTRY_REVISION` repository variables or use the manual workflow inputs.
 - Several public candidate datasets are duplicate-shaped (`*-pi-mono`). Keep them separate for CI coverage, but do not count them as independent scientific replication without deduplication.
-- Parquet trace datasets need a real streaming/schema-aware normalizer before joining the full-analysis CI path.
+- One Parquet trace-row schema is now supported (`archit11-claude-code-traces-parquet`); additional Parquet variants still need schema-specific adapters before joining the full-analysis CI path.
 - `SALT-NLP/SWE-chat` should be promoted once a trusted CI HF token has accepted gated access and we settle the secrets/trigger strategy. Keep it out of unauthenticated PR CI until then. Its documented Presidio/TruffleHog redaction is a major plus, but not a substitute for checking every field middens consumes.
 - Weekly `full` runs may hit HF unauthenticated rate limits; add `HF_TOKEN` as a repo secret if that becomes noisy.
