@@ -47,6 +47,7 @@ on:
       - "scripts/interpret_public_comparison.py"
       - "docs/prompts/public-corpus-interpretation-v1.md"
       - "docs/prompts/public-comparative-interpretation-v1.md"
+      - "tests/test_hf_corpus_matrix.py"
       - "tests/test_extract_public_corpus_metrics.py"
       - "tests/test_build_public_results_site.py"
       - "tests/test_build_public_comparative_metrics.py"
@@ -173,7 +174,11 @@ jobs:
           mkdir -p ".tmp/previous-site/corpora/${{ matrix.id }}"
           if git ls-remote --exit-code origin refs/heads/www >/dev/null 2>&1; then
             git fetch --depth=1 origin www
-            for file in corpus.json analysis-manifest.json split-manifest.json metrics.json status.json fingerprints.json interpretation.md; do
+            files="corpus.json analysis-manifest.json split-manifest.json metrics.json status.json fingerprints.json"
+            if [ "${{ matrix.interpret_enabled }}" = "true" ]; then
+              files="$files interpretation.md interpretation.json"
+            fi
+            for file in $files; do
               if git cat-file -e "FETCH_HEAD:downloads/corpora/${{ matrix.id }}/$file" 2>/dev/null; then
                 git show "FETCH_HEAD:downloads/corpora/${{ matrix.id }}/$file" > ".tmp/previous-site/corpora/${{ matrix.id }}/$file"
               fi
@@ -341,7 +346,7 @@ jobs:
             --output ".tmp/site-data/corpora/${{ matrix.id }}"
 
       - name: Interpret public-safe corpus metrics
-        if: ${{ github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' && vars.PUBLIC_RESULTS_INTERPRET_COMMAND != '' && vars.PUBLIC_RESULTS_INTERPRET_MODEL != '' }}
+        if: ${{ matrix.interpret_enabled == true && github.event_name != 'pull_request' && github.repository == 'Lightless-Labs/third-thoughts' && vars.PUBLIC_RESULTS_INTERPRET_COMMAND != '' && vars.PUBLIC_RESULTS_INTERPRET_MODEL != '' }}
         run: |
           python scripts/interpret_public_corpus.py \
             --corpus-dir ".tmp/site-data/corpora/${{ matrix.id }}" \

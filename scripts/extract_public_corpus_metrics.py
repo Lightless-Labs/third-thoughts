@@ -236,6 +236,8 @@ PUBLIC_REGISTRY_KEYS = (
     "storage_format",
     "description",
     "analysis_enabled",
+    "publish_enabled",
+    "interpret_enabled",
     "ci_tiers",
     "expected_min_jsonl_files",
     "expected_min_sessions",

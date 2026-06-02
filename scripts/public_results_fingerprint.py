@@ -44,6 +44,8 @@ PUBLIC_REGISTRY_KEYS: tuple[str, ...] = (
     "source",
     "storage_format",
     "analysis_enabled",
+    "publish_enabled",
+    "interpret_enabled",
     "ci_tiers",
     "expected_min_jsonl_files",
     "expected_min_sessions",

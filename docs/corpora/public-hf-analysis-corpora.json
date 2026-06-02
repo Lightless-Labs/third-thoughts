@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Pinned public Hugging Face corpora used by CI to run middens analyze/export without LLM interpretation.",
+  "description": "Pinned public Hugging Face corpora used by CI to run middens analyze/export and publish curated public-safe website results.",
   "default_ci_tier": "representative",
   "corpora": [
     {
@@ -11,10 +11,16 @@
       "storage_format": "jsonl",
       "description": "Small mixed-source sanity cohort: Claude Code, Codex, and Pi coding-agent sessions.",
       "analysis_enabled": true,
-      "ci_tiers": ["smoke", "representative", "full"],
+      "ci_tiers": [
+        "smoke",
+        "representative",
+        "full"
+      ],
       "expected_min_jsonl_files": 7,
       "expected_min_sessions": 7,
-      "notes": "Tiny by design; useful for parser mix and fast PR checks. HSMM alone has insufficient data, but full analyze should still complete with insufficient summaries where appropriate."
+      "notes": "Tiny by design; useful for parser mix and fast PR checks. HSMM alone has insufficient data, but full analyze should still complete with insufficient summaries where appropriate.",
+      "publish_enabled": true,
+      "interpret_enabled": true
     },
     {
       "id": "badlogicgames-pi-mono",
@@ -24,10 +30,15 @@
       "storage_format": "jsonl",
       "description": "Main public Pi coding-agent cohort.",
       "analysis_enabled": true,
-      "ci_tiers": ["representative", "full"],
+      "ci_tiers": [
+        "representative",
+        "full"
+      ],
       "expected_min_jsonl_files": 626,
       "expected_min_sessions": 620,
-      "notes": "Primary public Pi corpus used in the fixed HF HSMM replication."
+      "notes": "Primary public Pi corpus used in the fixed HF HSMM replication.",
+      "publish_enabled": true,
+      "interpret_enabled": true
     },
     {
       "id": "thomasmustier-pi-for-excel",
@@ -37,10 +48,14 @@
       "storage_format": "jsonl",
       "description": "Independent public Pi coding-agent project corpus.",
       "analysis_enabled": true,
-      "ci_tiers": ["full"],
+      "ci_tiers": [
+        "full"
+      ],
       "expected_min_jsonl_files": 161,
       "expected_min_sessions": 150,
-      "notes": "Good medium-sized non-pi-mono corpus; independent HSMM lift was 7.86x under current middens."
+      "notes": "Good medium-sized non-pi-mono corpus; independent HSMM lift was 7.86x under current middens.",
+      "publish_enabled": true,
+      "interpret_enabled": true
     },
     {
       "id": "aaaaliou-pi-mono",
@@ -50,10 +65,14 @@
       "storage_format": "jsonl",
       "description": "Independent public Pi coding-agent corpus with different HSMM magnitude than badlogicgames/pi-mono.",
       "analysis_enabled": true,
-      "ci_tiers": ["full"],
+      "ci_tiers": [
+        "full"
+      ],
       "expected_min_jsonl_files": 145,
       "expected_min_sessions": 140,
-      "notes": "Included because it varies materially from pi-mono; independent HSMM lift was 1.44x under current middens."
+      "notes": "Included because it varies materially from pi-mono; independent HSMM lift was 1.44x under current middens.",
+      "publish_enabled": true,
+      "interpret_enabled": true
     },
     {
       "id": "kimi-claude-code-traces-jsonl",
@@ -63,10 +82,14 @@
       "storage_format": "jsonl",
       "description": "Claude-Code-style JSONL trace corpus from the public claude-code search candidates.",
       "analysis_enabled": true,
-      "ci_tiers": ["full"],
+      "ci_tiers": [
+        "full"
+      ],
       "expected_min_jsonl_files": 36,
       "expected_min_sessions": 30,
-      "notes": "Provides non-Pi JSONL coverage."
+      "notes": "Provides non-Pi JSONL coverage.",
+      "publish_enabled": true,
+      "interpret_enabled": true
     },
     {
       "id": "archit11-claude-code-traces-parquet",
@@ -76,10 +99,14 @@
       "storage_format": "parquet_trace_rows",
       "description": "Claude API request/response trace rows normalized into Claude-Code-compatible JSONL during materialization.",
       "analysis_enabled": true,
-      "ci_tiers": ["full"],
+      "ci_tiers": [
+        "full"
+      ],
       "expected_min_jsonl_files": 25,
       "expected_min_sessions": 25,
-      "notes": "First supported Parquet trace-row corpus. `scripts/materialize_hf_analysis_corpus.py` requires schema columns timestamp/request_id/conversation_json and writes one generated JSONL session per trace row using normalizer claude_trace_parquet_request_response_row_v1. Useful for non-Pi public coverage; interpret autonomous counts through the normal middens classifier, not the earlier HSMM-only normalized Session[] artifact."
+      "notes": "First supported Parquet trace-row corpus. `scripts/materialize_hf_analysis_corpus.py` requires schema columns timestamp/request_id/conversation_json and writes one generated JSONL session per trace row using normalizer claude_trace_parquet_request_response_row_v1. Useful for non-Pi public coverage; interpret autonomous counts through the normal middens classifier, not the earlier HSMM-only normalized Session[] artifact.",
+      "publish_enabled": true,
+      "interpret_enabled": true
     },
     {
       "id": "salt-nlp-swe-chat",
@@ -92,7 +119,9 @@
       "ci_tiers": [],
       "expected_min_jsonl_files": 5800,
       "expected_min_sessions": 5800,
-      "notes": "Excellent candidate for public-HF regression/analysis once access is granted, but the dataset is gated (`gated=auto`). Unauthenticated download of `transcripts/*.jsonl` returns 401, so keep disabled until CI has an HF token accepted for the dataset and a durable secrets/trigger strategy. API listing at pinned revision shows 5,850 transcript JSONL files; README reports 5,851. One-off token smoke on 2026-05-26 downloaded three transcripts and middens parsed all three with `--split --no-python`. README says user prompts and assistant text responses were PII-redacted with Microsoft Presidio plus TruffleHog; still validate transcript/tool/thinking fields before treating outputs as privacy-safe."
+      "notes": "Excellent candidate for public-HF regression/analysis once access is granted, but the dataset is gated (`gated=auto`). Unauthenticated download of `transcripts/*.jsonl` returns 401, so keep disabled until CI has an HF token accepted for the dataset and a durable secrets/trigger strategy. API listing at pinned revision shows 5,850 transcript JSONL files; README reports 5,851. One-off token smoke on 2026-05-26 downloaded three transcripts and middens parsed all three with `--split --no-python`. README says user prompts and assistant text responses were PII-redacted with Microsoft Presidio plus TruffleHog; still validate transcript/tool/thinking fields before treating outputs as privacy-safe.",
+      "publish_enabled": false,
+      "interpret_enabled": false
     }
   ]
 }

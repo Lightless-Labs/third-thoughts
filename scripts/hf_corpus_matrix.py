@@ -37,6 +37,23 @@ def load_registry(path: Path) -> dict[str, Any]:
     return registry
 
 
+def publish_enabled(corpus: dict[str, Any]) -> bool:
+    """Whether this registry entry is allowed into published site-data.
+
+    Older registry fixtures predate the explicit control, so analysis-enabled
+    corpora default to publishable for backwards compatibility. The production
+    registry records the flag explicitly to keep publication decisions boring.
+    """
+
+    return bool(corpus.get("publish_enabled", corpus.get("analysis_enabled", False)))
+
+
+def interpret_enabled(corpus: dict[str, Any]) -> bool:
+    """Whether optional per-corpus LLM interpretation may run for this corpus."""
+
+    return bool(corpus.get("interpret_enabled", False))
+
+
 def main() -> int:
     args = parse_args()
     registry = load_registry(args.registry)
@@ -45,6 +62,8 @@ def main() -> int:
     selected = []
     for corpus in registry["corpora"]:
         if not corpus.get("analysis_enabled", False):
+            continue
+        if not publish_enabled(corpus):
             continue
         if args.corpus != "all" and corpus.get("id") != args.corpus:
             continue
@@ -55,14 +74,20 @@ def main() -> int:
                 "id": corpus["id"],
                 "dataset_repo": corpus["dataset_repo"],
                 "dataset_revision": corpus["dataset_revision"],
+                "publish_enabled": True,
+                "interpret_enabled": interpret_enabled(corpus),
             }
         )
 
     if not selected:
-        enabled_ids = [c.get("id") for c in registry["corpora"] if c.get("analysis_enabled", False)]
+        enabled_ids = [
+            str(c.get("id"))
+            for c in registry["corpora"]
+            if c.get("analysis_enabled", False) and publish_enabled(c)
+        ]
         fail(
-            f"no corpora selected for tier={tier!r}, corpus={args.corpus!r}. "
-            f"Enabled corpus ids: {', '.join(enabled_ids)}"
+            f"no publishable corpora selected for tier={tier!r}, corpus={args.corpus!r}. "
+            f"Analysis+publish enabled corpus ids: {', '.join(enabled_ids)}"
         )
 
     print(json.dumps({"include": selected}, sort_keys=True))

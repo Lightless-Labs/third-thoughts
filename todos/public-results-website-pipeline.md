@@ -34,6 +34,7 @@ Build an end-to-end public results pipeline:
 3. Per-corpus interpretation (`todos/public-results-per-corpus-interpretation.md`). First cut done 2026-05-31; prompt review done 2026-06-01; provider smoke pending.
 4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`). Deterministic metrics half done 2026-05-29; LLM interpretation first cut done 2026-05-31; prompt review done 2026-06-01; provider smoke pending.
 5. Fingerprint-based invalidation/reuse (`todos/public-results-fingerprint-invalidation.md`). First cut done 2026-05-31: per-corpus fingerprints, previous-`www` reuse, manual `force`, and per-corpus/comparative interpretation fingerprint skips are wired.
+6. Registry publish/interpret controls. Done 2026-06-01: corpus registry entries now carry explicit `publish_enabled` and `interpret_enabled`; the matrix filters out non-publishable corpora and passes `interpret_enabled` to CI so per-corpus LLM interpretation is gated per corpus.
 
 ## Non-goals for the first cut
 
@@ -45,7 +46,7 @@ Build an end-to-end public results pipeline:
 
 ## Done
 
-- [ ] Registry supports publish/interpret controls per corpus.
+- [x] Registry supports publish/interpret controls per corpus.
 - [x] Selected corpora produce public-safe result bundles.
 - [x] Website shows corpus cards and comparative deterministic metrics.
 - [x] Per-corpus interpretation is available for trusted runs. (Provider/live-run smoke still pending in the per-corpus todo.)
