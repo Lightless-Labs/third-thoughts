@@ -128,7 +128,7 @@ Each published corpus bundle includes `fingerprints.json` with:
 
 - `corpus`: registry entry plus materialization count/hash summary;
 - `process`: repo SHA, middens version, source-tree hashes, workflow/script hashes, and analysis flags;
-- `interpretation`: currently records disabled/not-configured inputs until the LLM interpretation phase lands.
+- `interpretation`: disabled/not-configured metadata when interpretation is off, or the curated-input/prompt/model/script fingerprint when interpretation is enabled.
 
 The fingerprint file hashes raw object details but does not publish raw transcript paths, session ids, prompts, tool payloads, or per-session rows.
 
@@ -138,6 +138,8 @@ Per-corpus interpretation is off unless repository variables configure it for tr
 
 - `PUBLIC_RESULTS_INTERPRET_MODEL`: model/provider label to record in metadata;
 - `PUBLIC_RESULTS_INTERPRET_COMMAND`: command that reads the rendered prompt from stdin and writes Markdown to stdout.
+
+The prompt templates were reviewed on 2026-06-01; see `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`. The review tightened the comparative prompt around per-corpus split counts and distinct `0`/missing/`redacted` handling. Sensible, if not glamorous.
 
 When both are set, CI runs:
 

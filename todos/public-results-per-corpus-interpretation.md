@@ -54,7 +54,9 @@ The prompt must require:
 
 Implemented the first optional per-corpus interpretation path: `docs/prompts/public-corpus-interpretation-v1.md`, `scripts/interpret_public_corpus.py`, metadata/fingerprint output, unchanged-fingerprint skip, unsafe marker checks, site download support for `interpretation.json`, and trusted CI wiring via repo variables `PUBLIC_RESULTS_INTERPRET_MODEL` + `PUBLIC_RESULTS_INTERPRET_COMMAND`.
 
-2026-06-01 Codex prompt review approved the per-corpus prompt with no P1/P2 findings after checking curated-evidence, metric-citation, split-count, privacy, missing-axis, duplicate-corpus, and tone requirements. Review note: `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`. Still needs a live trusted-run/provider smoke before calling the whole path boring in the good way.
+2026-06-01 Codex prompt review approved the per-corpus prompt with no P1/P2 findings after checking curated-evidence, metric-citation, split-count, privacy, missing-axis, duplicate-corpus, and tone requirements. Review note: `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`.
+
+2026-06-01 local provider-backed smoke passed using Codex CLI as the stdin/stdout runner against a copied `agent-sessions-list-mixed` site-data bundle under `.tmp/provider-smoke/`: `scripts/interpret_public_corpus.py` wrote `interpretation.{md,json}`, the generated site built, and privacy grep passed. Still needs a trusted GitHub workflow/provider smoke before calling the whole path boring in the good way.
 
 ## Done
 
