@@ -35,6 +35,7 @@ Build an end-to-end public results pipeline:
 4. Comparative metrics + interpretation (`todos/public-results-comparative-interpretation.md`). Deterministic metrics half done 2026-05-29; LLM interpretation first cut done 2026-05-31; prompt review done 2026-06-01; provider smoke pending.
 5. Fingerprint-based invalidation/reuse (`todos/public-results-fingerprint-invalidation.md`). First cut done 2026-05-31: per-corpus fingerprints, previous-`www` reuse, manual `force`, and per-corpus/comparative interpretation fingerprint skips are wired.
 6. Registry publish/interpret controls. Done 2026-06-01: corpus registry entries now carry explicit `publish_enabled` and `interpret_enabled`; the matrix filters out non-publishable corpora and passes `interpret_enabled` to CI so per-corpus LLM interpretation is gated per corpus.
+7. Trusted smoke/deploy. Done 2026-06-04: workflow run `26980555426` passed for the smoke tier and deployed generated output to `www@197debe`; downloaded site artifact privacy grep passed. Provider-backed GitHub interpretation smoke remains pending because repo variables are not configured.
 
 ## Non-goals for the first cut
 
