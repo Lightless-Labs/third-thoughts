@@ -2,6 +2,7 @@
 
 **Created:** 2026-05-31
 **Enhanced:** 2026-05-31 (analysis-reuse implementation)
+**Completed:** 2026-06-01 (first-cut analysis + interpretation fingerprint reuse wired)
 
 ## Goal
 
@@ -17,7 +18,7 @@ Add deterministic fingerprints to the public results pipeline so repeated truste
 
 ## Non-goals
 
-- No LLM interpretation implementation in this step.
+- No provider-specific LLM SDK implementation in this step; interpretation scripts remain command-driven.
 - No GitHub Actions cache or artifact-bucket layer yet; first reuse source is the generated `www` branch/site output.
 - No transcript-level publication of materialization details.
 
@@ -42,4 +43,4 @@ Add deterministic fingerprints to the public results pipeline so repeated truste
 - [x] Workflow dispatch has a `force` input.
 - [x] Non-PR runs can reuse prior `www` site-data when corpus/process fingerprints match.
 - [x] Docs/todos/handoff reflect the new status.
-- [ ] Interpretation-specific skip wiring is added once per-corpus/comparative LLM interpretation exists.
+- [x] Interpretation-specific skip wiring is added once per-corpus/comparative LLM interpretation exists.

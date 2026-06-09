@@ -1,6 +1,6 @@
 ---
 title: "Fingerprint-based rerun and reuse for public results"
-status: in_progress
+status: done
 priority: P2
 tags: [ci, caching, reproducibility, public-results]
 source: public-results-website-pipeline
@@ -56,6 +56,8 @@ First cut can read previous fingerprints from the generated `www` branch/site da
 ## Progress
 
 **Started:** 2026-05-31. Dedicated plan: `docs/plans/2026-05-31-public-results-fingerprint-invalidation-plan.md`.
+
+**Completed:** 2026-06-01 (first-cut analysis/interpretation fingerprint reuse is wired; provider smoke remains tracked on the interpretation todos, not here).
 
 Implemented the deterministic analysis-reuse layer: `scripts/public_results_fingerprint.py`, `scripts/public_results_changed.py`, extractor/site integration, `fingerprints.json` downloads, methodology display, prior-`www` reuse in `.github/workflows/hf-corpus-analysis.yml`, and workflow `force` input. Per-corpus interpretation fingerprint skip is wired through `scripts/interpret_public_corpus.py`; comparative interpretation fingerprint skip is wired through `scripts/interpret_public_comparison.py`.
 

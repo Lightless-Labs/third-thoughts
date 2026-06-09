@@ -128,7 +128,7 @@ Each published corpus bundle includes `fingerprints.json` with:
 
 - `corpus`: registry entry plus materialization count/hash summary;
 - `process`: repo SHA, middens version, source-tree hashes, workflow/script hashes, and analysis flags;
-- `interpretation`: currently records disabled/not-configured inputs until the LLM interpretation phase lands.
+- `interpretation`: disabled/not-configured metadata when interpretation is off, or the curated-input/prompt/model/script fingerprint when interpretation is enabled.
 
 The fingerprint file hashes raw object details but does not publish raw transcript paths, session ids, prompts, tool payloads, or per-session rows.
 
@@ -138,6 +138,8 @@ Per-corpus interpretation is off unless repository variables configure it for tr
 
 - `PUBLIC_RESULTS_INTERPRET_MODEL`: model/provider label to record in metadata;
 - `PUBLIC_RESULTS_INTERPRET_COMMAND`: command that reads the rendered prompt from stdin and writes Markdown to stdout.
+
+The prompt templates were reviewed on 2026-06-01; see `docs/reviews/2026-06-01-public-results-interpretation-prompts-codex-review.md`. The review tightened the comparative prompt around per-corpus split counts and distinct `0`/missing/`redacted` handling. Sensible, if not glamorous.
 
 When both are set, CI runs:
 
@@ -254,12 +256,14 @@ This grep is not a formal privacy proof. It is just a cheap tripwire. The real g
 1. Edit `docs/corpora/public-hf-analysis-corpora.json`.
 2. Pin `dataset_revision` to an immutable revision SHA.
 3. Set `analysis_enabled: true` only when the corpus is public and supported.
-4. Choose `ci_tiers`:
+4. Set `publish_enabled: true` only when the corpus may appear in generated public site-data. Leave it `false` for analysis-only/gated candidates.
+5. Set `interpret_enabled: true` only when optional per-corpus LLM interpretation may run from curated metrics for that corpus. Leave it `false` for corpora that should publish deterministic metrics only.
+6. Choose `ci_tiers`:
    - `smoke` for tiny parser sanity checks;
    - `representative` for regular CI coverage;
    - `full` for publishable results.
-5. Run or wait for `HF Corpus Analysis`.
-6. Check the generated corpus page and comparative page.
+7. Run or wait for `HF Corpus Analysis`.
+8. Check the generated corpus page and comparative page.
 
 Do not enable gated or sensitive corpora for public publishing until there is a durable auth/privacy story and a methodology note explaining it.
 
@@ -288,7 +292,7 @@ Then give Pages a minute. Computers: famously fast except when they are not.
 
 Check:
 
-1. `analysis_enabled` is true in the registry;
+1. `analysis_enabled` and `publish_enabled` are true in the registry;
 2. selected `tier` includes that corpus;
 3. the matrix job completed;
 4. the `Extract public-safe site data` step wrote `.tmp/site-data/corpora/<id>/metrics.json`;
