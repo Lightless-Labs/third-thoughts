@@ -30,7 +30,8 @@ steps:
 
       cd middens
       cargo fmt --check
-      cargo test --locked
+      cargo test --locked --lib
+      cargo test --locked --test cucumber -- --input tests/features/smoke.feature
       cargo build --release --locked
 
       smoke_output="$$(mktemp -d)"
@@ -78,7 +79,8 @@ steps:
 
       cd middens
       cargo fmt --check
-      cargo test --locked
+      cargo test --locked --lib
+      cargo test --locked --test cucumber -- --input tests/features/smoke.feature
       cargo build --release --locked
 
       smoke_output="$$(mktemp -d)"
