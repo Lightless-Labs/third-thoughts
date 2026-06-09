@@ -391,7 +391,7 @@ jobs:
               cp "$corpus_dir/interpretation.md" "site-data/corpora/$corpus_id/"
             fi
             found=$((found + 1))
-          done < <(find .tmp/public-results-artifacts -path '*/.tmp/site-data/corpora/*/metrics.json' | sort)
+          done < <(find .tmp/public-results-artifacts \( -path '*/site-data/corpora/*/metrics.json' -o -path '*/.tmp/site-data/corpora/*/metrics.json' \) | sort)
           if [ "$found" -eq 0 ]; then
             echo "No public-safe site-data bundles found in downloaded artifacts" >&2
             exit 1
