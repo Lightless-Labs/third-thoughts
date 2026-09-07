@@ -1,0 +1,529 @@
+{
+  "axis_coverage": {
+    "language": {
+      "affected_corpora": 6,
+      "available": false,
+      "reason": "language detection is not yet part of the public metrics bundle"
+    },
+    "session_type": {
+      "autonomous_corpora": 1,
+      "interactive_corpora": 6,
+      "subagent_corpora": 3,
+      "totals": {
+        "autonomous": 1,
+        "interactive": 944,
+        "subagent": 55
+      }
+    },
+    "thinking_visibility": {
+      "affected_corpora": 6,
+      "available": false,
+      "reason": "public comparative bundle has aggregate visible/redacted hints only, not full axis stratification"
+    }
+  },
+  "corpora": [
+    "aaaaliou-pi-mono",
+    "agent-sessions-list-mixed",
+    "archit11-claude-code-traces-parquet",
+    "badlogicgames-pi-mono",
+    "kimi-claude-code-traces-jsonl",
+    "thomasmustier-pi-for-excel"
+  ],
+  "duplicate_families": {
+    "pi-mono-family": [
+      "aaaaliou-pi-mono",
+      "badlogicgames-pi-mono"
+    ]
+  },
+  "findings": {
+    "correction_first_third": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 0.2916455460584853,
+          "max_min_ratio_positive": 25.59189666663209,
+          "mean": 0.13328391303957918,
+          "min": 0.0,
+          "range": 0.2916455460584853
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "descriptive",
+        "defined_corpora": 6,
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "first_third_rate",
+      "label": "First-third correction rate",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 0.19972906403940885
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 0.15714285714285717
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 0.2916455460584853
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 0.011396011396011395
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 0.1397899996007124
+        }
+      },
+      "technique": "correction-rate"
+    },
+    "correction_last_third": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 0.1412452107279693,
+          "max_min_ratio_positive": 10.875881226053636,
+          "mean": 0.056808562251019885,
+          "min": 0.0,
+          "range": 0.1412452107279693
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "descriptive",
+        "defined_corpora": 6,
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "last_third_rate",
+      "label": "Last-third correction rate",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 0.1412452107279693
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 0.012987012987012988
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 0.07696700368895444
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 0.1096521461021826
+        }
+      },
+      "technique": "correction-rate"
+    },
+    "correction_mean": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 0.21399035571054237,
+          "max_min_ratio_positive": 44.53264016774782,
+          "mean": 0.11501828918021041,
+          "min": 0.0,
+          "range": 0.21399035571054237
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "descriptive",
+        "defined_corpora": 6,
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "overall_mean_rate",
+      "label": "Mean correction rate",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 0.17774643916963875
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 0.16129032258064516
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 0.21399035571054237
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 0.004805247452306276
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 0.13227737016812993
+        }
+      },
+      "technique": "correction-rate"
+    },
+    "ena_top_code": {
+      "aggregate": {
+        "categorical": {
+          "EVIDENCE_SEEK": 1,
+          "SELF_CORRECT": 1,
+          "TOOL_USE": 4
+        },
+        "defined_count": 6,
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "descriptive",
+        "defined_corpora": 6,
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "top_code",
+      "label": "ENA top code",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": "TOOL_USE"
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": "EVIDENCE_SEEK"
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": "TOOL_USE"
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": "TOOL_USE"
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": "SELF_CORRECT"
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": "TOOL_USE"
+        }
+      },
+      "technique": "ena-analysis"
+    },
+    "hsmm_pre_correction_lift": {
+      "aggregate": {
+        "defined_count": 5,
+        "numeric": {
+          "max": 7.864450341759308,
+          "max_min_ratio_positive": 4.586033180600303,
+          "mean": 3.4163199614648585,
+          "min": 0.0,
+          "range": 7.864450341759308
+        },
+        "status_counts": {
+          "defined": 5,
+          "undefined": 1
+        },
+        "undefined_count": 1
+      },
+      "classification": {
+        "classification_input": "mixed_direction",
+        "defined_corpora": 5,
+        "threshold": ">1.0 indicates elevated pre-correction state probability",
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications",
+          "metric missing or undefined for at least one selected corpus"
+        ]
+      },
+      "finding": "pre_correction_lift",
+      "label": "HSMM pre-correction lift",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 1.714869917432622
+        },
+        "agent-sessions-list-mixed": {
+          "status": "undefined",
+          "value": null
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 5.6134719402318485
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 1.8888076079005125
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 7.864450341759308
+        }
+      },
+      "technique": "hsmm"
+    },
+    "mvt_compliance": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0,
+          "range": 0.0
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "direction_consistent_zero",
+        "defined_corpora": 6,
+        "threshold": "0 means no observed MVT-compliant sessions",
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "mvt_compliance_rate",
+      "label": "MVT compliance",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 0.0
+        }
+      },
+      "technique": "information-foraging"
+    },
+    "risk_suppression": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 1.0,
+          "max_min_ratio_positive": 1.0967317394165386,
+          "mean": 0.7994,
+          "min": 0.0,
+          "range": 1.0
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "mixed_or_low",
+        "defined_corpora": 6,
+        "threshold": ">=0.90 in defined corpora",
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "suppression_rate",
+      "label": "Risk suppression",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 0.9478
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 0.9824
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 0.9118
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 1.0
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 0.9544
+        }
+      },
+      "technique": "thinking-divergence"
+    },
+    "thinking_text_divergence": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 3.746,
+          "max_min_ratio_positive": 2.3675894324358486,
+          "mean": 1.7909666666666666,
+          "min": 0.0,
+          "range": 3.746
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "descriptive",
+        "defined_corpora": 6,
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "divergence_ratio",
+      "label": "Thinking/text divergence",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 3.746
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 1.5822
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 1.9419
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 3.4757
+        }
+      },
+      "technique": "thinking-divergence"
+    },
+    "tool_entropy": {
+      "aggregate": {
+        "defined_count": 6,
+        "numeric": {
+          "max": 1.044655381441439,
+          "max_min_ratio_positive": 1.3315357370570948,
+          "mean": 0.7815689919783435,
+          "min": 0.0,
+          "range": 1.044655381441439
+        },
+        "status_counts": {
+          "defined": 6
+        },
+        "undefined_count": 0
+      },
+      "classification": {
+        "classification_input": "descriptive",
+        "defined_corpora": 6,
+        "total_corpora": 6,
+        "warnings": [
+          "autonomous stratum too small for behavior claims",
+          "duplicate-shaped corpus families are present; do not count them as independent replications"
+        ]
+      },
+      "finding": "mean_entropy",
+      "label": "Tool entropy",
+      "observations": {
+        "aaaaliou-pi-mono": {
+          "status": "defined",
+          "value": 1.0108946811738455
+        },
+        "agent-sessions-list-mixed": {
+          "status": "defined",
+          "value": 0.9493218092454959
+        },
+        "archit11-claude-code-traces-parquet": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "badlogicgames-pi-mono": {
+          "status": "defined",
+          "value": 0.8999928168026518
+        },
+        "kimi-claude-code-traces-jsonl": {
+          "status": "defined",
+          "value": 1.044655381441439
+        },
+        "thomasmustier-pi-for-excel": {
+          "status": "defined",
+          "value": 0.7845492632066287
+        }
+      },
+      "technique": "entropy"
+    }
+  },
+  "schema_version": 1
+}

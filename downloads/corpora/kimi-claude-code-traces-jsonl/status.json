@@ -1,0 +1,25 @@
+{
+  "corpus_id": "kimi-claude-code-traces-jsonl",
+  "fingerprints": {
+    "corpus": "e1c34b9c0f9ca25c30c4b5b386202e974dc65a3fd00e32712e824cd67483cea5",
+    "interpretation": "dd3e2e7a4530dbd2406ef1f686b0b5a9cc3e8be458fc264f47b3d005e229c288",
+    "process": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+  },
+  "outputs": [
+    "corpus.json",
+    "analysis-manifest.json",
+    "split-manifest.json",
+    "metrics.json",
+    "fingerprints.json",
+    "status.json"
+  ],
+  "schema_version": 1,
+  "status": "ok",
+  "warnings": [
+    "autonomous_axis_empty: no autonomous sessions in split output",
+    "language_axis_unavailable: current metrics are not gated by detected language",
+    "redacted unsafe value shape for ena-analysis.strongest_high_correction_edge",
+    "redacted unsafe value shape for ena-analysis.strongest_low_correction_edge",
+    "split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,interactive,subagent"
+  ]
+}

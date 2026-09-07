@@ -1,0 +1,23 @@
+{
+  "corpus_id": "thomasmustier-pi-for-excel",
+  "fingerprints": {
+    "corpus": "bb25f602216e987c4009e53abe8140aadb6781fad4b89f90394008711de61ca4",
+    "interpretation": "2ab29f19474b9ef7a06642846d683f56bc488ac8832340dc30e2d740610ed312",
+    "process": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+  },
+  "outputs": [
+    "corpus.json",
+    "analysis-manifest.json",
+    "split-manifest.json",
+    "metrics.json",
+    "fingerprints.json",
+    "status.json"
+  ],
+  "schema_version": 1,
+  "status": "ok",
+  "warnings": [
+    "autonomous_axis_empty: no autonomous sessions in split output",
+    "language_axis_unavailable: current metrics are not gated by detected language",
+    "split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,subagent"
+  ]
+}

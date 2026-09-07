@@ -1,0 +1,23 @@
+{
+  "analysis_enabled": true,
+  "ci_tiers": [
+    "full"
+  ],
+  "dataset_repo": "thomasmustier/pi-for-excel-sessions",
+  "dataset_revision": "1b7218d2acf621e52bb5208435b1f80154342e3f",
+  "description": "Independent public Pi coding-agent project corpus.",
+  "expected_min_jsonl_files": 161,
+  "expected_min_sessions": 150,
+  "id": "thomasmustier-pi-for-excel",
+  "interpret_enabled": true,
+  "materialization": {
+    "available": true,
+    "jsonl_files": 161,
+    "normalizer": null,
+    "object_count": 161,
+    "object_hash_fingerprint": "0360ffc7559f4266b39a3572ae8be2e97a3b52edf6722434378c5adf185514b6"
+  },
+  "publish_enabled": true,
+  "source": "other=pi-share-hf",
+  "storage_format": "jsonl"
+}

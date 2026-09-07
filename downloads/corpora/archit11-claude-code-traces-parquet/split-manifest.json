@@ -1,0 +1,180 @@
+{
+  "analyzer_fingerprint": {
+    "middens_version": "0.0.1-beta.4",
+    "technique_versions": {}
+  },
+  "corpus_fingerprint": {
+    "manifest_hash": "00b6661b2848ea3e5cf6925a96cd63f1b25848f373e59c48f44283c76b5722b7",
+    "session_count": 25,
+    "short": "00b6661b"
+  },
+  "created_at": "2026-06-08T08:25:21.372218742Z",
+  "run_id": "run-019ea656-1abd-760a-9b85-a71fd985c648",
+  "strata": [
+    {
+      "manifest_ref": "interactive/manifest.json",
+      "name": "interactive",
+      "session_count": 5
+    },
+    {
+      "manifest_ref": "subagent/manifest.json",
+      "name": "subagent",
+      "session_count": 19
+    },
+    {
+      "manifest_ref": "autonomous/manifest.json",
+      "name": "autonomous",
+      "session_count": 1
+    }
+  ],
+  "stratum_statuses": {
+    "autonomous": {
+      "counts": {
+        "completed": 6,
+        "errored": 0,
+        "total": 6
+      },
+      "manifest_available": true,
+      "manifest_session_count": 25,
+      "session_count": 1,
+      "session_count_matches_manifest": false,
+      "techniques": {
+        "burstiness": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "correction-rate": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 1,
+          "version": "0.0.1-beta.4"
+        },
+        "diversity": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 1,
+          "version": "0.0.1-beta.4"
+        },
+        "entropy": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "markov": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "thinking-divergence": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        }
+      }
+    },
+    "interactive": {
+      "counts": {
+        "completed": 6,
+        "errored": 0,
+        "total": 6
+      },
+      "manifest_available": true,
+      "manifest_session_count": 25,
+      "session_count": 5,
+      "session_count_matches_manifest": false,
+      "techniques": {
+        "burstiness": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "correction-rate": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 5,
+          "version": "0.0.1-beta.4"
+        },
+        "diversity": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 5,
+          "version": "0.0.1-beta.4"
+        },
+        "entropy": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "markov": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "thinking-divergence": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        }
+      }
+    },
+    "subagent": {
+      "counts": {
+        "completed": 6,
+        "errored": 0,
+        "total": 6
+      },
+      "manifest_available": true,
+      "manifest_session_count": 25,
+      "session_count": 19,
+      "session_count_matches_manifest": false,
+      "techniques": {
+        "burstiness": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 5,
+          "version": "0.0.1-beta.4"
+        },
+        "correction-rate": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 19,
+          "version": "0.0.1-beta.4"
+        },
+        "diversity": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 19,
+          "version": "0.0.1-beta.4"
+        },
+        "entropy": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "markov": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 5,
+          "version": "0.0.1-beta.4"
+        },
+        "thinking-divergence": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        }
+      }
+    }
+  },
+  "techniques": []
+}

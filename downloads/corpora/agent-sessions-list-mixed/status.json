@@ -1,0 +1,25 @@
+{
+  "corpus_id": "agent-sessions-list-mixed",
+  "fingerprints": {
+    "corpus": "c2ab24ce53838335f6a3db328df98f1d41847174f69ca55e858dc99f47b90264",
+    "interpretation": "c925a6709399095d27c37dd4e9860f8e97aca7468f45d04f1345f1d6fbf166f1",
+    "process": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+  },
+  "outputs": [
+    "corpus.json",
+    "analysis-manifest.json",
+    "split-manifest.json",
+    "metrics.json",
+    "fingerprints.json",
+    "status.json"
+  ],
+  "schema_version": 1,
+  "status": "ok",
+  "warnings": [
+    "autonomous_axis_empty: no autonomous sessions in split output",
+    "language_axis_unavailable: current metrics are not gated by detected language",
+    "redacted unsafe value shape for smith-waterman.top_struggle_motif",
+    "split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,interactive,subagent",
+    "tiny_n: fewer than 30 parsed sessions; aggregate findings are smoke-test evidence only"
+  ]
+}

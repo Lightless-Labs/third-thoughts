@@ -1,0 +1,164 @@
+{
+  "corpora": [
+    {
+      "dataset_repo": "aaaaliou/pi-mono",
+      "dataset_revision": "61eee21d662f8736ace59507fc30555e1bff5c6e",
+      "duplicate_family": "pi-mono-family",
+      "estimated_parse_errors": 0,
+      "id": "aaaaliou-pi-mono",
+      "materialized_jsonl_files": 145,
+      "normalizer": null,
+      "session_count": 145,
+      "source": "other=pi-share-hf",
+      "storage_format": "jsonl",
+      "strata": {
+        "autonomous": 0,
+        "interactive": 145,
+        "subagent": 0
+      },
+      "warning_codes": [
+        "autonomous_axis_empty",
+        "duplicate_shape_possible",
+        "language_axis_unavailable",
+        "split_manifest_count_mismatch"
+      ]
+    },
+    {
+      "dataset_repo": "cfahlgren1/agent-sessions-list",
+      "dataset_revision": "10d6d295cb79a11194cfd93f0e9752b76889fbba",
+      "duplicate_family": null,
+      "estimated_parse_errors": 0,
+      "id": "agent-sessions-list-mixed",
+      "materialized_jsonl_files": 7,
+      "normalizer": null,
+      "session_count": 7,
+      "source": "seed",
+      "storage_format": "jsonl",
+      "strata": {
+        "autonomous": 0,
+        "interactive": 5,
+        "subagent": 2
+      },
+      "warning_codes": [
+        "autonomous_axis_empty",
+        "language_axis_unavailable",
+        "redacted unsafe value shape for smith-waterman.top_struggle_motif",
+        "split_manifest_count_mismatch",
+        "tiny_n"
+      ]
+    },
+    {
+      "dataset_repo": "archit11/claude-code-traces",
+      "dataset_revision": "416248040ba2c706c475bba238782c3e334fd4d8",
+      "duplicate_family": null,
+      "estimated_parse_errors": 0,
+      "id": "archit11-claude-code-traces-parquet",
+      "materialized_jsonl_files": 25,
+      "normalizer": "claude_trace_parquet_request_response_row_v1",
+      "session_count": 25,
+      "source": "seed/claude-code-search",
+      "storage_format": "parquet_trace_rows",
+      "strata": {
+        "autonomous": 1,
+        "interactive": 5,
+        "subagent": 19
+      },
+      "warning_codes": [
+        "autonomous_axis_tiny",
+        "language_axis_unavailable",
+        "redacted unsafe value shape for corpus-timeline.date_range_max",
+        "redacted unsafe value shape for corpus-timeline.date_range_min",
+        "redacted unsafe value shape for corpus-timeline.peak_day",
+        "redacted unsafe value shape for ena-analysis.strongest_high_correction_edge",
+        "redacted unsafe value shape for ena-analysis.strongest_low_correction_edge",
+        "redacted unsafe value shape for smith-waterman.top_struggle_motif",
+        "redacted unsafe value shape for smith-waterman.top_success_motif",
+        "split_manifest_count_mismatch",
+        "tiny_n"
+      ]
+    },
+    {
+      "dataset_repo": "badlogicgames/pi-mono",
+      "dataset_revision": "dac2a1d3ba12dda597b973a791a77618ccb5f413",
+      "duplicate_family": "pi-mono-family",
+      "estimated_parse_errors": 0,
+      "id": "badlogicgames-pi-mono",
+      "materialized_jsonl_files": 626,
+      "normalizer": null,
+      "session_count": 626,
+      "source": "seed/pi-share-hf",
+      "storage_format": "jsonl",
+      "strata": {
+        "autonomous": 0,
+        "interactive": 626,
+        "subagent": 0
+      },
+      "warning_codes": [
+        "autonomous_axis_empty",
+        "duplicate_shape_possible",
+        "language_axis_unavailable",
+        "split_manifest_count_mismatch"
+      ]
+    },
+    {
+      "dataset_repo": "armand0e/kimi-k2.6-claude-code-traces",
+      "dataset_revision": "1f02263eb3c1d41f9d7b264baf56a09063a67963",
+      "duplicate_family": null,
+      "estimated_parse_errors": 0,
+      "id": "kimi-claude-code-traces-jsonl",
+      "materialized_jsonl_files": 36,
+      "normalizer": null,
+      "session_count": 36,
+      "source": "search=claude code",
+      "storage_format": "jsonl",
+      "strata": {
+        "autonomous": 0,
+        "interactive": 2,
+        "subagent": 34
+      },
+      "warning_codes": [
+        "autonomous_axis_empty",
+        "language_axis_unavailable",
+        "redacted unsafe value shape for ena-analysis.strongest_high_correction_edge",
+        "redacted unsafe value shape for ena-analysis.strongest_low_correction_edge",
+        "split_manifest_count_mismatch"
+      ]
+    },
+    {
+      "dataset_repo": "thomasmustier/pi-for-excel-sessions",
+      "dataset_revision": "1b7218d2acf621e52bb5208435b1f80154342e3f",
+      "duplicate_family": null,
+      "estimated_parse_errors": 0,
+      "id": "thomasmustier-pi-for-excel",
+      "materialized_jsonl_files": 161,
+      "normalizer": null,
+      "session_count": 161,
+      "source": "other=pi-share-hf",
+      "storage_format": "jsonl",
+      "strata": {
+        "autonomous": 0,
+        "interactive": 161,
+        "subagent": 0
+      },
+      "warning_codes": [
+        "autonomous_axis_empty",
+        "language_axis_unavailable",
+        "split_manifest_count_mismatch"
+      ]
+    }
+  ],
+  "corpus_count": 6,
+  "duplicate_families": {
+    "pi-mono-family": [
+      "aaaaliou-pi-mono",
+      "badlogicgames-pi-mono"
+    ]
+  },
+  "schema_version": 1,
+  "stratum_totals": {
+    "autonomous": 1,
+    "interactive": 944,
+    "subagent": 55
+  },
+  "total_sessions": 1000
+}
