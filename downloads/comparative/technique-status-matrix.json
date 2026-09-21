@@ -1,0 +1,944 @@
+{
+  "corpora": [
+    "aaaaliou-pi-mono",
+    "agent-sessions-list-mixed",
+    "archit11-claude-code-traces-parquet",
+    "badlogicgames-pi-mono",
+    "kimi-claude-code-traces-jsonl",
+    "thomasmustier-pi-for-excel"
+  ],
+  "counts_by_corpus": {
+    "aaaaliou-pi-mono": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    },
+    "agent-sessions-list-mixed": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    },
+    "archit11-claude-code-traces-parquet": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    },
+    "badlogicgames-pi-mono": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    },
+    "kimi-claude-code-traces-jsonl": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    },
+    "thomasmustier-pi-for-excel": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    }
+  },
+  "matrix": {
+    "burstiness": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 26,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 11,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 13,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 11,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "change-point-detection": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "convention-epidemiology": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 10,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": null,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 9,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 10,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 10,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "corpus-timeline": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 47,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 69,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 2,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 17,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "correction-rate": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 145,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 25,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 626,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 36,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 161,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "cross-project-graph": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "diversity": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 145,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 25,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 626,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 36,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 161,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "ena-analysis": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "entropy": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 73,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 1,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 296,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 26,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 143,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "granger-causality": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": null,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 12,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "hsmm": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": null,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "information-foraging": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "lag-sequential": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "markov": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 30,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 12,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 13,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 12,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "ncd-clustering": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "prefixspan-mining": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "process-mining": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "smith-waterman": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 18,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "spc-control-charts": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": null,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "survival-analysis": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 11,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": null,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": null,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 14,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 32,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 17,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "thinking-divergence": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 122,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 555,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 36,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 158,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "tpattern-detection": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 2,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 2,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 16,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "user-signal-analysis": {
+      "aaaaliou-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "agent-sessions-list-mixed": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "archit11-claude-code-traces-parquet": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "badlogicgames-pi-mono": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "kimi-claude-code-traces-jsonl": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      },
+      "thomasmustier-pi-for-excel": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      }
+    }
+  },
+  "schema_version": 1,
+  "techniques": [
+    "burstiness",
+    "change-point-detection",
+    "convention-epidemiology",
+    "corpus-timeline",
+    "correction-rate",
+    "cross-project-graph",
+    "diversity",
+    "ena-analysis",
+    "entropy",
+    "granger-causality",
+    "hsmm",
+    "information-foraging",
+    "lag-sequential",
+    "markov",
+    "ncd-clustering",
+    "prefixspan-mining",
+    "process-mining",
+    "smith-waterman",
+    "spc-control-charts",
+    "survival-analysis",
+    "thinking-divergence",
+    "tpattern-detection",
+    "user-signal-analysis"
+  ]
+}

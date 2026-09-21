@@ -1,0 +1,25 @@
+{
+  "analysis_enabled": true,
+  "ci_tiers": [
+    "smoke",
+    "representative",
+    "full"
+  ],
+  "dataset_repo": "cfahlgren1/agent-sessions-list",
+  "dataset_revision": "10d6d295cb79a11194cfd93f0e9752b76889fbba",
+  "description": "Small mixed-source sanity cohort: Claude Code, Codex, and Pi coding-agent sessions.",
+  "expected_min_jsonl_files": 7,
+  "expected_min_sessions": 7,
+  "id": "agent-sessions-list-mixed",
+  "interpret_enabled": true,
+  "materialization": {
+    "available": true,
+    "jsonl_files": 7,
+    "normalizer": null,
+    "object_count": 7,
+    "object_hash_fingerprint": "eb924d7cdabdca160f47ae57c7e6aaa7ed76ae8ac29896903c03c6e61b11818e"
+  },
+  "publish_enabled": true,
+  "source": "seed",
+  "storage_format": "jsonl"
+}

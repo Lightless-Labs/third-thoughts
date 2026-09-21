@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Methodology — Third Thoughts</title>
+    <meta name="description" content="How the public corpus results site is generated safely.">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="wordmark" href="../index.html">Third Thoughts</a>
+        <nav class="nav" aria-label="Primary">
+          <a href="../index.html">Home</a>
+<a href="../corpora/index.html">Corpora</a>
+<a href="../comparative/index.html">Comparative</a>
+<a href="../methodology/index.html" aria-current="page">Methodology</a>
+<a href="../downloads/index.html">Downloads</a>
+<a href="https://github.com/Lightless-Labs/third-thoughts">GitHub</a>
+        </nav>
+      </header>
+      
+      <section class="hero compact">
+        <div class="eyebrow">Methodology</div>
+        <h1>Curated aggregates in, static HTML out.</h1>
+        <p class="lede">The site is generated from Phase 1 `site-data` bundles, not from raw transcripts or arbitrary technique tables.</p>
+      </section>
+      <section class="section two-col">
+        <article class="panel">
+          <h2>What gets published</h2>
+          <ul>
+            <li>Public corpus provenance and pinned dataset revisions.</li>
+            <li>Session and split-stratum counts.</li>
+            <li>Technique completion/error status for up to 23 techniques.</li>
+            <li>A fixed allowlist of aggregate findings.</li>
+            <li>Warnings for tiny cohorts, empty autonomous axes, language-axis gaps, and duplicate-shaped corpus families.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <h2>What does not</h2>
+          <ul>
+            <li>Raw transcripts, prompts, assistant messages, thinking text, or tool payloads.</li>
+            <li>Raw per-session tables, session ids, project names, or source paths.</li>
+            <li>Notebook artifacts unless a later phase explicitly allowlists them.</li>
+          </ul>
+        </article>
+      </section>
+      <section class="section panel">
+        <h2>Current caveats</h2>
+        <p>The compound scoping rule still applies: findings should be scoped by session type, thinking visibility, language, and time window. This first generated site shows deterministic corpus-level metrics; it is not yet the LLM interpretation layer and it is not a substitute for methodology review.</p>
+      </section>
+      <section class="section table-wrap"><h2>Reuse fingerprints</h2><p>Each corpus bundle records corpus, process, and interpretation fingerprints. CI can reuse a previous public-safe bundle when the corpus and process fingerprints match; manual force runs can still rerun the whole thing when humans are feeling suspicious.</p><table class="metric-table"><thead><tr><th>Corpus</th><th>Corpus</th><th>Process</th><th>Interpretation</th></tr></thead><tbody><tr><th>aaaaliou-pi-mono</th><td><code>ff814ca3b9c2</code></td><td><code>f6c9db663af5</code></td><td><code>da8053649945</code></td></tr><tr><th>agent-sessions-list-mixed</th><td><code>c2ab24ce5383</code></td><td><code>f6c9db663af5</code></td><td><code>c925a6709399</code></td></tr><tr><th>archit11-claude-code-traces-parquet</th><td><code>029f848b0657</code></td><td><code>f6c9db663af5</code></td><td><code>eb3e6038631f</code></td></tr><tr><th>badlogicgames-pi-mono</th><td><code>33907011ee69</code></td><td><code>f6c9db663af5</code></td><td><code>da4fcf98b416</code></td></tr><tr><th>kimi-claude-code-traces-jsonl</th><td><code>e1c34b9c0f9c</code></td><td><code>f6c9db663af5</code></td><td><code>dd3e2e7a4530</code></td></tr><tr><th>thomasmustier-pi-for-excel</th><td><code>bb25f602216e</code></td><td><code>f6c9db663af5</code></td><td><code>2ab29f19474b</code></td></tr></tbody></table></section>
+    
+    </main>
+  </body>
+</html>

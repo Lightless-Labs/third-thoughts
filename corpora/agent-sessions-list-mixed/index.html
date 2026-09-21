@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>agent-sessions-list-mixed — Third Thoughts</title>
+    <meta name="description" content="Public-safe metrics for agent-sessions-list-mixed.">
+    <link rel="stylesheet" href="../../assets/style.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="wordmark" href="../../index.html">Third Thoughts</a>
+        <nav class="nav" aria-label="Primary">
+          <a href="../../index.html">Home</a>
+<a href="../../corpora/index.html" aria-current="page">Corpora</a>
+<a href="../../comparative/index.html">Comparative</a>
+<a href="../../methodology/index.html">Methodology</a>
+<a href="../../downloads/index.html">Downloads</a>
+<a href="https://github.com/Lightless-Labs/third-thoughts">GitHub</a>
+        </nav>
+      </header>
+      
+      <section class="hero compact">
+        <div class="eyebrow">Corpus · jsonl</div>
+        <h1>agent-sessions-list-mixed</h1>
+        <p class="lede">Small mixed-source sanity cohort: Claude Code, Codex, and Pi coding-agent sessions.</p>
+      </section>
+      <section class="section">
+        <div class="stats-row">
+          <div class="stat"><span>7</span><small>parsed sessions</small></div>
+          <div class="stat"><span>5</span><small>interactive</small></div>
+          <div class="stat"><span>2</span><small>subagent</small></div>
+          <div class="stat"><span>0</span><small>autonomous</small></div>
+        </div>
+      </section>
+      <section class="section two-col">
+        <article class="panel">
+          <h2>Provenance</h2>
+          <dl class="kv">
+            <div><dt>Dataset</dt><dd>cfahlgren1/agent-sessions-list</dd></div>
+            <div><dt>Revision</dt><dd><code>10d6d295cb79a11194cfd93f0e9752b76889fbba</code></dd></div>
+            <div><dt>Source</dt><dd>seed</dd></div>
+            <div><dt>Normalizer</dt><dd>—</dd></div>
+            <div><dt>Estimated parse errors</dt><dd>0</dd></div>
+          </dl>
+        </article>
+        <article class="panel">
+          <h2>Caveats</h2>
+          <ul class="warnings"><li>autonomous_axis_empty: no autonomous sessions in split output</li><li>language_axis_unavailable: current metrics are not gated by detected language</li><li>redacted unsafe value shape for smith-waterman.top_struggle_motif</li><li>split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,interactive,subagent</li><li>tiny_n: fewer than 30 parsed sessions; aggregate findings are smoke-test evidence only</li></ul>
+        </article>
+      </section>
+      <section class="section">
+        <h2>Key metrics</h2>
+        <table class="metric-table"><thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead><tbody><tr><th>Risk suppression</th><td>98.24%</td><td>defined</td></tr><tr><th>Thinking/text divergence</th><td>1.582</td><td>defined</td></tr><tr><th>Correction mean</th><td>16.13%</td><td>defined</td></tr><tr><th>First-third correction</th><td>15.71%</td><td>defined</td></tr><tr><th>Last-third correction</th><td>1.30%</td><td>defined</td></tr><tr><th>MVT compliance</th><td>0.00%</td><td>defined</td></tr><tr><th>HSMM pre-correction lift</th><td>—</td><td>undefined</td></tr><tr><th>Tool entropy</th><td>0.9493</td><td>defined</td></tr><tr><th>ENA top code</th><td>EVIDENCE_SEEK</td><td>defined</td></tr></tbody></table>
+      </section>
+      <section class="section">
+        <h2>Technique status</h2>
+        <table class="metric-table compact-table"><thead><tr><th>Technique</th><th>Status</th><th>Rows</th><th>Version</th></tr></thead><tbody><tr><th>burstiness</th><td>completed</td><td>7</td><td>0.0.1-beta.4</td></tr><tr><th>change-point-detection</th><td>completed</td><td>0</td><td>0.0.1-beta.4</td></tr><tr><th>convention-epidemiology</th><td>completed</td><td>—</td><td>0.0.1-beta.4</td></tr><tr><th>corpus-timeline</th><td>completed</td><td>5</td><td>0.0.1-beta.4</td></tr><tr><th>correction-rate</th><td>completed</td><td>7</td><td>0.0.1-beta.4</td></tr><tr><th>cross-project-graph</th><td>completed</td><td>0</td><td>0.0.1-beta.4</td></tr><tr><th>diversity</th><td>completed</td><td>7</td><td>0.0.1-beta.4</td></tr><tr><th>ena-analysis</th><td>completed</td><td>7</td><td>0.0.1-beta.4</td></tr><tr><th>entropy</th><td>completed</td><td>1</td><td>0.0.1-beta.4</td></tr><tr><th>granger-causality</th><td>completed</td><td>20</td><td>0.0.1-beta.4</td></tr><tr><th>hsmm</th><td>completed</td><td>—</td><td>0.0.1-beta.4</td></tr><tr><th>information-foraging</th><td>completed</td><td>8</td><td>0.0.1-beta.4</td></tr><tr><th>lag-sequential</th><td>completed</td><td>20</td><td>0.0.1-beta.4</td></tr><tr><th>markov</th><td>completed</td><td>7</td><td>0.0.1-beta.4</td></tr><tr><th>ncd-clustering</th><td>completed</td><td>3</td><td>0.0.1-beta.4</td></tr><tr><th>prefixspan-mining</th><td>completed</td><td>20</td><td>0.0.1-beta.4</td></tr><tr><th>process-mining</th><td>completed</td><td>6</td><td>0.0.1-beta.4</td></tr><tr><th>smith-waterman</th><td>completed</td><td>4</td><td>0.0.1-beta.4</td></tr><tr><th>spc-control-charts</th><td>completed</td><td>—</td><td>0.0.1-beta.4</td></tr><tr><th>survival-analysis</th><td>completed</td><td>—</td><td>0.0.1-beta.4</td></tr><tr><th>thinking-divergence</th><td>completed</td><td>4</td><td>0.0.1-beta.4</td></tr><tr><th>tpattern-detection</th><td>completed</td><td>2</td><td>0.0.1-beta.4</td></tr><tr><th>user-signal-analysis</th><td>completed</td><td>6</td><td>0.0.1-beta.4</td></tr></tbody></table>
+      </section>
+      
+      <section class="section"><p><a href="../../downloads/corpora/agent-sessions-list-mixed/metrics.json">Download the public-safe metrics JSON</a></p></section>
+    
+    </main>
+  </body>
+</html>

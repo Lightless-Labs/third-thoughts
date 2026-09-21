@@ -1,0 +1,31 @@
+{
+  "corpus_id": "archit11-claude-code-traces-parquet",
+  "fingerprints": {
+    "corpus": "029f848b06570a99203427b40de5885566508b9f9ffe9b1bbcf8acf44ae08fa0",
+    "interpretation": "eb3e6038631f6bb351fc554165e0a6abaf52c1134fe66c3456ac061c1821e44d",
+    "process": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+  },
+  "outputs": [
+    "corpus.json",
+    "analysis-manifest.json",
+    "split-manifest.json",
+    "metrics.json",
+    "fingerprints.json",
+    "status.json"
+  ],
+  "schema_version": 1,
+  "status": "ok",
+  "warnings": [
+    "autonomous_axis_tiny: fewer than 10 autonomous sessions; do not make autonomous-loop behavior claims",
+    "language_axis_unavailable: current metrics are not gated by detected language",
+    "redacted unsafe value shape for corpus-timeline.date_range_max",
+    "redacted unsafe value shape for corpus-timeline.date_range_min",
+    "redacted unsafe value shape for corpus-timeline.peak_day",
+    "redacted unsafe value shape for ena-analysis.strongest_high_correction_edge",
+    "redacted unsafe value shape for ena-analysis.strongest_low_correction_edge",
+    "redacted unsafe value shape for smith-waterman.top_struggle_motif",
+    "redacted unsafe value shape for smith-waterman.top_success_motif",
+    "split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,interactive,subagent",
+    "tiny_n: fewer than 30 parsed sessions; aggregate findings are smoke-test evidence only"
+  ]
+}

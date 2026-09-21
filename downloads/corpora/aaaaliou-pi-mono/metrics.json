@@ -1,0 +1,1165 @@
+{
+  "corpus": {
+    "dataset_repo": "aaaaliou/pi-mono",
+    "dataset_revision": "61eee21d662f8736ace59507fc30555e1bff5c6e",
+    "id": "aaaaliou-pi-mono",
+    "normalizer": null,
+    "source": "other=pi-share-hf",
+    "storage_format": "jsonl"
+  },
+  "schema_version": 1,
+  "session_counts": {
+    "analysis": 145,
+    "by_stratum": {
+      "autonomous": 0,
+      "interactive": 145,
+      "subagent": 0
+    },
+    "estimated_parse_errors": 0,
+    "materialized_jsonl_files": 145
+  },
+  "technique_status": {
+    "counts": {
+      "completed": 23,
+      "errored": 0,
+      "total": 23
+    },
+    "techniques": {
+      "burstiness": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 26,
+        "version": "0.0.1-beta.4"
+      },
+      "change-point-detection": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "convention-epidemiology": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 10,
+        "version": "0.0.1-beta.4"
+      },
+      "corpus-timeline": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 47,
+        "version": "0.0.1-beta.4"
+      },
+      "correction-rate": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 145,
+        "version": "0.0.1-beta.4"
+      },
+      "cross-project-graph": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      },
+      "diversity": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 145,
+        "version": "0.0.1-beta.4"
+      },
+      "ena-analysis": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      },
+      "entropy": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 73,
+        "version": "0.0.1-beta.4"
+      },
+      "granger-causality": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "hsmm": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "information-foraging": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      },
+      "lag-sequential": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      },
+      "markov": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 30,
+        "version": "0.0.1-beta.4"
+      },
+      "ncd-clustering": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "prefixspan-mining": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      },
+      "process-mining": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      },
+      "smith-waterman": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 18,
+        "version": "0.0.1-beta.4"
+      },
+      "spc-control-charts": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      },
+      "survival-analysis": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 11,
+        "version": "0.0.1-beta.4"
+      },
+      "thinking-divergence": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 122,
+        "version": "0.0.1-beta.4"
+      },
+      "tpattern-detection": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      },
+      "user-signal-analysis": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      }
+    }
+  },
+  "technique_status_by_stratum": {
+    "autonomous": {
+      "counts": {
+        "completed": 6,
+        "errored": 0,
+        "total": 6
+      },
+      "manifest_available": true,
+      "manifest_session_count": 145,
+      "session_count": 0,
+      "session_count_matches_manifest": false,
+      "techniques": {
+        "burstiness": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "correction-rate": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "diversity": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "entropy": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "markov": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "thinking-divergence": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        }
+      }
+    },
+    "interactive": {
+      "counts": {
+        "completed": 6,
+        "errored": 0,
+        "total": 6
+      },
+      "manifest_available": true,
+      "manifest_session_count": 145,
+      "session_count": 145,
+      "session_count_matches_manifest": true,
+      "techniques": {
+        "burstiness": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 26,
+          "version": "0.0.1-beta.4"
+        },
+        "correction-rate": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 145,
+          "version": "0.0.1-beta.4"
+        },
+        "diversity": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 145,
+          "version": "0.0.1-beta.4"
+        },
+        "entropy": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 73,
+          "version": "0.0.1-beta.4"
+        },
+        "markov": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 30,
+          "version": "0.0.1-beta.4"
+        },
+        "thinking-divergence": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 122,
+          "version": "0.0.1-beta.4"
+        }
+      }
+    },
+    "subagent": {
+      "counts": {
+        "completed": 6,
+        "errored": 0,
+        "total": 6
+      },
+      "manifest_available": true,
+      "manifest_session_count": 145,
+      "session_count": 0,
+      "session_count_matches_manifest": false,
+      "techniques": {
+        "burstiness": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "correction-rate": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "diversity": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "entropy": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        },
+        "markov": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": null,
+          "version": "0.0.1-beta.4"
+        },
+        "thinking-divergence": {
+          "error_count": 0,
+          "status": "completed",
+          "table_row_count": 0,
+          "version": "0.0.1-beta.4"
+        }
+      }
+    }
+  },
+  "techniques": {
+    "burstiness": {
+      "findings": {
+        "aggregate_burstiness": {
+          "status": "defined",
+          "value": 0.4306
+        },
+        "aggregate_memory": {
+          "status": "defined",
+          "value": 0.0483
+        },
+        "tools_analyzed": {
+          "status": "defined",
+          "value": 26
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 26,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "change-point-detection": {
+      "findings": {
+        "change_points_correction_flag": {
+          "status": "defined",
+          "value": 0
+        },
+        "change_points_tool_call_rate": {
+          "status": "defined",
+          "value": 0
+        },
+        "change_points_tool_diversity": {
+          "status": "defined",
+          "value": 0
+        },
+        "change_points_user_msg_length": {
+          "status": "defined",
+          "value": 0
+        },
+        "mean_change_points_per_session": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 84
+        },
+        "total_change_points": {
+          "status": "defined",
+          "value": 0
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "convention-epidemiology": {
+      "findings": {
+        "conventions_detected": {
+          "status": "defined",
+          "value": 28
+        },
+        "conventions_fitted": {
+          "status": "defined",
+          "value": 28
+        },
+        "cross_project_conventions": {
+          "status": "defined",
+          "value": 0
+        },
+        "epidemic_conventions": {
+          "status": "defined",
+          "value": 3
+        },
+        "mean_inter_project_latency_days": {
+          "status": "defined",
+          "value": null
+        },
+        "projects_detected": {
+          "status": "defined",
+          "value": 2
+        },
+        "radial_conventions": {
+          "status": "defined",
+          "value": 0
+        },
+        "sequential_conventions": {
+          "status": "defined",
+          "value": 0
+        },
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 145
+        },
+        "sessions_without_cwd": {
+          "status": "defined",
+          "value": 0
+        },
+        "top_convention_r0": {
+          "status": "defined",
+          "value": null
+        },
+        "top_convention_r2": {
+          "status": "defined",
+          "value": 0.9976
+        },
+        "top_cross_project_reach": {
+          "status": "defined",
+          "value": null
+        },
+        "ubiquitous_conventions": {
+          "status": "defined",
+          "value": 0
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 10,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "corpus-timeline": {
+      "findings": {
+        "date_range_max": {
+          "status": "defined",
+          "value": "2026-05-12"
+        },
+        "date_range_min": {
+          "status": "defined",
+          "value": "2026-03-01"
+        },
+        "high_concurrency_day_count": {
+          "status": "defined",
+          "value": 0
+        },
+        "peak_day": {
+          "status": "defined",
+          "value": "2026-03-07"
+        },
+        "total_dates": {
+          "status": "defined",
+          "value": 47
+        },
+        "total_projects": {
+          "status": "defined",
+          "value": 1
+        },
+        "total_sessions": {
+          "status": "defined",
+          "value": 145
+        },
+        "undated_sessions": {
+          "status": "defined",
+          "value": 0
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 47,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "correction-rate": {
+      "findings": {
+        "first_third_rate": {
+          "status": "defined",
+          "value": 0.19972906403940885
+        },
+        "last_third_rate": {
+          "status": "defined",
+          "value": 0.1412452107279693
+        },
+        "mean_degradation_ratio": {
+          "status": "defined",
+          "value": 0.18044788975021533
+        },
+        "middle_third_rate": {
+          "status": "defined",
+          "value": 0.10334975369458128
+        },
+        "overall_mean_rate": {
+          "status": "defined",
+          "value": 0.17774643916963875
+        },
+        "overall_median_rate": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "sessions_with_corrections": {
+          "status": "defined",
+          "value": "67/145"
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 145,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "cross-project-graph": {
+      "findings": {
+        "cluster_count": {
+          "status": "defined",
+          "value": 0
+        },
+        "mutual_pair_count": {
+          "status": "defined",
+          "value": 0
+        },
+        "total_edges": {
+          "status": "defined",
+          "value": 0
+        },
+        "total_projects": {
+          "status": "defined",
+          "value": 0
+        },
+        "total_references": {
+          "status": "defined",
+          "value": 0
+        },
+        "total_sessions": {
+          "status": "defined",
+          "value": 0
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 0,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "diversity": {
+      "findings": {
+        "mean_evenness": {
+          "status": "defined",
+          "value": 0.6192944956330129
+        },
+        "mean_shannon": {
+          "status": "defined",
+          "value": 0.8934755492291887
+        },
+        "mean_simpson": {
+          "status": "defined",
+          "value": 0.47611016758030805
+        },
+        "median_shannon": {
+          "status": "defined",
+          "value": 1.0397207708399179
+        },
+        "monoculture_count": {
+          "status": "defined",
+          "value": 30
+        },
+        "monoculture_fraction": {
+          "status": "defined",
+          "value": 0.20689655172413793
+        },
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 145
+        },
+        "species_area_r_squared": {
+          "status": "defined",
+          "value": 0.7147817949997666
+        },
+        "species_area_z": {
+          "status": "defined",
+          "value": 0.4430040489669321
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 145,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "ena-analysis": {
+      "findings": {
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 138
+        },
+        "strongest_high_correction_edge": {
+          "status": "defined",
+          "value": "EVIDENCE_SEEK\u2194TOOL_USE"
+        },
+        "strongest_low_correction_edge": {
+          "status": "defined",
+          "value": "EVIDENCE_SEEK\u2194TOOL_USE"
+        },
+        "top_code": {
+          "status": "defined",
+          "value": "TOOL_USE"
+        },
+        "top_code_centrality": {
+          "status": "defined",
+          "value": 0.215
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 7,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "entropy": {
+      "findings": {
+        "anomaly_count": {
+          "status": "defined",
+          "value": 91
+        },
+        "high_entropy_anomalies": {
+          "status": "defined",
+          "value": 25
+        },
+        "low_entropy_anomalies": {
+          "status": "defined",
+          "value": 66
+        },
+        "low_high_ratio": {
+          "status": "defined",
+          "value": 2.64
+        },
+        "mean_entropy": {
+          "status": "defined",
+          "value": 1.0108946811738455
+        },
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 73
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 73,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "granger-causality": {
+      "findings": {
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 58
+        },
+        "significant_pairs": {
+          "status": "defined",
+          "value": 8
+        },
+        "strongest_pair_p": {
+          "status": "defined",
+          "value": 1.6823494277968516e-79
+        },
+        "thinking_causes_correction": {
+          "status": "defined",
+          "value": true
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "hsmm": {
+      "findings": {
+        "dominant_pre_correction_state": {
+          "status": "defined",
+          "value": 4
+        },
+        "mean_state_duration_executing": {
+          "status": "defined",
+          "value": 1.8261603375527429
+        },
+        "mean_state_duration_exploring": {
+          "status": "defined",
+          "value": 2.6104328523862375
+        },
+        "optimal_n_states": {
+          "status": "defined",
+          "value": 5
+        },
+        "pre_correction_lift": {
+          "status": "defined",
+          "value": 1.714869917432622
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "information-foraging": {
+      "findings": {
+        "explore_exploit_ratio": {
+          "status": "defined",
+          "value": 2.355902950149482
+        },
+        "high_correction_foraging_time": {
+          "status": "defined",
+          "value": 1.6530389142720587
+        },
+        "low_correction_foraging_time": {
+          "status": "defined",
+          "value": 0
+        },
+        "mean_foraging_efficiency": {
+          "status": "defined",
+          "value": 0.05362141028607177
+        },
+        "mean_patches_per_session": {
+          "status": "defined",
+          "value": 5.3023255813953485
+        },
+        "mean_residence_time": {
+          "status": "defined",
+          "value": 1.6530389142720587
+        },
+        "mvt_compliance_rate": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "patch_revisit_rate": {
+          "status": "defined",
+          "value": 0.3240159393504484
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 8,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "lag-sequential": {
+      "findings": {
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 70
+        },
+        "significant_transitions_lag1": {
+          "status": "defined",
+          "value": 16
+        },
+        "significant_transitions_lag2": {
+          "status": "defined",
+          "value": 11
+        },
+        "significant_transitions_lag3": {
+          "status": "defined",
+          "value": 4
+        },
+        "top_negative_transition": {
+          "status": "defined",
+          "value": "AT\u2192AK (lag=1, z=-38.8)"
+        },
+        "top_positive_transition": {
+          "status": "defined",
+          "value": "AK\u2192AK (lag=2, z=32.0)"
+        },
+        "total_events": {
+          "status": "defined",
+          "value": 4554
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 20,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "markov": {
+      "findings": {
+        "total_bigrams": {
+          "status": "defined",
+          "value": 4559
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 30,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "ncd-clustering": {
+      "findings": {
+        "largest_cluster_size": {
+          "status": "defined",
+          "value": 41
+        },
+        "optimal_k": {
+          "status": "defined",
+          "value": 3
+        },
+        "sessions_in_sample": {
+          "status": "defined",
+          "value": 50
+        },
+        "sessions_skipped": {
+          "status": "defined",
+          "value": 23
+        },
+        "silhouette_score": {
+          "status": "defined",
+          "value": 0.2258
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "prefixspan-mining": {
+      "findings": {
+        "high_correction_sessions": {
+          "status": "defined",
+          "value": 47
+        },
+        "low_correction_sessions": {
+          "status": "defined",
+          "value": 74
+        },
+        "min_support_threshold": {
+          "status": "defined",
+          "value": 21
+        },
+        "patterns_length_3": {
+          "status": "defined",
+          "value": 15
+        },
+        "patterns_length_4": {
+          "status": "defined",
+          "value": 31
+        },
+        "patterns_length_5": {
+          "status": "defined",
+          "value": 50
+        },
+        "patterns_length_6": {
+          "status": "defined",
+          "value": 48
+        },
+        "sequences_with_tools": {
+          "status": "defined",
+          "value": 140
+        },
+        "struggle_patterns": {
+          "status": "defined",
+          "value": 9
+        },
+        "success_patterns": {
+          "status": "defined",
+          "value": 5
+        },
+        "total_patterns": {
+          "status": "defined",
+          "value": 144
+        },
+        "total_sessions": {
+          "status": "defined",
+          "value": 145
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 50,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "process-mining": {
+      "findings": {
+        "dfg_edges": {
+          "status": "defined",
+          "value": 9
+        },
+        "total_events": {
+          "status": "defined",
+          "value": 9921
+        },
+        "unique_activities": {
+          "status": "defined",
+          "value": 5
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 5,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "smith-waterman": {
+      "findings": {
+        "cluster_count": {
+          "status": "defined",
+          "value": 1
+        },
+        "conserved_motifs_count": {
+          "status": "defined",
+          "value": 18
+        },
+        "mean_alignment_score": {
+          "status": "defined",
+          "value": 0.7904
+        },
+        "top_struggle_motif": {
+          "status": "defined",
+          "value": "BTBTB"
+        },
+        "top_success_motif": {
+          "status": "defined",
+          "value": "BBBBR"
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 18,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "spc-control-charts": {
+      "findings": {
+        "assistant_len_ooc_count": {
+          "status": "defined",
+          "value": 4
+        },
+        "correction_rate_mean": {
+          "status": "defined",
+          "value": 0.2334
+        },
+        "correction_rate_ooc_count": {
+          "status": "defined",
+          "value": 2
+        },
+        "correction_rate_ucl": {
+          "status": "defined",
+          "value": 0.85
+        },
+        "cusum_first_alarm_index": {
+          "status": "defined",
+          "value": 40
+        },
+        "rule2_violations": {
+          "status": "defined",
+          "value": 1
+        },
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 103
+        },
+        "tool_error_rate_ooc_count": {
+          "status": "defined",
+          "value": 4
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 3,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "survival-analysis": {
+      "findings": {
+        "cox_concordance": {
+          "status": "defined",
+          "value": 0.5486096592097011
+        },
+        "hazard_trend": {
+          "status": "defined",
+          "value": "increasing"
+        },
+        "median_survival_turns": {
+          "status": "defined",
+          "value": 3.0
+        },
+        "sessions_censored": {
+          "status": "defined",
+          "value": 78
+        },
+        "sessions_with_correction": {
+          "status": "defined",
+          "value": 67
+        },
+        "survival_at_10": {
+          "status": "defined",
+          "value": 0.0
+        },
+        "survival_at_20": {
+          "status": "defined",
+          "value": 0.0
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 11,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "thinking-divergence": {
+      "findings": {
+        "analyzed_unknown_sessions": {
+          "status": "defined",
+          "value": 0
+        },
+        "analyzed_visible_sessions": {
+          "status": "defined",
+          "value": 122
+        },
+        "divergence_ratio": {
+          "status": "defined",
+          "value": 3.746
+        },
+        "messages_with_both": {
+          "status": "defined",
+          "value": 407
+        },
+        "sessions_analyzed": {
+          "status": "defined",
+          "value": 122
+        },
+        "sessions_with_thinking": {
+          "status": "defined",
+          "value": 122
+        },
+        "skipped_redacted_sessions": {
+          "status": "defined",
+          "value": 0
+        },
+        "suppressed_tokens": {
+          "status": "defined",
+          "value": 1288
+        },
+        "suppression_rate": {
+          "status": "defined",
+          "value": 0.9478
+        },
+        "total_risk_tokens": {
+          "status": "defined",
+          "value": 1359
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 122,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "tpattern-detection": {
+      "findings": {
+        "level_1_patterns": {
+          "status": "defined",
+          "value": 4
+        },
+        "level_2_patterns": {
+          "status": "defined",
+          "value": 4
+        },
+        "most_common_pattern": {
+          "status": "defined",
+          "value": "AK->AK"
+        },
+        "total_events_analyzed": {
+          "status": "defined",
+          "value": 5595
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 4,
+        "version": "0.0.1-beta.4"
+      }
+    },
+    "user-signal-analysis": {
+      "findings": {
+        "approvals": {
+          "status": "defined",
+          "value": 104
+        },
+        "boilerplate_messages": {
+          "status": "defined",
+          "value": 0
+        },
+        "corrections": {
+          "status": "defined",
+          "value": 103
+        },
+        "directives": {
+          "status": "defined",
+          "value": 60
+        },
+        "escalations_found": {
+          "status": "defined",
+          "value": 48
+        },
+        "messages_classified": {
+          "status": "defined",
+          "value": 641
+        },
+        "questions": {
+          "status": "defined",
+          "value": 217
+        },
+        "redirects": {
+          "status": "defined",
+          "value": 33
+        },
+        "skipped_non_english_messages": {
+          "status": "defined",
+          "value": 68
+        },
+        "total_user_messages": {
+          "status": "defined",
+          "value": 709
+        }
+      },
+      "status": {
+        "error_count": 0,
+        "status": "completed",
+        "table_row_count": 6,
+        "version": "0.0.1-beta.4"
+      }
+    }
+  }
+}
