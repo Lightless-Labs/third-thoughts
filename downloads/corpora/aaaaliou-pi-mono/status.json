@@ -1,0 +1,24 @@
+{
+  "corpus_id": "aaaaliou-pi-mono",
+  "fingerprints": {
+    "corpus": "ff814ca3b9c27ecbea33715b58ba141a34782921580af607dd439f16709e5ad2",
+    "interpretation": "da8053649945c27b2c9da7fab1166f1ef98996b64c9b462d14803624a07f4ff7",
+    "process": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+  },
+  "outputs": [
+    "corpus.json",
+    "analysis-manifest.json",
+    "split-manifest.json",
+    "metrics.json",
+    "fingerprints.json",
+    "status.json"
+  ],
+  "schema_version": 1,
+  "status": "ok",
+  "warnings": [
+    "autonomous_axis_empty: no autonomous sessions in split output",
+    "duplicate_shape_possible: pi-mono-family corpora need deduplication before independent-replication claims",
+    "language_axis_unavailable: current metrics are not gated by detected language",
+    "split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,subagent"
+  ]
+}

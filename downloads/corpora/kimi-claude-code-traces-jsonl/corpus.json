@@ -1,0 +1,23 @@
+{
+  "analysis_enabled": true,
+  "ci_tiers": [
+    "full"
+  ],
+  "dataset_repo": "armand0e/kimi-k2.6-claude-code-traces",
+  "dataset_revision": "1f02263eb3c1d41f9d7b264baf56a09063a67963",
+  "description": "Claude-Code-style JSONL trace corpus from the public claude-code search candidates.",
+  "expected_min_jsonl_files": 36,
+  "expected_min_sessions": 30,
+  "id": "kimi-claude-code-traces-jsonl",
+  "interpret_enabled": true,
+  "materialization": {
+    "available": true,
+    "jsonl_files": 36,
+    "normalizer": null,
+    "object_count": 36,
+    "object_hash_fingerprint": "5575d7f852d9cbbf9db7be9ad188a56d175ec9a0222658be1cad76730bb4e2c8"
+  },
+  "publish_enabled": true,
+  "source": "search=claude code",
+  "storage_format": "jsonl"
+}

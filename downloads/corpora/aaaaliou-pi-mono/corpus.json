@@ -1,0 +1,23 @@
+{
+  "analysis_enabled": true,
+  "ci_tiers": [
+    "full"
+  ],
+  "dataset_repo": "aaaaliou/pi-mono",
+  "dataset_revision": "61eee21d662f8736ace59507fc30555e1bff5c6e",
+  "description": "Independent public Pi coding-agent corpus with different HSMM magnitude than badlogicgames/pi-mono.",
+  "expected_min_jsonl_files": 145,
+  "expected_min_sessions": 140,
+  "id": "aaaaliou-pi-mono",
+  "interpret_enabled": true,
+  "materialization": {
+    "available": true,
+    "jsonl_files": 145,
+    "normalizer": null,
+    "object_count": 145,
+    "object_hash_fingerprint": "15ad42d201432d657f5cfc782afc7cd8c627161f304ed84302ef99dbde8bf2cf"
+  },
+  "publish_enabled": true,
+  "source": "other=pi-share-hf",
+  "storage_format": "jsonl"
+}

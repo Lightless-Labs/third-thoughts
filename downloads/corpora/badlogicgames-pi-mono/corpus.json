@@ -1,0 +1,24 @@
+{
+  "analysis_enabled": true,
+  "ci_tiers": [
+    "representative",
+    "full"
+  ],
+  "dataset_repo": "badlogicgames/pi-mono",
+  "dataset_revision": "dac2a1d3ba12dda597b973a791a77618ccb5f413",
+  "description": "Main public Pi coding-agent cohort.",
+  "expected_min_jsonl_files": 626,
+  "expected_min_sessions": 620,
+  "id": "badlogicgames-pi-mono",
+  "interpret_enabled": true,
+  "materialization": {
+    "available": true,
+    "jsonl_files": 626,
+    "normalizer": null,
+    "object_count": 626,
+    "object_hash_fingerprint": "ac1e1e0e649e99336abbf90874c65c1700ac06bc11fef1ec5d1dd58ddd55940c"
+  },
+  "publish_enabled": true,
+  "source": "seed/pi-share-hf",
+  "storage_format": "jsonl"
+}

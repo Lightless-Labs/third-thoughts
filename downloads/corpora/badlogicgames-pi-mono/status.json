@@ -1,0 +1,24 @@
+{
+  "corpus_id": "badlogicgames-pi-mono",
+  "fingerprints": {
+    "corpus": "33907011ee6912f261e8eba55b58804287290b074f219be1b037673509bbdd29",
+    "interpretation": "da4fcf98b416574623b0e0cb57c7f7561e9a77241287a603ce8040a56ca4aea5",
+    "process": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+  },
+  "outputs": [
+    "corpus.json",
+    "analysis-manifest.json",
+    "split-manifest.json",
+    "metrics.json",
+    "fingerprints.json",
+    "status.json"
+  ],
+  "schema_version": 1,
+  "status": "ok",
+  "warnings": [
+    "autonomous_axis_empty: no autonomous sessions in split output",
+    "duplicate_shape_possible: pi-mono-family corpora need deduplication before independent-replication claims",
+    "language_axis_unavailable: current metrics are not gated by detected language",
+    "split_manifest_count_mismatch: stratum manifest session counts differ from top-level split counts for autonomous,subagent"
+  ]
+}

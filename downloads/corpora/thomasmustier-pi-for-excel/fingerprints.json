@@ -1,0 +1,149 @@
+{
+  "corpus_id": "thomasmustier-pi-for-excel",
+  "fingerprints": {
+    "corpus": {
+      "components": {
+        "materialization": {
+          "available": true,
+          "dataset_repo": "thomasmustier/pi-for-excel-sessions",
+          "dataset_revision": "1b7218d2acf621e52bb5208435b1f80154342e3f",
+          "jsonl_files": 161,
+          "normalizer": null,
+          "object_count": 161,
+          "object_hash_count": 161,
+          "object_hash_fingerprint": "3d61e2e3fdad93cafa40a6d8e0b21ad4d92d3bf952500476d408dca5e0ac058e",
+          "storage_format": "jsonl"
+        },
+        "registry_entry": {
+          "analysis_enabled": true,
+          "ci_tiers": [
+            "full"
+          ],
+          "dataset_repo": "thomasmustier/pi-for-excel-sessions",
+          "dataset_revision": "1b7218d2acf621e52bb5208435b1f80154342e3f",
+          "expected_min_jsonl_files": 161,
+          "expected_min_sessions": 150,
+          "id": "thomasmustier-pi-for-excel",
+          "interpret_enabled": true,
+          "publish_enabled": true,
+          "source": "other=pi-share-hf",
+          "storage_format": "jsonl"
+        }
+      },
+      "fingerprint": "bb25f602216e987c4009e53abe8140aadb6781fad4b89f90394008711de61ca4"
+    },
+    "interpretation": {
+      "components": {
+        "enabled": true,
+        "metrics_input_hash": "002c6912a93080e8b83faa660e8fcc32ff26a8e42c9339dc6072db1c91d8c182",
+        "model": null,
+        "prompt_template": null,
+        "prompt_template_hash": null,
+        "script_hash": "80a79113fa20c6db5e5811171a018a7f14738e73794edcca6bbc7529fae0f00f",
+        "temperature": null
+      },
+      "fingerprint": "2ab29f19474b9ef7a06642846d683f56bc488ac8832340dc30e2d740610ed312"
+    },
+    "process": {
+      "components": {
+        "analysis_flags": {
+          "flat": {
+            "force": true,
+            "techniques": "all",
+            "timeout_seconds": 1800
+          },
+          "split": {
+            "no_python": true,
+            "split": true
+          }
+        },
+        "middens_version": "0.0.1-beta.4",
+        "repo_git_sha": "f7225455e1667e23dd720341af4d6b9da899437d",
+        "source_hashes": {
+          ".github/workflows/hf-corpus-analysis.yml": "9fc27030f6f2e306abd9f7207b28988093f91670909fcea804fd4ca3a06b3840",
+          "middens/Cargo.lock": "b2b58424d65e684532d50ad3e52bbf72f24f7684d285c7f0a16ebb9f7e30ef8d",
+          "middens/Cargo.toml": "e69a12539ec34336490d6b518de14862e08c175a343d01c48e936a0c9c6c3e37",
+          "middens/python/techniques/change_point_detection.py": "e809626227cbf67a25d7cadcd7438c238bc23a02a62ecc2623a8ade18ec1c350",
+          "middens/python/techniques/convention_epidemiology.py": "5d479c36ef4078926755dde2bd3e6357d19af97a7fcf4e1731e150e2ea53a409",
+          "middens/python/techniques/corpus_timeline.py": "7419e7bc2ec890977397fc73164e15ecd24aac2a247864f22a7e79aaeac89bba",
+          "middens/python/techniques/cross_project_graph.py": "33b41ba52298c6b34fdcf1b2c71d5467641594ae13e901e91c85e8d55b8866f7",
+          "middens/python/techniques/echo.py": "768eda3a9a4f2787efc4fca4002570012a20812169ab15fe3dd020a053617aa1",
+          "middens/python/techniques/ena_analysis.py": "a77e040a16212e0650fa6cd7ff802567a426213b05e5c86f7b0284bebbc91aa0",
+          "middens/python/techniques/granger_causality.py": "c0e984c85d005135658c1cc11f40edcb9e6f262b269f6cdc0b4f867295667f5b",
+          "middens/python/techniques/hsmm.py": "db01667f4de638db6bd94452c8ac26f780cd9891ec3a6f7e2a3833a50d0e7894",
+          "middens/python/techniques/information_foraging.py": "7177c58ece2707ccb710d4fe71e327a855a5a1cf66c966acbf3b8c428fea08b7",
+          "middens/python/techniques/lag_sequential.py": "72899f959079622223c6c24fdbdeefad79cee2accb0d07420c91cf43004927f5",
+          "middens/python/techniques/ncd_clustering.py": "97a7485cbbc0bd10f36b4a602517f005b0bf969938bda12e1e43f02a97809e6f",
+          "middens/python/techniques/prefixspan_mining.py": "5896327075af0b7ad0f5b1a46e3503d4c70705f58ac5189246d01469a1fdcd2c",
+          "middens/python/techniques/process_mining.py": "b6f5a04e78bb181fbbd9f23cb6e20ff3c6333615d36c0dc3aee2156a46d312a9",
+          "middens/python/techniques/smith_waterman.py": "411a5bad52a68c35854f32dccd8b8427899e6cc3d1775b656ba31221c2313a18",
+          "middens/python/techniques/spc_control_charts.py": "6d15a1af536dcc99ebffe5de5c800a4f524a757c23f84b7fb5a3d20704aa0c06",
+          "middens/python/techniques/survival_analysis.py": "ec485ab17e328cbb903fee4c9ad6e288788e9184e9d927e4e9cebfff6151d156",
+          "middens/python/techniques/tpattern_detection.py": "b3913744ab70f89b335ae021f5de08518a64a5b19af88d03ece487c3d0437c9a",
+          "middens/python/techniques/user_signal_analysis.py": "fbf7390d1d2508d5a6eadf1364264ca66f08d1c2ef61f9070d670a797fcfd5d1",
+          "middens/src/archive/copy.rs": "9e0aa3270edc9e5cd657d7d86d7f00c5f0f5e017c865b96137659f2d1a767441",
+          "middens/src/archive/discover.rs": "ef3826e77b9efa7fb532fa69341bcaf2e9ac9780d9e34d7addd15556d7b5f891",
+          "middens/src/archive/manifest.rs": "630d270e630cbf91de66ac3eb02eb640ec397ff4d4753d14d0868c32778ca9e4",
+          "middens/src/archive/mod.rs": "19a0101dae3691f929ecf28973528f8c781534cbd6a86bde4ea18b310e861fcb",
+          "middens/src/archive/parse.rs": "b02afc5387b8f4d329d115e49a65ee00b9346fcdb78003d93f9893f9bc811dea",
+          "middens/src/archive/plan.rs": "6b37386fe0fb7352bba3c38814400a684e847bb75b39d6a9b01f53fda972a292",
+          "middens/src/bridge/embedded.rs": "48341fef87e4426746b80fbba0fafae829331b32e5d60a757da0a98f4f4dd73f",
+          "middens/src/bridge/mod.rs": "33a40cc895af65805d5ebecf800028ac37f6cdc674dd8709f2635a04676a56cf",
+          "middens/src/bridge/technique.rs": "84603ea1dad66827ebc81d7cafb33e19c8cd516f40fba3f9f88659aff5518e09",
+          "middens/src/bridge/uv.rs": "ac4b615564d76427f1cb581235bab9447e0f6f0bf1b92a9adab810b3a115109b",
+          "middens/src/classifier/correction.rs": "9a908c22cb7bfd54eb2f9d7a635dfd1f35f46c3335ab08c625e6149e4d710b7e",
+          "middens/src/classifier/mod.rs": "daa7c474925545fe8a91857d3a2d3aba001545dbe83be6871c885654b511ea2e",
+          "middens/src/classifier/session_type.rs": "ec80d3e016c628bb1070afce0a6e59b74691508cdb6a246bc01e866da2f39a47",
+          "middens/src/commands/archive.rs": "c72a64ce822af2f7cc18c04d4070e6666509267d5a0eec29b9323fbe44093bcc",
+          "middens/src/commands/export.rs": "20dbc2a506ca86996f2bc548ff2db7b8a4c175d3f68dc29993eab6e7d541d44f",
+          "middens/src/commands/interpret.rs": "1d0a5ea84e8ea79923a0ab7ea745a52bdcc7492428bb87e951479b561b934931",
+          "middens/src/commands/mod.rs": "4e14554ba5112714cf1de5a2e626c116755c2bb6ef4996c68a9936ad2fb08be1",
+          "middens/src/corpus/discovery.rs": "ae4c650336f402712a9eaf96045926b4012ba22c41d971e9c696408da651cb0d",
+          "middens/src/corpus/manifest.rs": "2c88d1da387f2984ebbf06db87861d2681ddc531c0acf6d373fceeb3a6a900af",
+          "middens/src/corpus/mod.rs": "5ea0379cddee058afdbcb4a324666beb8a9c35eddcbc88b71bffc15ae23fe951",
+          "middens/src/fingerprint/evolution.rs": "7fc74ac90cd5077733733bdc54405c4ffebc769dec2e5f1e0a4e7ad2b9ad7afb",
+          "middens/src/fingerprint/extract.rs": "7fc74ac90cd5077733733bdc54405c4ffebc769dec2e5f1e0a4e7ad2b9ad7afb",
+          "middens/src/fingerprint/mod.rs": "fb1071abedf22332333b9a0ef3a5a358238dbb763db235d23e8bec77e9155b3a",
+          "middens/src/lib.rs": "f5b9751c4d646c7b081523d2320ebda8ef712e5918013d10804e691ee6de9038",
+          "middens/src/main.rs": "8ac685522b8cbc6ff3f70659193a971548ff85395f7d721d31f93df14d32f510",
+          "middens/src/output/ascii.rs": "ee23376eb7be585b904ae7d8c57e93864bf68e774791d0a21b3fc162d92a1048",
+          "middens/src/output/json.rs": "177634060de548f2c2511d8ed34fb8c7892734fbb3e3bd907f12ab156e37f35b",
+          "middens/src/output/markdown.rs": "d400128399a58f6359fa19c00fbb56fe7584d03f36b6be71d3c28c64ef4203d2",
+          "middens/src/output/mod.rs": "370827f9954c7955a1c7cb78e0352bca65ab4d22fb835a1f68607a35cee0b209",
+          "middens/src/parser/auto_detect.rs": "bf5be9f64734dd0b889d954d368a66412427970d6a88c46f3b097dc513e4ed46",
+          "middens/src/parser/claude_code.rs": "76b2a42ae52d4c4c5b6d3c77aa56ea6c033b3d1ff05b7e214051e92639f2b254",
+          "middens/src/parser/codex.rs": "76ef9542f225abc0f9824dfe0177644c00f62876e78c788d384ec864e66d61ca",
+          "middens/src/parser/gemini.rs": "7c9d559e7678969b384c7a2b60ecfa245907a4faa7928387513cac39563d1ec1",
+          "middens/src/parser/mod.rs": "617d9677fbc9d2f938de29bf30f5641a9bad920274bd374b8516d431b4580a88",
+          "middens/src/parser/openclaw.rs": "279ead54f422ab7c9673b63a93ac6cd4cc9999c04950a053bad66a77bd841804",
+          "middens/src/parser/pi.rs": "a5d83b2a679b1a0e174ec4c35420487b8f6759a43d4faedb1198b80f4af345b8",
+          "middens/src/pipeline.rs": "a41235559d577344c65b5faeab60105ceba001b1605ece5da86a806729ac5ccc",
+          "middens/src/report/mod.rs": "03b40e4459d85a1cda938a74a7f6ddb3ed6ee300aeb07d929cfbe37824e0cfcc",
+          "middens/src/session.rs": "9b5ea97abbced04abdec0ef034354cf07077cc0620441bc7336151d1df09da57",
+          "middens/src/storage/discovery.rs": "ba8bdf4495bbb43908f4e1a702ebc27d6dd8b952dab1dd68d376f55060134261",
+          "middens/src/storage/mod.rs": "3998f410037c891f188ab7aab3cefdbf6a03dc2effa94093800817c5455e841d",
+          "middens/src/techniques/burstiness.rs": "70dba71f6394eb44c6a1e4de04bf5d40b68b3fb58eb52cc3a71168b265604459",
+          "middens/src/techniques/correction_rate.rs": "b20fd7c886d7436eba55a6d3bedf328569f62fedbc6b73a64893d978fda38d24",
+          "middens/src/techniques/diversity.rs": "16db6e63ffec6752007c33c26c67f034c64a1ce6e3b82c57f8cf1641b5fd2290",
+          "middens/src/techniques/entropy.rs": "e4ea5db260904b28355677104f7485a0d4bea80bd3fbe7dcab8577ca6fb8b01a",
+          "middens/src/techniques/markov.rs": "51845f8676ea832a2f91685716fb9eb60d22cbdff97447bb67e733f434d1c5f5",
+          "middens/src/techniques/mod.rs": "8c073e99c04ce4fb43e2cb9310cdcc1e02cd640dea099fe5e9c9b9a4490c4a59",
+          "middens/src/techniques/thinking_divergence.rs": "b3ca60f24746192d43181c8325d1fb591e19c655541e930be8969d1eabb65c7c",
+          "middens/src/view/ascii.rs": "ee23376eb7be585b904ae7d8c57e93864bf68e774791d0a21b3fc162d92a1048",
+          "middens/src/view/ipynb.rs": "c8de41e891e13a914268c470ccb4bbda479328d4f17b67589692ba7cf968536b",
+          "middens/src/view/json.rs": "3ff556f7af3846fef7647fec87012409da8a9d9230daf1494b5543a7d9c04f68",
+          "middens/src/view/markdown.rs": "5c953c0615cee1d408a9e69f77f218529a5fd50cc80bbc62a5a3a614fddfd3eb",
+          "middens/src/view/mod.rs": "2a517722e7d66c4bd3d1aba46a07e869a85fae1a4bf9d76ccec0b888222f0660",
+          "scripts/build_public_comparative_metrics.py": "a4280cbab1b090b832e1293a630a99ddd9397a226993db9a9f1028b121bc1ad7",
+          "scripts/build_public_results_site.py": "6c1f1687a69b0d5afaf23e7d50ef25f10d542ad9fbf64e28a7567ed9779475b7",
+          "scripts/extract_public_corpus_metrics.py": "4fe4131b84b8f1e09a35b2328c825f316de9f1470e2bb0b8af1fc2853922dc32",
+          "scripts/materialize_hf_analysis_corpus.py": "202b2dadf72f2e19da423bdbf78407aec2cdb9e6a57b9043c423115405aca328",
+          "scripts/public_results_fingerprint.py": "80a79113fa20c6db5e5811171a018a7f14738e73794edcca6bbc7529fae0f00f"
+        },
+        "source_tree_hash": "03dd4e370fb5273b6c12669b233a49524d7a396d93c79d0e244961857bb0c590"
+      },
+      "fingerprint": "f6c9db663af5daf0a84e50f02fef98b989e6ae5392f973a8c4a6af1734cf05ef"
+    }
+  },
+  "schema_version": 1
+}

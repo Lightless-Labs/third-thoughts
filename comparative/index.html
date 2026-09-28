@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comparative metrics — Third Thoughts</title>
+    <meta name="description" content="Comparative public-safe metrics across selected corpora.">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="wordmark" href="../index.html">Third Thoughts</a>
+        <nav class="nav" aria-label="Primary">
+          <a href="../index.html">Home</a>
+<a href="../corpora/index.html">Corpora</a>
+<a href="../comparative/index.html" aria-current="page">Comparative</a>
+<a href="../methodology/index.html">Methodology</a>
+<a href="../downloads/index.html">Downloads</a>
+<a href="https://github.com/Lightless-Labs/third-thoughts">GitHub</a>
+        </nav>
+      </header>
+      
+      <section class="hero compact">
+        <div class="eyebrow">Comparative metrics</div>
+        <h1>Side-by-side, with several warning labels attached.</h1>
+        <p class="lede">This table compares deterministic aggregate metrics. It does not deduplicate duplicate-shaped corpora, pool them into a headline, or pretend empty autonomous strata mean anything deep. Comparative JSON is present and rendered below.</p>
+      </section>
+      <section class="section table-wrap">
+        <table class="metric-table">
+          <thead><tr><th>Corpus</th><th>Sessions</th><th>Interactive</th><th>Subagent</th><th>Autonomous</th><th>Risk suppression</th><th>MVT compliance</th><th>HSMM lift</th></tr></thead>
+          <tbody><tr><th><a href="../corpora/aaaaliou-pi-mono/index.html">aaaaliou-pi-mono</a></th><td>145</td><td>145</td><td>0</td><td>0</td><td>94.78%</td><td>0.00%</td><td>1.71×</td></tr><tr><th><a href="../corpora/agent-sessions-list-mixed/index.html">agent-sessions-list-mixed</a></th><td>7</td><td>5</td><td>2</td><td>0</td><td>98.24%</td><td>0.00%</td><td>—</td></tr><tr><th><a href="../corpora/archit11-claude-code-traces-parquet/index.html">archit11-claude-code-traces-parquet</a></th><td>25</td><td>5</td><td>19</td><td>1</td><td>0.00%</td><td>0.00%</td><td>0.00×</td></tr><tr><th><a href="../corpora/badlogicgames-pi-mono/index.html">badlogicgames-pi-mono</a></th><td>626</td><td>626</td><td>0</td><td>0</td><td>91.18%</td><td>0.00%</td><td>5.61×</td></tr><tr><th><a href="../corpora/kimi-claude-code-traces-jsonl/index.html">kimi-claude-code-traces-jsonl</a></th><td>36</td><td>2</td><td>34</td><td>0</td><td>100.00%</td><td>0.00%</td><td>1.89×</td></tr><tr><th><a href="../corpora/thomasmustier-pi-for-excel/index.html">thomasmustier-pi-for-excel</a></th><td>161</td><td>161</td><td>0</td><td>0</td><td>95.44%</td><td>0.00%</td><td>7.86×</td></tr></tbody>
+        </table>
+      </section>
+      
+      <section class="section two-col">
+        <article class="panel">
+          <h2>Axis coverage</h2>
+          <dl class="kv">
+            <div><dt>Interactive corpora</dt><dd>6</dd></div>
+            <div><dt>Subagent corpora</dt><dd>3</dd></div>
+            <div><dt>Autonomous corpora</dt><dd>1</dd></div>
+            <div><dt>Language axis</dt><dd>language detection is not yet part of the public metrics bundle</dd></div>
+            <div><dt>Thinking visibility axis</dt><dd>public comparative bundle has aggregate visible/redacted hints only, not full axis stratification</dd></div>
+          </dl>
+        </article>
+        <article class="panel">
+          <h2>Duplicate-family warnings</h2>
+          <p>pi-mono-family: aaaaliou-pi-mono, badlogicgames-pi-mono</p>
+        </article>
+      </section>
+    
+      
+      <section class="section table-wrap">
+        <h2>Finding replication inputs</h2>
+        <table class="metric-table">
+          <thead><tr><th>Metric</th><th>Defined corpora</th><th>Undefined corpora</th><th>Min</th><th>Max</th><th>Classification input</th></tr></thead>
+          <tbody><tr><th>First-third correction rate</th><td>6</td><td>0</td><td>0.00%</td><td>29.16%</td><td>descriptive</td></tr><tr><th>Last-third correction rate</th><td>6</td><td>0</td><td>0.00%</td><td>14.12%</td><td>descriptive</td></tr><tr><th>Mean correction rate</th><td>6</td><td>0</td><td>0.00%</td><td>21.40%</td><td>descriptive</td></tr><tr><th>ENA top code</th><td>6</td><td>0</td><td>—</td><td>—</td><td>descriptive</td></tr><tr><th>HSMM pre-correction lift</th><td>5</td><td>1</td><td>0.00×</td><td>7.86×</td><td>mixed_direction</td></tr><tr><th>MVT compliance</th><td>6</td><td>0</td><td>0.00%</td><td>0.00%</td><td>direction_consistent_zero</td></tr><tr><th>Risk suppression</th><td>6</td><td>0</td><td>0.00%</td><td>100.00%</td><td>mixed_or_low</td></tr><tr><th>Thinking/text divergence</th><td>6</td><td>0</td><td>0</td><td>3.746</td><td>descriptive</td></tr><tr><th>Tool entropy</th><td>6</td><td>0</td><td>0</td><td>1.045</td><td>descriptive</td></tr></tbody>
+        </table>
+      </section>
+    
+      
+    
+    </main>
+  </body>
+</html>

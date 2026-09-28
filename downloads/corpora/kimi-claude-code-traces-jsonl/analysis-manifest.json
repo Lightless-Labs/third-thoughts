@@ -1,0 +1,273 @@
+{
+  "analyzer_fingerprint": {
+    "middens_version": "0.0.1-beta.4",
+    "python_bridge": {
+      "requirements_hash": "757594150e2db9eba63e2c9e6375c7f337580ceb761ecb7f6046b602e00d5e29",
+      "uv_version": "uv 0.11.19 (x86_64-unknown-linux-gnu)"
+    },
+    "technique_versions": {
+      "burstiness": "0.0.1-beta.4",
+      "change-point-detection": "0.0.1-beta.4",
+      "convention_epidemiology": "0.0.1-beta.4",
+      "corpus-timeline": "0.0.1-beta.4",
+      "correction-rate": "0.0.1-beta.4",
+      "cross-project-graph": "0.0.1-beta.4",
+      "diversity": "0.0.1-beta.4",
+      "ena_analysis": "0.0.1-beta.4",
+      "entropy": "0.0.1-beta.4",
+      "granger_causality": "0.0.1-beta.4",
+      "hsmm": "0.0.1-beta.4",
+      "information_foraging": "0.0.1-beta.4",
+      "lag_sequential": "0.0.1-beta.4",
+      "markov": "0.0.1-beta.4",
+      "ncd_clustering": "0.0.1-beta.4",
+      "prefixspan_mining": "0.0.1-beta.4",
+      "process_mining": "0.0.1-beta.4",
+      "smith_waterman": "0.0.1-beta.4",
+      "spc_control_charts": "0.0.1-beta.4",
+      "survival_analysis": "0.0.1-beta.4",
+      "thinking-divergence": "0.0.1-beta.4",
+      "tpattern_detection": "0.0.1-beta.4",
+      "user-signal-analysis": "0.0.1-beta.4"
+    }
+  },
+  "corpus_fingerprint": {
+    "manifest_hash": "10981dfff27650b00bbc05e97136c873662ea54fe371819a35192844116510de",
+    "session_count": 36,
+    "short": "10981dff"
+  },
+  "created_at": "2026-06-08T08:25:45.284216496Z",
+  "run_id": "run-019ea656-7837-7167-a970-cc09cb13da3d",
+  "techniques": [
+    {
+      "error_count": 0,
+      "name": "burstiness",
+      "status": "completed",
+      "table": {
+        "name": "per_tool_burstiness",
+        "row_count": 13
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "correction-rate",
+      "status": "completed",
+      "table": {
+        "name": "per_session",
+        "row_count": 36
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "diversity",
+      "status": "completed",
+      "table": {
+        "name": "per_session_diversity",
+        "row_count": 36
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "entropy",
+      "status": "completed",
+      "table": {
+        "name": "per_session_entropy",
+        "row_count": 26
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "markov",
+      "status": "completed",
+      "table": {
+        "name": "transition_matrix",
+        "row_count": 13
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "thinking-divergence",
+      "status": "completed",
+      "table": {
+        "name": "per_session",
+        "row_count": 36
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "hsmm",
+      "status": "completed",
+      "table": {
+        "name": "State Transition Matrix",
+        "row_count": 4
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "information-foraging",
+      "status": "completed",
+      "table": {
+        "name": "Foraging Metrics Summary",
+        "row_count": 8
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "granger-causality",
+      "status": "completed",
+      "table": {
+        "name": "Granger Causality Results",
+        "row_count": 12
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "survival-analysis",
+      "status": "completed",
+      "table": {
+        "name": "Survival Probabilities",
+        "row_count": 32
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "process-mining",
+      "status": "completed",
+      "table": {
+        "name": "Activity Frequencies",
+        "row_count": 5
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "prefixspan-mining",
+      "status": "completed",
+      "table": {
+        "name": "Frequent Sequential Patterns",
+        "row_count": 50
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "smith-waterman",
+      "status": "completed",
+      "table": {
+        "name": "Conserved Motifs",
+        "row_count": 20
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "tpattern-detection",
+      "status": "completed",
+      "table": {
+        "name": "T-Patterns Level 1",
+        "row_count": 3
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "lag-sequential",
+      "status": "completed",
+      "table": {
+        "name": "Top Positive Transitions",
+        "row_count": 20
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "spc-control-charts",
+      "status": "completed",
+      "table": {
+        "name": "Control Limits",
+        "row_count": 3
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "ncd-clustering",
+      "status": "completed",
+      "table": {
+        "name": "Cluster Summary",
+        "row_count": 3
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "ena-analysis",
+      "status": "completed",
+      "table": {
+        "name": "Code Centrality",
+        "row_count": 7
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "convention-epidemiology",
+      "status": "completed",
+      "table": {
+        "name": "Within-Workflow Fits",
+        "row_count": 10
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "user-signal-analysis",
+      "status": "completed",
+      "table": {
+        "name": "Category Counts",
+        "row_count": 6
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "cross-project-graph",
+      "status": "completed",
+      "table": {
+        "name": "Edges",
+        "row_count": 0
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "change-point-detection",
+      "status": "completed",
+      "table": {
+        "name": "Change Points",
+        "row_count": 0
+      },
+      "version": "0.0.1-beta.4"
+    },
+    {
+      "error_count": 0,
+      "name": "corpus-timeline",
+      "status": "completed",
+      "table": {
+        "name": "Daily Activity",
+        "row_count": 2
+      },
+      "version": "0.0.1-beta.4"
+    }
+  ]
+}
